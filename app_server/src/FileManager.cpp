@@ -11,8 +11,6 @@
 #include "../include/FileManager.hpp"
 #include "../include/profile_session_manager.hpp"
 #include "../include/utils/StringExtensions.hpp"
-#include "../include/user_information.hpp"
-#include "../../Common/include/Notification.hpp"
 
 using namespace userInformation;
 using namespace notification;

@@ -1,19 +1,18 @@
 #include <unordered_map>
 #include <iostream>
 #include <list>
-#include <string>
 #include "../include/profile_session_manager.hpp"
-#include "../include/user_information.hpp"
 
 using namespace std;
 using namespace userInformation;
+using namespace notification;
 
 namespace profileSessionManager {
 
     ProfileSessionManager::ProfileSessionManager() {}
 
     ProfileSessionManager::ProfileSessionManager(unordered_map <string, UserInformation> users,
-                                                 unordered_map<string, string> notifications) {
+                                                 unordered_map<string, Notification> notifications) {
 
         this->users = users;
         this->notifications = notifications;
@@ -23,11 +22,15 @@ namespace profileSessionManager {
         this->users = users;
     }
 
+    void ProfileSessionManager::setNotifications(unordered_map<string, Notification> notifications) {
+        this->notifications = notifications;
+    }
+
     unordered_map<string,UserInformation> ProfileSessionManager::getUsers() {
         return this->users;
     }
 
-    unordered_map<string,string> ProfileSessionManager::getNotifications() {
+    unordered_map<string,Notification> ProfileSessionManager::getNotifications() {
         return this->notifications;
     }
 
