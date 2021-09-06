@@ -17,7 +17,6 @@ namespace profileSessionManager {
     class ProfileSessionManager {
     private:
         unordered_map<string,UserInformation> users; // <username> : <user info object>
-        //TODO: change type of value to the one of notification
         unordered_map<string,Notification> notifications; // <notification ID> : <notification object>
     public:
         /* Initializers */

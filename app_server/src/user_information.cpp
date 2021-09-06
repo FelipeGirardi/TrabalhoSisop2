@@ -1,9 +1,13 @@
 #include "../include/user_information.hpp"
+//#include <semaphore.h>
 
 namespace userInformation {
 
     UserInformation::UserInformation() {}
     UserInformation::UserInformation(list<string> pendingNotifications, list <string> followers) {
+//        sem_init(&this->mutexP, 0, 1);
+//        sem_init(&this->mutexC, 0, 1);
+//        sem_init(&this->hasItemsToConsume, 0, 0);
         this->pendingNotifications = pendingNotifications;
         this->followers = followers;
     }
@@ -66,5 +70,25 @@ namespace userInformation {
     void UserInformation::incrementNumberOfSessions() {
         this->numerOfSessions += 1;
     }
+
+    /* semaphore methods */
+//    void *produce(void *arg) {
+//
+//        sem_wait(&this->mutexP);
+//        string *notificationID = static_cast<string *>(arg);
+//        cout << "PRODUCING" << notificationID << endl;
+//        this->pendingNotifications.push_back(notificationID);
+//        sem_post(&this->hasItemsToConsume);
+//        sem_post(&this->mutexP);
+//    }
+//    void *consume(void *arg) {
+//
+//        sem_wait(&this->hasItemsToConsume);
+//        sem_wait(&this->mutexC);
+//        string *notificationID = static_cast<string *>(arg);
+//        cout << "PRODUCING" << notificationID << endl;
+//        this->pendingNotifications.push_back(notificationID);
+//        sem_post(&this->mutexC);
+//    }
 
 }
