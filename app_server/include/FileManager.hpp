@@ -21,6 +21,8 @@ class FileManager {
     public:
         /*
          * Save the property `users` to a .txt file
+         * Each line:
+         * username | follower1,follower2, | notifID1, notifID2, |
          */
         void saveUsersOnFile(unordered_map<string, UserInformation>);
         /*
