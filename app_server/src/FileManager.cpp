@@ -7,12 +7,16 @@
 #include <unordered_map>
 #include <vector>
 #include <list>
+#include <string>
 #include "../include/FileManager.hpp"
 #include "../include/profile_session_manager.hpp"
 #include "../include/utils/StringExtensions.hpp"
 #include "../include/user_information.hpp"
+#include "../../Common/include/Notification.hpp"
 
 using namespace userInformation;
+using namespace notification;
+using namespace std;
 
 unordered_map <string, UserInformation> FileManager::getUsersFromFile() {
 
@@ -77,4 +81,53 @@ void FileManager::saveUsersOnFile(unordered_map<string, UserInformation>users) {
     } else {
         cout << "Unable to open file";
     }
+}
+void FileManager::saveNotificationsOnFile(unordered_map<string, Notification> notifications) {
+    ofstream file;
+    file.open (this->notificationsFilename);
+    if (file.is_open()) {
+        for (auto notif_pair: notifications) {
+            file << notif_pair.first << this->delimiter;
+            Notification notif = notif_pair.second;
+            file << notif.toString();
+            file << this->delimiter << endl;
+        }
+        file.close();
+    } else {
+        cout << "Unable to open file";
+    }
+
+}
+unordered_map<string, Notification> FileManager::getNotificationsFromFile() {
+    unordered_map <string, Notification> notifications;
+    StringExtensions stringParser;
+
+    string line;
+    ifstream myfile (this->notificationsFilename);
+    if (myfile.is_open())
+    {
+        while ( getline (myfile,line) )
+        {
+            vector<string> splitedString = stringParser.split(line, this->delimiter);
+
+            //TODO: dar um jeito nesse 5
+            if (splitedString.size() == 5) {
+                string id = splitedString[0];
+                string text = splitedString[1];
+                string username = splitedString[2];
+                long int time = stoi(splitedString[3]);
+                int pendingReaders = stoi(splitedString[4]);
+
+                Notification newNotif = Notification(id, text, username,
+                                                     time, pendingReaders);
+                notifications[id] = newNotif;
+            } else {
+                cout << "Invalid file line";
+            }
+        }
+        myfile.close();
+    }
+    else cout << "Unable to open file";
+    return notifications;
+
 }

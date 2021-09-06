@@ -5,7 +5,8 @@ build_server:
 	g++ -std=c++11 -c MainTest.cpp src/profile_session_manager.cpp \
 	src/user_information.cpp \
 	src/utils/StringExtensions.cpp \
-	src/FileManager.cpp
+	src/FileManager.cpp \
+	../Common/src/Notification.cpp
 
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o

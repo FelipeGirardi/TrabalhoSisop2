@@ -8,8 +8,10 @@
 #include <unordered_map>
 #include <string>
 #include "../include/user_information.hpp"
+#include "../../Common/include/Notification.hpp"
 
 using namespace userInformation;
+using namespace notification;
 
 class FileManager {
 
@@ -17,10 +19,11 @@ class FileManager {
         const char delimiter = '|';
         const char arrayDelimiter = ',';
         const string filename = "users.txt";
+        const string notificationsFilename = "notifications.txt";
 
     public:
         /*
-         * Save the property `users` to a .txt file
+         * Save the SessionManager's property `users` to a .txt file
          * Each line:
          * username | follower1,follower2, | notifID1, notifID2, |
          */
@@ -29,6 +32,15 @@ class FileManager {
          * Retrieve the property `users` to from .txt file
          */
         unordered_map<string, UserInformation> getUsersFromFile();
+
+        /*
+         * Save the SessionManager's property `notifications` to a .txt file
+         * Each line:
+         * notification ID | attributes of the notification (see notification.toString()) |
+         * Obs.: LET THE DELIMITER AT THE END
+         */
+        void saveNotificationsOnFile(unordered_map<string, Notification> notifications);
+        unordered_map<string, Notification> getNotificationsFromFile();
 
 };
 
