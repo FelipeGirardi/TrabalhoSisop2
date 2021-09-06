@@ -20,17 +20,19 @@ int main() {
 
     unordered_map<string, UserInformation> users;
     unordered_map<string, string> notifications;
-    users["@felipe"] = UserInformation(test_list,followers_test);
-    users["@laura"] = UserInformation(test_list, {});
-    users["@lize"] = UserInformation({},{});
-    users["@renan"] = UserInformation({},followers_test);
+    users["@mo"] = UserInformation(test_list,followers_test);
+    users["@joana"] = UserInformation(test_list, {});
+    users["@pedrinho"] = UserInformation({},{});
+    users["@yoda"] = UserInformation({},followers_test);
 
 
     ProfileSessionManager sessionManager = ProfileSessionManager(users,notifications);
 
     sessionManager.saveUsersOnFile();
     unordered_map<string,UserInformation> users_retrieval = sessionManager.getUsersFromFile();
-    for (auto user_pair: users_retrieval) {
+    sessionManager.setUsers(users_retrieval);
+
+    for (auto user_pair: sessionManager.getUsers()) {
         cout << user_pair.first << endl;
         cout << user_pair.second.toString() << endl;
     }

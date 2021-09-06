@@ -14,13 +14,29 @@ namespace profileSessionManager {
 
     class ProfileSessionManager {
     private:
-        unordered_map<string,UserInformation> users;
+        unordered_map<string,UserInformation> users; // <username> : <user info object>
         //TODO: change type of value to the one of notification
-        unordered_map<string,string> notifications;
+        unordered_map<string,string> notifications; // <notification ID> : <notification object>
     public:
+        /* Initializers */
         ProfileSessionManager(unordered_map<string, UserInformation> users, unordered_map<string, string>notifications);
-        unordered_map<string,UserInformation> getUsersFromFile();
+
+        /* Setters */
+        void setUsers(unordered_map<string,UserInformation> users);
+
+        /* Getters */
+        unordered_map<string,UserInformation> getUsers();
+        unordered_map<string,string> getNotifications();
+
+        /* General Methods */
+        /*
+         * Save the property `users` to a .txt file
+         */
         void saveUsersOnFile();
+        /*
+         * Retrieve the property `users` to from .txt file
+         */
+        unordered_map<string,UserInformation> getUsersFromFile();
     };
 }
 #endif

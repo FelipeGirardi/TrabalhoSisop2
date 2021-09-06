@@ -80,4 +80,16 @@ namespace profileSessionManager {
         }
     }
 
+    void ProfileSessionManager::setUsers(unordered_map<string,UserInformation> users) {
+        this->users = users;
+    }
+
+    unordered_map<string,UserInformation> ProfileSessionManager::getUsers() {
+        return this->users;
+    }
+
+    unordered_map<string,string> ProfileSessionManager::getNotifications() {
+        return this->notifications;
+    }
+
 }
