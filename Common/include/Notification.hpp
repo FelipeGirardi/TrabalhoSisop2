@@ -17,21 +17,25 @@ namespace notification {
         long int time;
         int pendingReaders;
     public:
+        /* Initializers */
         Notification();
         Notification(string id, string text, string username, long int time, int pendingReaders);
 
+        /* Getters */
         string getID();
         string getText();
         string getUsername();
         int getPendingReaders();
         long int getTime();
 
+        /* Setters */
         void setID(string id);
         void setText(string text);
         void setUsername(string username);
         void setTime(long int time);
         void setPendingReaders(int pendingReaders);
 
+        /* Others */
         /*
          * returns a string with all attributes,
          * in the order of declaration,

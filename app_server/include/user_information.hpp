@@ -26,21 +26,17 @@ namespace userInformation {
             list<string> getPendingNotifications();
             int getNumberOfSessions();
 
-            /* Setters Followers */
-            void addNewFollower(string follower);
-            void addNewFollowers(list<string> followers);
+            /* Setters */
             void setFollowers(list<string> followers);
-
-            /* Setters Notifications */
-            void addNewNotification(string notificationID);
-            void addNewNotifications(list<string> notificationsIDs);
             void setNotifications(list<string> notificationsIDs);
 
-            /* Other Setters */
+            /* Other methods */
             void setNumberOfSessions(int numberOfSessions);
             void incrementNumberOfSessions();
-
-            /* Other methods */
+            void addNewNotification(string notificationID);
+            void addNewNotifications(list<string> notificationsIDs);
+            void addNewFollower(string follower);
+            void addNewFollowers(list<string> followers);
             string toString();
 
     };

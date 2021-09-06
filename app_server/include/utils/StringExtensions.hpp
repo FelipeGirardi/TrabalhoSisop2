@@ -13,7 +13,9 @@ using namespace std;
 class StringExtensions {
 
     public:
+        /* Initializes */
         StringExtensions();
+
         /*
         * splits string with a 1-char delimiter into a vector
         * Example:

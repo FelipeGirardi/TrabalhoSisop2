@@ -28,6 +28,7 @@ class FileManager {
          * username | follower1,follower2, | notifID1, notifID2, |
          */
         void saveUsersOnFile(unordered_map<string, UserInformation>);
+
         /*
          * Retrieve the property `users` to from .txt file
          */
@@ -40,6 +41,10 @@ class FileManager {
          * Obs.: LET THE DELIMITER AT THE END
          */
         void saveNotificationsOnFile(unordered_map<string, Notification> notifications);
+
+        /*
+         * Retrieve the property `notifications` to from .txt file
+         */
         unordered_map<string, Notification> getNotificationsFromFile();
 
 };
