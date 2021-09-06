@@ -16,9 +16,9 @@ namespace profileSessionManager {
     private:
         unordered_map<string,UserInformation> users;
         //TODO: change type of value to the one of notification
-        unordered_map<int,string> notifications;
+        unordered_map<string,string> notifications;
     public:
-        ProfileSessionManager(unordered_map<string, UserInformation> users, unordered_map<int, string>notifications);
+        ProfileSessionManager(unordered_map<string, UserInformation> users, unordered_map<string, string>notifications);
         unordered_map<string,UserInformation> getUsersFromFile();
         void saveUsersOnFile();
     };

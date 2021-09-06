@@ -12,23 +12,31 @@ namespace userInformation {
     class UserInformation {
 
         private:
-            list<int> pendingNotifications; //IDs of notifications the user still has to receive
+            list<string> pendingNotifications; //IDs of notifications the user still has to receive
             list<string> followers; // names of followers
         
         public:
+            /* Initializers */
             UserInformation();
+            UserInformation(list<string> pendingNotifications, list<string> followers);
 
-            UserInformation(list<int> pendingNotifications, list<string> followers);
-            list<string> getFollowersID;
-            list<int> getPendingNotifications;
+            /* Getters */
+            list<string> getFollowers();
+            list<string> getPendingNotifications();
 
+            /* Setters Followers */
             void addNewFollower(string follower);
             void addNewFollowers(list<string> followers);
             void setFollowers(list<string> followers);
 
-            void addNewNotification(int notificationID);
-            void addNewNotifications(list<int> notificationsIDs);
-            void setNotifications(list<int> notificationsIDs);
+            /* Setters Notifications*/
+            void addNewNotification(string notificationID);
+            void addNewNotifications(list<string> notificationsIDs);
+            void setNotifications(list<string> notificationsIDs);
+
+            /* To String */
+            string toString();
+
     };
 }
 

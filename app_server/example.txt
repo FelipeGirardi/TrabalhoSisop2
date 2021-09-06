@@ -1,1 +1,4 @@
-Writing this to a file.
+@lize|||
+@renan|@renan,@lize,||
+@felipe|@renan,@lize,|1,2,3,|
+@laura||1,2,3,|
