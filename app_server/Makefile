@@ -2,7 +2,11 @@ SRC_DIR = src
 BUILD_DIR = build
 
 build_server:
-	g++ -std=c++11 -c MainTest.cpp src/profile_session_manager.cpp src/user_information.cpp src/utils/StringExtensions.cpp
+	g++ -std=c++11 -c MainTest.cpp src/profile_session_manager.cpp \
+	src/user_information.cpp \
+	src/utils/StringExtensions.cpp \
+	src/FileManager.cpp
+
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o
 

@@ -7,6 +7,7 @@
 #include <list>
 #include "include/profile_session_manager.hpp"
 #include "include/user_information.hpp"
+#include "include/FileManager.hpp"
 
 using namespace std;
 using namespace profileSessionManager;
@@ -25,11 +26,11 @@ int main() {
     users["@pedrinho"] = UserInformation({},{});
     users["@yoda"] = UserInformation({},followers_test);
 
+    FileManager fileManager;
+    ProfileSessionManager sessionManager;
 
-    ProfileSessionManager sessionManager = ProfileSessionManager(users,notifications);
-
-    sessionManager.saveUsersOnFile();
-    unordered_map<string,UserInformation> users_retrieval = sessionManager.getUsersFromFile();
+    fileManager.saveUsersOnFile(users);
+    unordered_map<string,UserInformation> users_retrieval = fileManager.getUsersFromFile();
     sessionManager.setUsers(users_retrieval);
 
     for (auto user_pair: sessionManager.getUsers()) {

@@ -19,6 +19,7 @@ namespace profileSessionManager {
         unordered_map<string,string> notifications; // <notification ID> : <notification object>
     public:
         /* Initializers */
+        ProfileSessionManager();
         ProfileSessionManager(unordered_map<string, UserInformation> users, unordered_map<string, string>notifications);
 
         /* Setters */
@@ -27,16 +28,6 @@ namespace profileSessionManager {
         /* Getters */
         unordered_map<string,UserInformation> getUsers();
         unordered_map<string,string> getNotifications();
-
-        /* General Methods */
-        /*
-         * Save the property `users` to a .txt file
-         */
-        void saveUsersOnFile();
-        /*
-         * Retrieve the property `users` to from .txt file
-         */
-        unordered_map<string,UserInformation> getUsersFromFile();
     };
 }
 #endif
