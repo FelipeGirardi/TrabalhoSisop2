@@ -28,6 +28,12 @@ namespace profileSessionManager {
         /* Getters */
         unordered_map<string,UserInformation> getUsers();
         unordered_map<string,string> getNotifications();
+
+        /* Others */
+        void incrementSessionOfUser(string username);
+        int getNumberOfSessionsOfUser(string username);
+
+
     };
 }
 #endif

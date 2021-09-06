@@ -38,6 +38,7 @@ unordered_map <string, UserInformation> FileManager::getUsersFromFile() {
                                                                   this->arrayDelimiter);
                 list<string> notificationsList(notifications.begin(), notifications.end());
 
+                newUserInfo.setNumberOfSessions(0);
                 newUserInfo.setFollowers(followersList);
                 newUserInfo.setNotifications(notificationsList);
                 users[username] = newUserInfo;

@@ -14,6 +14,7 @@ namespace userInformation {
         private:
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             list<string> followers; // names of followers
+            int numerOfSessions;
         
         public:
             /* Initializers */
@@ -23,18 +24,23 @@ namespace userInformation {
             /* Getters */
             list<string> getFollowers();
             list<string> getPendingNotifications();
+            int getNumberOfSessions();
 
             /* Setters Followers */
             void addNewFollower(string follower);
             void addNewFollowers(list<string> followers);
             void setFollowers(list<string> followers);
 
-            /* Setters Notifications*/
+            /* Setters Notifications */
             void addNewNotification(string notificationID);
             void addNewNotifications(list<string> notificationsIDs);
             void setNotifications(list<string> notificationsIDs);
 
-            /* To String */
+            /* Other Setters */
+            void setNumberOfSessions(int numberOfSessions);
+            void incrementNumberOfSessions();
+
+            /* Other methods */
             string toString();
 
     };

@@ -33,10 +33,20 @@ int main() {
     unordered_map<string,UserInformation> users_retrieval = fileManager.getUsersFromFile();
     sessionManager.setUsers(users_retrieval);
 
+    cout << "ANTES" << endl;
     for (auto user_pair: sessionManager.getUsers()) {
         cout << user_pair.first << endl;
         cout << user_pair.second.toString() << endl;
     }
+    cout << endl << endl;
+    cout << "DEPOIS" << endl;
+    sessionManager.incrementSessionOfUser("@lize");
+    for (auto user_pair: sessionManager.getUsers()) {
+        cout << user_pair.first << endl;
+        cout << user_pair.second.toString() << endl;
+    }
+
+
 
 
     return 0;

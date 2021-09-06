@@ -50,8 +50,21 @@ namespace userInformation {
         for (string notification : this->pendingNotifications) {
             fullString += notification + " ";
         }
+        fullString += '\n';
+        fullString += "NumberOfSessions:\n";
+        fullString += to_string(this->numerOfSessions);
         return fullString;
 
+    }
+
+    void UserInformation::setNumberOfSessions(int numberOfSessions) {
+        this->numerOfSessions = numberOfSessions;
+    }
+    int UserInformation::getNumberOfSessions() {
+        return this->numerOfSessions;
+    }
+    void UserInformation::incrementNumberOfSessions() {
+        this->numerOfSessions += 1;
     }
 
 }
