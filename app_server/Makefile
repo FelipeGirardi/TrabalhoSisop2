@@ -6,14 +6,6 @@ build_server:
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o
 
-profile_session:
-	$(SRC_DIR)/profile_session_manager.cpp
-	g++ -c $(SRC_DIR)/profile_session_manager.cpp
-
-user_info:
-	 $(SRC_DIR)/user_information.cpp
-	 g++ -c $(SRC_DIR)/user_information.cpp
-
 main:
 	make build_server
 	./$(BUILD_DIR)/serverApp
