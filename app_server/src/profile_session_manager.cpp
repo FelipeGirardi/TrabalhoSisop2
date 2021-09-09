@@ -11,27 +11,21 @@ namespace profileSessionManager {
 
     ProfileSessionManager::ProfileSessionManager() {}
 
-    ProfileSessionManager::ProfileSessionManager(unordered_map <string, UserInformation> users,
-                                                 unordered_map<string, Notification> notifications) {
+    ProfileSessionManager::ProfileSessionManager(unordered_map <string, UserInformation> users) {
 
         this->users = users;
-        this->notifications = notifications;
     }
 
     void ProfileSessionManager::setUsers(unordered_map<string, UserInformation> users) {
         this->users = users;
     }
 
-    void ProfileSessionManager::setNotifications(unordered_map<string, Notification> notifications) {
-        this->notifications = notifications;
-    }
-
     unordered_map<string,UserInformation> ProfileSessionManager::getUsers() {
         return this->users;
     }
 
-    unordered_map<string,Notification> ProfileSessionManager::getNotifications() {
-        return this->notifications;
+    UserInformation ProfileSessionManager::getUserByUsername(string username) {
+        return this->users[username];
     }
 
     void ProfileSessionManager::incrementSessionOfUser(string username) {
@@ -43,5 +37,14 @@ namespace profileSessionManager {
     int ProfileSessionManager::getNumberOfSessionsOfUser(string username) {
         return this->users[username].getNumberOfSessions();
     }
+
+    void ProfileSessionManager::newNotificationSentBy(string username, string notificationID) {
+
+    }
+
+    void ProfileSessionManager::createNewSession(string username) {
+
+    }
+
 
 }

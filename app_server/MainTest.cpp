@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <list>
+#include <unistd.h>
 #include "include/profile_session_manager.hpp"
 #include "include/user_information.hpp"
 #include "include/FileManager.hpp"

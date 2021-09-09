@@ -6,7 +6,8 @@ build_server:
 	src/user_information.cpp \
 	src/utils/StringExtensions.cpp \
 	src/FileManager.cpp \
-	../Common/src/Notification.cpp
+	../Common/src/Notification.cpp \
+	src/NotificationManager.cpp
 
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o
