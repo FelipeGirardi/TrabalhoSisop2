@@ -10,7 +10,10 @@ build_server:
 	src/NotificationManager.cpp
 
 	mv *.o $(BUILD_DIR)
-	g++ -o $(BUILD_DIR)/serverApp build/*.o
+	g++ -o $(BUILD_DIR)/serverApp build/*.o -lpthread
+
+clean:
+	rm $(BUILD_DIR)/*
 
 main:
 	make build_server

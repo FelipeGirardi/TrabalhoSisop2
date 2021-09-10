@@ -1,6 +1,7 @@
 #include <unordered_map>
 #include <iostream>
 #include <list>
+#include <pthread.h>
 #include "../include/profile_session_manager.hpp"
 
 using namespace std;
@@ -40,6 +41,11 @@ namespace profileSessionManager {
 
     void ProfileSessionManager::newNotificationSentBy(string username, string notificationID) {
 
+        list<string> followers = this->users[username].getFollowers();
+        for (string follower : followers) {
+            this->users[follower].produceNewNotification(notificationID);
+        }
+        pthread_exit(NULL);
     }
 
     void ProfileSessionManager::createNewSession(string username) {

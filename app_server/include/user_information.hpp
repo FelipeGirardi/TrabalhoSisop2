@@ -17,9 +17,19 @@ namespace userInformation {
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             list<string> followers; // names of followers
             int numerOfSessions;
+            pthread_t tid;
 
+            /**
+             * This is the method executed by the producer thread
+             * @param arg - an arg_struct object
+             * @return
+             */
+            static void * producer(void *arg);
 
         public:
+
+            //TODO: maybe make this private and add some setters and getters
+            sem_t freeCritialSession, hasItems;
             /* Initializers */
             UserInformation();
             UserInformation(list<string> pendingNotifications, list<string> followers);
@@ -43,6 +53,13 @@ namespace userInformation {
             void addNewFollower(string follower);
             void addNewFollowers(list<string> followers);
             string toString();
+
+            /**
+             * This method creates a new producer thread
+             * for adding a notification in the user's pendingNotifications
+             *
+             */
+            void produceNewNotification(string notificationID);
 
     };
 }

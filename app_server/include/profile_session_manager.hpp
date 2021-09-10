@@ -35,12 +35,11 @@ namespace profileSessionManager {
 
         /*
          * Method called by Notification Manager
-         * Creates producer thread
          *
          * @Param username: the user who sent the notification
          * @Param notificationID: the ID of notification to be sent to all followers of `username`
          */
-         static void newNotificationSentBy(string username, string notificationID);
+        void newNotificationSentBy(string username, string notificationID);
 
         /*
         * Method called by Communication Manager
