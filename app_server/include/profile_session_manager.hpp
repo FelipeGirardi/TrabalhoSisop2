@@ -48,7 +48,17 @@ namespace profileSessionManager {
         * @Param username: the user who wants to login/create account
         *
         */
-        static void createNewSession(string username);
+        void createNewSession(string username);
+
+        /*
+        * Method called by Communication Manager
+        * It decrements the number of sessions of user
+         * Collateral effect: if it is the only session of user, consumer thread is ended.
+        *
+        * @Param username: the user who wants to end one session
+        *
+        */
+        void endSession(string username);
 
     };
 }

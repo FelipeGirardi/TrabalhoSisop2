@@ -50,6 +50,18 @@ namespace profileSessionManager {
 
     void ProfileSessionManager::createNewSession(string username) {
 
+        int currentNumberSessions = this->users[username].getNumberOfSessions();
+        if ( currentNumberSessions >= 2) {
+            return;
+        } else if (currentNumberSessions == 0) {
+            this->users[username].startListeningForNotifications();
+        }
+        this->users[username].incrementNumberOfSessions();
+
+    }
+
+    void ProfileSessionManager::endSession(string username) {
+        this->users[username].decrementNumberOfSessions();
     }
 
 

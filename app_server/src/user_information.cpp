@@ -1,4 +1,5 @@
 #include "../include/user_information.hpp"
+#include "../include/NotificationManager.hpp"
 #include <semaphore.h>
 #include <iostream>
 #include <stdlib.h>
@@ -14,7 +15,8 @@ struct arg_struct {
 namespace userInformation {
 
     UserInformation::UserInformation() {}
-    UserInformation::UserInformation(list<string> pendingNotifications, list <string> followers) {
+    UserInformation::UserInformation(string username, list<string> pendingNotifications, list <string> followers) {
+        this->username = username;
         this->pendingNotifications = pendingNotifications;
         this->followers = followers;
     }
@@ -69,6 +71,9 @@ namespace userInformation {
     void UserInformation::incrementNumberOfSessions() {
         this->numerOfSessions += 1;
     }
+    void UserInformation::decrementNumberOfSessions() {
+        this->numerOfSessions -= 1;
+    }
 
     void UserInformation::produceNewNotification(string notificationID) {
 
@@ -80,6 +85,13 @@ namespace userInformation {
         *args = my_args;
 
         pthread_create(&(this->tid), NULL, this->producer, (void *) args);
+    }
+
+    void UserInformation::startListeningForNotifications() {
+
+        UserInformation *args = (UserInformation *) malloc(sizeof(UserInformation *));
+        args = this;
+        pthread_create(&(this->consumerTid), NULL, this->consumer, (void *) args);
     }
 
     void * UserInformation::producer(void *arg) {
@@ -101,5 +113,36 @@ namespace userInformation {
         cout << "returning from producer" <<endl;
         return 0;
 
+    }
+
+    void *UserInformation::consumer(void *arg) {
+
+        cout << "init consumer thread" << endl;
+        UserInformation *_this = (UserInformation *) arg;
+
+        while(_this->numerOfSessions > 0) {
+            cout << "dentro do while" << endl;
+            sleep(rand()%5);
+            sem_wait(&((*_this).hasItems));
+            cout << "has items" << endl;
+            sem_wait(&((*_this).freeCritialSession));
+            cout << "SC is free" << endl;
+
+            // this if shouldn't be needed, but better safe than sorry
+            if (!_this->pendingNotifications.empty()) {
+                string consumedItem = _this->pendingNotifications.front();
+                cout << "consuming: " << consumedItem << endl;
+                _this->pendingNotifications.pop_front();
+                NotificationManager::sendNotificationTo(_this->username, consumedItem);
+            } else {
+                cout << "not possible to consume" << endl;
+            }
+
+            sem_post(&(_this->freeCritialSession));
+
+        }
+
+        free(arg);
+        return 0;
     }
 }

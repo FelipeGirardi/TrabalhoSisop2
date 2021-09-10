@@ -14,10 +14,11 @@ namespace userInformation {
     class UserInformation {
 
         private:
+            string username;
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             list<string> followers; // names of followers
             int numerOfSessions;
-            pthread_t tid;
+            pthread_t tid, consumerTid;
 
             /**
              * This is the method executed by the producer thread
@@ -26,13 +27,20 @@ namespace userInformation {
              */
             static void * producer(void *arg);
 
+            /**
+             * This is the method executed by the consumer thread
+             * @param arg - an UserInformation object
+             * @return
+             */
+            static void *consumer(void *arg);
+
         public:
 
             //TODO: maybe make this private and add some setters and getters
             sem_t freeCritialSession, hasItems;
             /* Initializers */
             UserInformation();
-            UserInformation(list<string> pendingNotifications, list<string> followers);
+            UserInformation(string username, list<string> pendingNotifications, list<string> followers);
 
             /* Getters */
             list<string> getFollowers();
@@ -46,6 +54,7 @@ namespace userInformation {
             /* Other methods */
             void setNumberOfSessions(int numberOfSessions);
             void incrementNumberOfSessions();
+            void decrementNumberOfSessions();
 
             void addNewNotification(string notificationID);
             void getNotifications();
@@ -60,6 +69,7 @@ namespace userInformation {
              *
              */
             void produceNewNotification(string notificationID);
+            void startListeningForNotifications();
 
     };
 }
