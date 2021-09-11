@@ -43,12 +43,20 @@ namespace profileSessionManager {
 
         list<string> followers = this->users[username].getFollowers();
         for (string follower : followers) {
+            if (this->users.find(follower) == this->users.end()) {continue;}
             this->users[follower].produceNewNotification(notificationID);
         }
-        pthread_exit(NULL);
+        //pthread_join();
     }
 
     void ProfileSessionManager::createNewSession(string username) {
+
+        // check if user exists
+        if (this->users.find(username) == this->users.end()) {
+            // user doesn't exist
+            UserInformation newUserInfo = UserInformation(username, {},{});
+            this->users[username] = newUserInfo;
+        }
 
         int currentNumberSessions = this->users[username].getNumberOfSessions();
         if ( currentNumberSessions >= 2) {
@@ -62,6 +70,11 @@ namespace profileSessionManager {
 
     void ProfileSessionManager::endSession(string username) {
         this->users[username].decrementNumberOfSessions();
+    }
+
+    void ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
+        if (this->users.find(toBeFollowed) == this->users.end()) { return; }
+        this->users[toBeFollowed].addNewFollower(follower);
     }
 
 

@@ -17,7 +17,7 @@ namespace userInformation {
             string username;
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             list<string> followers; // names of followers
-            int numerOfSessions;
+            int numberOfSessions;
             pthread_t tid, consumerTid;
 
             /**
@@ -40,6 +40,7 @@ namespace userInformation {
             sem_t freeCritialSession, hasItems;
             /* Initializers */
             UserInformation();
+            UserInformation(string username);
             UserInformation(string username, list<string> pendingNotifications, list<string> followers);
 
             /* Getters */

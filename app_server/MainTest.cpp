@@ -6,10 +6,12 @@
 #include <unordered_map>
 #include <list>
 #include <unistd.h>
+#include <pthread.h>
 #include "include/profile_session_manager.hpp"
 #include "include/user_information.hpp"
 #include "include/FileManager.hpp"
 #include "../Common/include/Notification.hpp"
+#include "include/NotificationManager.hpp"
 
 using namespace std;
 using namespace profileSessionManager;
@@ -60,6 +62,30 @@ int main() {
 //    }
 
 
+    cout << "MAIN" << endl;
+    ProfileSessionManager sessionManager;
+    sessionManager.createNewSession("ufrgs");
+    sessionManager.createNewSession("laura");
+    sessionManager.addNewFollowerToUser("laura", "ufrgs");
+    int i = 0;
+    while (i < 3) {
 
+        sleep(1);
+        cout << "aaa" << endl;
+        sessionManager.newNotificationSentBy("ufrgs", to_string(i));
+        cout << "bbb" << endl;
+        i++;
+    }
+
+    sleep(5);
+    cout << "oi" << endl;
+    sessionManager.endSession("laura");
+    sessionManager.endSession("ufrgs");
+
+//    NotificationManager notificationManager;
+//    Notification newNotification = Notification("notID", "oie", "ufrgs", 203912, 0);
+//    notificationManager.newNotificationSentBy("ufrgs", newNotification);
+
+    pthread_exit(0);
     return 0;
 }

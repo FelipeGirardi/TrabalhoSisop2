@@ -60,6 +60,14 @@ namespace profileSessionManager {
         */
         void endSession(string username);
 
+        /**
+         * Adds a new username (follower) to the list of followers of an user (toBeFollowed)
+         *
+         * @param follower - username of new user to be added to the list
+         * @param toBeFollowed  - username the user whose list is gonna be changed
+         */
+        void addNewFollowerToUser(string follower, string toBeFollowed);
+
     };
 }
 #endif

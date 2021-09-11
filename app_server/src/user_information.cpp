@@ -15,6 +15,14 @@ struct arg_struct {
 namespace userInformation {
 
     UserInformation::UserInformation() {}
+
+    UserInformation::UserInformation(string username) {
+        this->username = username;
+        this->pendingNotifications = {};
+        this->numberOfSessions = 0;
+        this->followers = {};
+    }
+
     UserInformation::UserInformation(string username, list<string> pendingNotifications, list <string> followers) {
         this->username = username;
         this->pendingNotifications = pendingNotifications;
@@ -57,22 +65,23 @@ namespace userInformation {
         }
         fullString += '\n';
         fullString += "NumberOfSessions:\n";
-        fullString += to_string(this->numerOfSessions);
+        fullString += to_string(this->numberOfSessions);
         return fullString;
 
     }
 
     void UserInformation::setNumberOfSessions(int numberOfSessions) {
-        this->numerOfSessions = numberOfSessions;
+        this->numberOfSessions = numberOfSessions;
     }
     int UserInformation::getNumberOfSessions() {
-        return this->numerOfSessions;
+        return this->numberOfSessions;
     }
     void UserInformation::incrementNumberOfSessions() {
-        this->numerOfSessions += 1;
+        this->numberOfSessions += 1;
     }
     void UserInformation::decrementNumberOfSessions() {
-        this->numerOfSessions -= 1;
+        pthread_cancel(this->consumerTid);
+        this->numberOfSessions -= 1;
     }
 
     void UserInformation::produceNewNotification(string notificationID) {
@@ -84,10 +93,15 @@ namespace userInformation {
         struct arg_struct *args = (struct arg_struct *) malloc(sizeof(struct arg_struct));
         *args = my_args;
 
+        this->tid = (unsigned long int) rand();
+        cout << "Producer ID" << (unsigned long int) this->tid << endl;
         pthread_create(&(this->tid), NULL, this->producer, (void *) args);
     }
 
     void UserInformation::startListeningForNotifications() {
+
+        sem_init(&(this->freeCritialSession), 0, 1);
+        sem_init(&(this->hasItems), 0, 0);
 
         UserInformation *args = (UserInformation *) malloc(sizeof(UserInformation *));
         args = this;
@@ -103,13 +117,13 @@ namespace userInformation {
 
         sem_wait(&((*_this).freeCritialSession));
 
-        cout << "producing: " << my_arg_struct->notificationID << endl;
+        cout << "producing not with ID: " << my_arg_struct->notificationID << endl;
         _this->pendingNotifications.push_back(my_arg_struct->notificationID);
 
         sem_post(&(_this->freeCritialSession));
         sem_post(&(_this->hasItems));
 
-        free(arg);
+        //free(arg);
         cout << "returning from producer" <<endl;
         return 0;
 
@@ -120,7 +134,7 @@ namespace userInformation {
         cout << "init consumer thread" << endl;
         UserInformation *_this = (UserInformation *) arg;
 
-        while(_this->numerOfSessions > 0) {
+        while(_this->numberOfSessions > 0) {
             cout << "dentro do while" << endl;
             sleep(rand()%5);
             sem_wait(&((*_this).hasItems));
@@ -131,7 +145,7 @@ namespace userInformation {
             // this if shouldn't be needed, but better safe than sorry
             if (!_this->pendingNotifications.empty()) {
                 string consumedItem = _this->pendingNotifications.front();
-                cout << "consuming: " << consumedItem << endl;
+                cout << "consuming not with ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
                 NotificationManager::sendNotificationTo(_this->username, consumedItem);
             } else {
@@ -141,8 +155,8 @@ namespace userInformation {
             sem_post(&(_this->freeCritialSession));
 
         }
-
-        free(arg);
+        cout << "ending consumer thread" << endl;
+        //free(arg);
         return 0;
     }
 }
