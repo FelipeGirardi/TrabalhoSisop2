@@ -3,34 +3,48 @@
 //
 
 #include "../include/NotificationManager.hpp"
+#include "../include/profile_session_manager.hpp"
 #include "../../Common/include/Notification.hpp"
 #include <unordered_map>
 #include <string>
 
-using namespace notification;
 using namespace std;
+using namespace notification;
 
-NotificationManager::NotificationManager() {
+namespace notifManager {
 
-}
+    NotificationManager::NotificationManager() {}
 
-void NotificationManager::setNotifications(unordered_map<string, Notification> notifications) {
-    this->notifications = notifications;
-}
+    NotificationManager::NotificationManager(unordered_map <string, Notification> notifications) {
+        this->setNotifications(notifications);
+    }
 
-unordered_map<string,Notification> NotificationManager::getNotifications() {
-    return this->notifications;
-}
+    void NotificationManager::setNotifications(unordered_map <string, Notification> notifications) {
+        this->notifications = notifications;
+    }
 
-Notification NotificationManager::getNotificationByID(string notificationID) {
-    return this->notifications[notificationID];
-}
+    unordered_map <string, Notification> NotificationManager::getNotifications() {
+        return this->notifications;
+    }
 
-void NotificationManager::sendNotificationTo(string username, string notificationID) {
+    Notification NotificationManager::getNotificationByID(string notificationID) {
+        if (this->notifications.find(notificationID) == this->notifications.end()) {
+            return Notification();
+        }
+        else {
+            return this->notifications[notificationID];
+        }
+    }
 
-}
+    void NotificationManager::sendNotificationTo(string username, string notificationID) {
+        if (this->notifications.find(notificationID) == this->notifications.end()) {}
+        else {
+            //CommunicationManager::sendNotificationTo(username, this->notifications[notificationID]);
+        }
+    }
 
-void NotificationManager::newNotificationSentBy(string username, Notification notification) {
-
+    void NotificationManager::newNotificationSentBy(string username, Notification notification) {
+        //ProfileSessionManager::newNotificationSentBy(username, notification.getID());
+    }
 }
 
