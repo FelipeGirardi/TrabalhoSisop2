@@ -2,29 +2,52 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <sys/types.h> 
+#include <errno.h>
+#include <ctype.h>
+#include <time.h>
+#include <signal.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 #include "../lib/communication.h"
+#define PORT 4000
+
+// profile_list *profiles;
+// void signalHandler(int);
 
 int main(int argc, char *argv[])
 {
-	int sockfd, newsockfd, n;
-	socklen_t clilen;
-	struct sockaddr_in serv_addr, cli_addr;
-	packet pkt;
-    
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
-        printf("ERROR opening socket");
-	
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(PORT);
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	bzero(&(serv_addr.sin_zero), 8);     
-    
-	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0) 
-		printf("ERROR on binding");
-	
+	int sockfd, option = 1;
+	struct sockaddr_in serv_addr;
+
+    setbuf(stdout, NULL);  // zera buffer do stdout
+
+    // cria socket TCP verificando erro
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        printf("ERROR opening socket\n");
+    }
+
+    setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+
+    // seta dados do servidor
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    bzero(&(serv_addr.sin_zero), 8);
+
+    // faz o bind
+    if (bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0)
+        printf("ERROR on binding\n");
+
+    // TO DO: carregar estruturas de dados + signal
+
+    // loop do listen de conexões
+
+
+    // *******************
+
 	listen(sockfd, 5);
 	
 	clilen = sizeof(struct sockaddr_in);
