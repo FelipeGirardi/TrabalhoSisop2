@@ -54,14 +54,15 @@ namespace profileSessionManager {
         // check if user exists
         if (this->users.find(username) == this->users.end()) {
             // user doesn't exist
-            UserInformation newUserInfo = UserInformation(username, {},{});
+            cout << "user doesnt exist" << endl;
+            UserInformation newUserInfo = UserInformation(username);
             this->users[username] = newUserInfo;
         }
 
         int currentNumberSessions = this->users[username].getNumberOfSessions();
-        if ( currentNumberSessions >= 2) {
-            return;
-        } else if (currentNumberSessions == 0) {
+        if (currentNumberSessions >= 2) { return; }
+        if (currentNumberSessions == 0) {
+            cout << "number of sessions of user is 0" << endl;
             this->users[username].startListeningForNotifications();
         }
         this->users[username].incrementNumberOfSessions();
@@ -69,7 +70,20 @@ namespace profileSessionManager {
     }
 
     void ProfileSessionManager::endSession(string username) {
-        this->users[username].decrementNumberOfSessions();
+
+        if (this->users.find(username) == this->users.end()) { return; }
+
+        int numberOfSessions = this->users[username].getNumberOfSessions();
+
+        if ( numberOfSessions == 2) {
+            cout << "number of sessions of user is 2" << endl;
+            this->users[username].decrementNumberOfSessions();
+        } else if(numberOfSessions == 1) {
+            cout << "number of sessions of user is 1" << endl;
+            this->users[username].stopListeningForNotifications();
+            this->users[username].decrementNumberOfSessions();
+        }
+
     }
 
     void ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {

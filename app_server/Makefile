@@ -7,7 +7,8 @@ build_server:
 	src/utils/StringExtensions.cpp \
 	src/FileManager.cpp \
 	../Common/src/Notification.cpp \
-	src/NotificationManager.cpp
+	src/NotificationManager.cpp \
+	src/utils/ListExtensions.cpp
 
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o -lpthread
