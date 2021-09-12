@@ -10,6 +10,7 @@
 
 using namespace std;
 using namespace notification;
+using namespace profileSessionManager;
 
 namespace notifManager {
 
@@ -43,8 +44,22 @@ namespace notifManager {
         }
     }
 
-    void NotificationManager::newNotificationSentBy(string username, Notification notification) {
+    void NotificationManager::newNotificationSentBy(string username, string notification) {
+        // Criar objeto notification (id, pendingReaders)
         //ProfileSessionManager::newNotificationSentBy(username, notification.getID());
+    }
+
+    int NotificationManager::getPendingReaders(string username) {
+        ProfileSessionManager profSessionManager;
+        UserInformation userWhoSentMessage = profSessionManager.getUserByUsername(username);
+        list<string> followerNames = userWhoSentMessage.getFollowers();
+        int pendingReaders = 0;
+        for(string followerName : followerNames) {
+            //UserInformation follower = profSessionManager.getUserByUsername(followerName);
+            //int nSessions = follower.getNumberOfSessions();
+            pendingReaders += 1;
+        }
+        return pendingReaders;
     }
 }
 

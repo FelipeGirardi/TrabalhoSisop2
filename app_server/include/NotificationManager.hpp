@@ -20,6 +20,8 @@ namespace notifManager {
 
     private:
         unordered_map <string, Notification> notifications; // <notification ID> : <notification object>
+
+        int getPendingReaders(string username);
     public:
         /* Initializers */
         NotificationManager();
@@ -43,10 +45,10 @@ namespace notifManager {
 
         /*
          * Method called by communicator thread when username sends
-         * a new notification to its followers
+         * a new notification to its followers. Creates notification object
          *
          */
-        void newNotificationSentBy(string username, Notification notification);
+        void newNotificationSentBy(string username, string notification);
     };
 }
 
