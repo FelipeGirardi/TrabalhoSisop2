@@ -17,7 +17,7 @@ all: build-directories MainTest.o FileManager.o NotificationManager.o profile_se
 	g++ -o $(BIN_DIR)/serverApp $(OBJ_DIR)/*.o $(COMMON_OBJ_DIR)/*.o -lpthread
 
 ###
-# Output files
+# Object files
 ###
 
 MainTest.o: MainTest.cpp
