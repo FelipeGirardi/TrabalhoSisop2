@@ -1,5 +1,4 @@
-#ifndef _COMMUNICATION_
-#define _COMMUNICATION_
+#pragma once
 
 typedef struct __packet {
     uint16_t type;          //Tipo do pacote (p.ex. DATA | CMD)

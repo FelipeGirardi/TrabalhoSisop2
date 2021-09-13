@@ -17,7 +17,9 @@
 // profile_list *profiles;
 // void signalHandler(int);
 
-int main(int argc, char *argv[])
+#define PORT 4000
+
+int main(int argc, char* argv[])
 {
 	int sockfd, option = 1;
 	struct sockaddr_in serv_addr;
@@ -49,29 +51,29 @@ int main(int argc, char *argv[])
     // *******************
 
 	listen(sockfd, 5);
-	
+
 	clilen = sizeof(struct sockaddr_in);
-	if ((newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen)) == -1) 
+	if ((newsockfd = accept(sockfd, (struct sockaddr*)&cli_addr, &clilen)) == -1)
 		printf("ERROR on accept");
-	
-	memset (&pkt, 0, sizeof (pkt));
-	
+
+	memset(&pkt, 0, sizeof(pkt));
+
 	/* read from the socket */
 	n = read(newsockfd, &pkt, sizeof(pkt));
-	if (n < 0) 
+	if (n < 0)
 		printf("ERROR reading from socket");
 	printf("type: %d\n", pkt.type);
 	printf("seqn: %d\n", pkt.seqn);
 	printf("length: %d\n", pkt.length);
 	printf("timestamp: %d\n", pkt.timestamp);
 	printf("payload: %s\n", pkt._payload);
-	
-	/* write in the socket */ 
-	n = write(newsockfd,"I got your message", 18);
-	if (n < 0) 
+
+	/* write in the socket */
+	n = write(newsockfd, "I got your message", 18);
+	if (n < 0)
 		printf("ERROR writing to socket");
 
 	close(newsockfd);
 	close(sockfd);
-	return 0; 
+	return 0;
 }

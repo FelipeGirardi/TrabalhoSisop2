@@ -3,8 +3,8 @@
 //
 
 #include "../include/NotificationManager.hpp"
+#include "../../common/include/Notification.hpp"
 #include "../include/profile_session_manager.hpp"
-#include "../../Common/include/Notification.hpp"
 #include <unordered_map>
 #include <string>
 

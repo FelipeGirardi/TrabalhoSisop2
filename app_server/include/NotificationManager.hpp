@@ -6,7 +6,7 @@
 #define NOTIFICATIONMANAGER_HPP
 
 #include "user_information.hpp"
-#include "../../Common/include/Notification.hpp"
+#include "../../common/include/Notification.hpp"
 #include <unordered_map>
 #include <string>
 
@@ -14,9 +14,7 @@ using namespace std;
 using namespace userInformation;
 using namespace notification;
 
-namespace notifManager {
-
-    class NotificationManager {
+class NotificationManager {
 
     private:
         unordered_map <string, Notification> notifications; // <notification ID> : <notification object>
@@ -49,8 +47,7 @@ namespace notifManager {
          *
          */
         void newNotificationSentBy(string username, string notification);
-    };
-}
+};
 
 
 #endif //NOTIFICATIONMANAGER_HPP
