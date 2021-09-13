@@ -6,7 +6,7 @@
 #define NOTIFICATIONMANAGER_HPP
 
 #include "user_information.hpp"
-#include "../../common/include/Notification.hpp"
+#include "../../Common/include/Notification.hpp"
 #include <unordered_map>
 #include <string>
 

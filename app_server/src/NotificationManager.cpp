@@ -3,7 +3,7 @@
 //
 
 #include "../include/NotificationManager.hpp"
-#include "../../common/include/Notification.hpp"
+#include "../../Common/include/Notification.hpp"
 #include "../include/profile_session_manager.hpp"
 #include <unordered_map>
 #include <string>
@@ -11,8 +11,6 @@
 using namespace std;
 using namespace notification;
 using namespace profileSessionManager;
-
-namespace notifManager {
 
     NotificationManager::NotificationManager() {}
 
@@ -61,5 +59,4 @@ namespace notifManager {
         }
         return pendingReaders;
     }
-}
 

@@ -13,15 +13,12 @@ OBJ_DIR = out
 BIN_DIR = bin
 COMMON_OBJ_DIR = ../common/$(OBJ_DIR)
 
-all: build-directories MainTest.o FileManager.o NotificationManager.o profile_session_manager.o user_information.o utils/StringExtensions.o
+all: build-directories FileManager.o NotificationManager.o CommunicationManager.o profile_session_manager.o user_information.o tcp_server.o utils/StringExtensions.o
 	g++ -o $(BIN_DIR)/serverApp $(OBJ_DIR)/*.o $(COMMON_OBJ_DIR)/*.o -lpthread
 
 ###
 # Object files
 ###
-
-MainTest.o: MainTest.cpp
-	g++ -std=c++11 -o $(OBJ_DIR)/MainTest.o -c MainTest.cpp
 
 FileManager.o: $(SRC_DIR)/FileManager.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/FileManager.o -c $(SRC_DIR)/FileManager.cpp
@@ -32,11 +29,14 @@ NotificationManager.o: $(SRC_DIR)/NotificationManager.cpp
 profile_session_manager.o: $(SRC_DIR)/profile_session_manager.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/profile_session_manager.o -c $(SRC_DIR)/profile_session_manager.cpp
 
-tcp_server.o: $(SRC_DIR)/tcp_server.cpp
-	g++ -std=c++11 -o $(OBJ_DIR)/tcp_server.o -c $(SRC_DIR)/tcp_server.cpp
+CommunicationManager.o:
+	g++ -std=c++11 -o $(OBJ_DIR)/CommunicationManager.o -c $(SRC_DIR)/CommunicationManager.cpp
 
 user_information.o:
 	g++ -std=c++11 -o $(OBJ_DIR)/user_information.o -c $(SRC_DIR)/user_information.cpp
+
+tcp_server.o: $(SRC_DIR)/tcp_server.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/tcp_server.o -c $(SRC_DIR)/tcp_server.cpp
 
 utils/StringExtensions.o:
 	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/utils/StringExtensions.cpp
