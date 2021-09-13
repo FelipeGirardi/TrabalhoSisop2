@@ -2,7 +2,7 @@
 #define PROFILE_SESSION_MANAGER_HPP
 
 #include "user_information.hpp"
-#include "../../Common/include/Notification.hpp"
+#include "../../common/include/Notification.hpp"
 
 #include <unordered_map>
 #include <string>
@@ -16,17 +16,17 @@ namespace profileSessionManager {
 
     class ProfileSessionManager {
     private:
-        unordered_map<string,UserInformation> users; // <username> : <user info object>
+        unordered_map<string, UserInformation> users; // <username> : <user info object>
     public:
         /* Initializers */
         ProfileSessionManager();
         ProfileSessionManager(unordered_map<string, UserInformation> users);
 
         /* Setters */
-        void setUsers(unordered_map<string,UserInformation> users);
+        void setUsers(unordered_map<string, UserInformation> users);
 
         /* Getters */
-        unordered_map<string,UserInformation> getUsers();
+        unordered_map<string, UserInformation> getUsers();
         UserInformation getUserByUsername(string username);
 
         /* Others */
@@ -40,7 +40,7 @@ namespace profileSessionManager {
          * @Param username: the user who sent the notification
          * @Param notificationID: the ID of notification to be sent to all followers of `username`
          */
-         static void newNotificationSentBy(string username, string notificationID);
+        static void newNotificationSentBy(string username, string notificationID);
 
         /*
         * Method called by Communication Manager

@@ -1,8 +1,7 @@
+#pragma once
+
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifndef _NOTIFICATIONS_H
-#define _NOTIFICATIONS_H
 
 //  STRUCTS
 typedef struct __notification {

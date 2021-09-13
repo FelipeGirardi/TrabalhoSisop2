@@ -3,7 +3,7 @@
 //
 
 #include "../include/NotificationManager.hpp"
-#include "../../Common/include/Notification.hpp"
+#include "../../common/include/Notification.hpp"
 #include <unordered_map>
 #include <string>
 
@@ -18,7 +18,7 @@ void NotificationManager::setNotifications(unordered_map<string, Notification> n
     this->notifications = notifications;
 }
 
-unordered_map<string,Notification> NotificationManager::getNotifications() {
+unordered_map<string, Notification> NotificationManager::getNotifications() {
     return this->notifications;
 }
 

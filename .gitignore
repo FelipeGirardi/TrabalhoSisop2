@@ -74,8 +74,14 @@ Temporary Items
 # .nfs files are created when an open file is removed but is still being accessed
 .nfs*
 
-##### Idea
+# Idea
 .idea/*
 
+# VS Code
+.vscode/*
+!.vscode/c_cpp_properties.json
+
 ##### Build
-/app_server/build/
+*/out/
+*/bin/
+*/build/
