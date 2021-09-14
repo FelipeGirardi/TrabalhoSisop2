@@ -27,7 +27,7 @@ unordered_map <string, UserInformation> FileManager::getUsersFromFile() {
     {
         while ( getline (myfile,line) )
         {
-            UserInformation newUserInfo;
+            //UserInformation newUserInfo;
             vector<string> splitedString = stringParser.split(line, this->delimiter);
 
             if (splitedString.size() == 3) {
@@ -40,10 +40,12 @@ unordered_map <string, UserInformation> FileManager::getUsersFromFile() {
                                                                   this->arrayDelimiter);
                 list<string> notificationsList(notifications.begin(), notifications.end());
 
-                newUserInfo.setNumberOfSessions(0);
-                newUserInfo.setFollowers(followersList);
-                newUserInfo.setNotifications(notificationsList);
-                users[username] = newUserInfo;
+//                newUserInfo.username = username;
+//                newUserInfo.setNumberOfSessions(0);
+//                newUserInfo.setFollowers(followersList);
+//                newUserInfo.setNotifications(notificationsList);
+
+                users[username] = UserInformation(username, notificationsList, followersList);
             } else {
                 cout << "Invalid file line";
             }

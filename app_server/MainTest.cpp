@@ -25,23 +25,14 @@ int main() {
 
     cout << "MAIN" << endl;
 
-    sessionManager.createNewSession("ufrgs");
-    sessionManager.createNewSession("laura");
-    sessionManager.addNewFollowerToUser("laura", "ufrgs");
+    FileManager fileManager;
+    users = fileManager.getUsersFromFile();
+    sessionManager.setUsers(users);
 
-    sleep(5);
-    sessionManager.endSession("laura");
-    sleep(5);
+    sessionManager.createNewSession("@joana");
+    sessionManager.createNewSession("@moritz");
+    sessionManager.newNotificationSentBy("@moritz", "6");
 
-    int i = 1;
-    while (i < 4) {
-
-        sleep(1);
-        sessionManager.newNotificationSentBy("ufrgs", to_string(i));
-        i++;
-    }
-    sleep(7);
-    sessionManager.createNewSession("laura");
     pthread_exit(0);
     return 0;
 }

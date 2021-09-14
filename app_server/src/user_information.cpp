@@ -32,17 +32,13 @@ namespace userInformation {
     }
 
     UserInformation::UserInformation(string username, list<string> pendingNotifications, list <string> followers) {
-	cout << "third initializer" << endl;
+	    cout << "third initializer" << endl;
         this->username = username;
-        //for (auto v : pendingNotifications) {
-            this->pendingNotifications.push_back(pendingNotifications.front());
-        //}
-        for (auto v : this->pendingNotifications) {
-            cout << v << " ";
-        }
+        this->pendingNotifications = pendingNotifications;
         this->followers = followers;
         this->numberOfSessions = 0;
         sem_init(&(this->freeCritialSession), 0, 1);
+        cout << "this user has" << pendingNotifications.size()  << "pending notifications" << endl;
         sem_init(&(this->hasItems), 0, pendingNotifications.size());
     }
 
@@ -50,7 +46,6 @@ namespace userInformation {
     {
         cout << "destructing" << this->username << endl;
     }
-
 
     void UserInformation::addNewFollower(string follower) {
         this->followers.push_back(follower);
@@ -78,6 +73,11 @@ namespace userInformation {
 
     string UserInformation::toString() {
         string fullString;
+
+        fullString += "User: ";
+        fullString += this->username;
+        fullString += '\n';
+
         fullString += "Followers:\n";
         for (string follower : this->followers) {
             fullString += follower + " ";
