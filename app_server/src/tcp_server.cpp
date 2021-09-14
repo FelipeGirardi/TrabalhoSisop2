@@ -35,11 +35,13 @@ void closeAppHandler(int n_signal);
 
 int main(int argc, char* argv[])
 {
+    cout << "** Primeiro print **\n";
 	int sockfd, option = 1;
 	struct sockaddr_in serv_addr;
 
     setbuf(stdout, NULL);  // zera buffer do stdout
 
+    cout << "** Vai criar socket **\n";
     // cria socket TCP verificando erro
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         cout << "** Erro abrindo socket **\n";
@@ -53,6 +55,7 @@ int main(int argc, char* argv[])
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     bzero(&(serv_addr.sin_zero), 8);
 
+    cout << "** Vai fazer bind **\n";
     // faz o bind
     if (::bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0)
         cout << "** Erro no bind **\n";
@@ -63,9 +66,10 @@ int main(int argc, char* argv[])
     ClientAuthData client_auth_data;
     client_auth_data.users = users_retrieval;
 
-    // seta signal de fechar app
+    // seta signal de fechar app do servidor
     signal(SIGINT, closeAppHandler);
 
+    cout << "** Vai fazer listen **\n";
     // loop do listen de conexões
     if (listen(sockfd, 5) == 0) {
         int client_sockfd, notif_sockfd; // usar notif_sockfd se precisar
@@ -73,6 +77,7 @@ int main(int argc, char* argv[])
             // aceita conexão do cliente
             struct sockaddr_in client_address;
             socklen_t client_length = sizeof(struct sockaddr_in);
+            cout << "** Vai fazer accept **\n";
             if ((client_sockfd = accept(sockfd, (struct sockaddr *) &client_address, &client_length)) == -1) {
                 cout << "** Erro aceitando conexao do cliente **\n";
                 continue;
@@ -88,7 +93,10 @@ int main(int argc, char* argv[])
             pthread_t auth_thread;
             client_auth_data.client_sockfd = client_sockfd;
             int *result;
-            pthread_create(&auth_thread, NULL, &auth_client_func, &client_auth_data);
+            cout << "** Vai criar thread auth **\n";
+            ClientAuthData *clData = (ClientAuthData*) malloc(sizeof (ClientAuthData));
+            *clData = client_auth_data;
+            pthread_create(&auth_thread, NULL, &auth_client_func, (void*)clData);
             pthread_join(auth_thread, (void **) &result);
 
             // TO DO: Checa autenticação
@@ -99,7 +107,8 @@ int main(int argc, char* argv[])
                 // Criando thread para interação com usuário
                 pthread_t client_thread;
                 client_auth_data.userID = *result;
-                pthread_create(&client_thread, NULL, &client_thread_func, &client_auth_data);
+                cout << "** Vai criar thread cliente **\n";
+                pthread_create(&client_thread, NULL, &client_thread_func, client_auth_data);
 
 //            }
 
@@ -173,6 +182,7 @@ void *client_thread_func(void *data) {
 //    pthread_create(&n_thread, NULL, &notification_thread, &cur_session);
 
     // inicia leitura de comandos do cliente
+    cout << "** Vai iniciar leitura de comandos **\n";
     while(strcmp(buffer,"exit\n") != 0) {
         bzero(buffer, BUFFER_SIZE);
         bufferInt = read(cl_sockfd, buffer, BUFFER_SIZE);
@@ -207,6 +217,7 @@ void *client_thread_func(void *data) {
         package._payload = response;
         package.length = strlen(response);
 
+        cout << "** Envia pacote **\n";
         // Envia pacote da mensagem (TO DO: decidir local da função)
 //        if (send_packet(cl_sockfd, &package) < 0) {
 //            break;
@@ -220,6 +231,7 @@ void *client_thread_func(void *data) {
 //    cur_session->isopen = false;
 //    pthread_cancel(n_thread);
 //    close(sockfd_n);
+    cout << "** Fecha socket **\n";
     close(cl_sockfd);
 //    cout << cur_user->username << " disconnected\n";
 
