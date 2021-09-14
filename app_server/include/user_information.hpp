@@ -39,8 +39,7 @@ namespace userInformation {
             string username;
             //TODO: maybe make this private and add some setters and getters
             int numberOfSessions;
-            pthread_t tid[10];
-            //pthread_t tid, consumerTid;
+            pthread_t consumerTid;
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             sem_t freeCritialSession, hasItems;
             /* Initializers */

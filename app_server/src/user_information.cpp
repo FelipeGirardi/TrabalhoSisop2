@@ -108,7 +108,7 @@ namespace userInformation {
     }
     void UserInformation::stopListeningForNotifications() {
         cout << "stop listening for notifications" << endl;
-        pthread_cancel(this->tid[0]);
+        pthread_cancel(this->consumerTid);
     }
 
     void UserInformation::produceNewNotification(string notificationID) {
@@ -120,33 +120,35 @@ namespace userInformation {
         struct arg_struct *args = (struct arg_struct *) malloc(sizeof(struct arg_struct));
         *args = my_args;
 
-//        pthread_t *tid = (pthread_t *) malloc(sizeof (pthread_t));
-//        *tid = (unsigned long int) rand();
-//        cout << "Producer ID" << (unsigned long int)  *tid << endl;
+        pthread_t *tid = (pthread_t *) malloc(sizeof (pthread_t));
+        *tid = (unsigned long int) rand();
+        cout << "Producer ID" << (unsigned long int) *tid << endl;
 
-        if (pthread_create(&(this->tid[stoi(notificationID)]), NULL, this->producer, (void *) args)) {
+        if (pthread_create(tid, NULL, this->producer, (void *) args)) {
             cout << "not possible to create producer thread" << endl;
             //free(args);
         }
-        //free(tid);
+
+        // será que é assim?
+        pthread_join(*tid, NULL);
+        free(tid);
     }
 
     void UserInformation::startListeningForNotifications() {
 
+        //pthread_t *tid = (pthread_t *) malloc(sizeof (pthread_t));
+        //*tid = (unsigned long int) rand();
+        //this->consumerTid = *tid;
 
+        //this->tid[0] = (unsigned long int) rand();
+        cout << "creating thread " << this->consumerTid << endl;
 
-//        pthread_t *tid = (pthread_t *) malloc(sizeof (pthread_t));
-//        *tid = (unsigned long int) rand();
-//        this->consumerTid = *tid;
-
-
-        this->tid[0] = (unsigned long int) rand();
-        cout << "creating thread " << this->tid[0] << endl;
-
-        if (pthread_create(&(this->tid[0]), NULL, this->consumer, (void *) this)) {
+        if (pthread_create(&(this->consumerTid), NULL, this->consumer, (void *) this)) {
             cout << "not possible to create consumer thread" << endl;
             //free(args);
         }
+        //pthread_join(*tid, NULL);
+        //free(tid);
     }
 
     void * UserInformation::producer(void *arg) {

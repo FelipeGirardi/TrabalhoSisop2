@@ -31,7 +31,19 @@ int main() {
 
     sessionManager.createNewSession("@joana");
     sessionManager.createNewSession("@moritz");
-    sessionManager.newNotificationSentBy("@moritz", "6");
+    sessionManager.newNotificationSentBy("@moritz", "10");
+
+    sleep(2);
+
+    sessionManager.endSession("@joana");
+
+    sleep(2);
+
+    sessionManager.newNotificationSentBy("@moritz", "22");
+
+    sleep(2);
+
+    sessionManager.createNewSession("@joana");
 
     pthread_exit(0);
     return 0;
