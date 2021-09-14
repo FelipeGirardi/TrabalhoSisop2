@@ -16,33 +16,37 @@ using namespace notification;
 
 class NotificationManager {
 
-private:
-    unordered_map<string,Notification> notifications; // <notification ID> : <notification object>
-public:
-    /* Initializers */
-    NotificationManager();
+    private:
+        unordered_map <string, Notification> notifications; // <notification ID> : <notification object>
 
-    /* Getters */
-    Notification getNotificationByID(string notificationID);
-    unordered_map<string,Notification> getNotifications();
+        int getPendingReaders(string username);
+    public:
+        /* Initializers */
+        NotificationManager();
+        NotificationManager(unordered_map <string, Notification> notifications);
 
-    /* Setters */
-    void setNotifications(unordered_map<string,Notification> notifications);
+        /* Getters */
+        Notification getNotificationByID(string notificationID);
 
-    /* Others */
-    /*
-     * Method called by consumer thread (Profile Session Manager)
-     * when new notification should be sent to user
-     *
-     */
-    static void sendNotificationTo(string username, string notificationID);
+        unordered_map <string, Notification> getNotifications();
 
-    /*
-     * Method called by communicator thread when username sends
-     * a new notification to its followers
-     *
-     */
-    static void newNotificationSentBy(string username, Notification notification);
+        /* Setters */
+        void setNotifications(unordered_map <string, Notification> notifications);
+
+        /* Others */
+        /*
+         * Method called by consumer thread (Profile Session Manager)
+         * when new notification should be sent to user
+         *
+         */
+        void sendNotificationTo(string username, string notificationID);
+
+        /*
+         * Method called by communicator thread when username sends
+         * a new notification to its followers. Creates notification object
+         *
+         */
+        void newNotificationSentBy(string username, string notification);
 };
 
 

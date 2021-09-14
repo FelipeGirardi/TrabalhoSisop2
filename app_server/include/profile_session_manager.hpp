@@ -16,17 +16,17 @@ namespace profileSessionManager {
 
     class ProfileSessionManager {
     private:
-        unordered_map<string,UserInformation> users; // <username> : <user info object>
+        unordered_map<string, UserInformation> users; // <username> : <user info object>
     public:
         /* Initializers */
         ProfileSessionManager();
         ProfileSessionManager(unordered_map<string, UserInformation> users);
 
         /* Setters */
-        void setUsers(unordered_map<string,UserInformation> users);
+        void setUsers(unordered_map<string, UserInformation> users);
 
         /* Getters */
-        unordered_map<string,UserInformation> getUsers();
+        unordered_map<string, UserInformation> getUsers();
         UserInformation getUserByUsername(string username);
 
         /* Others */
