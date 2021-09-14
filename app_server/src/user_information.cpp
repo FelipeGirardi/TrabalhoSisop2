@@ -128,8 +128,8 @@ namespace userInformation {
         }
 
         // será que é assim?
-        pthread_join(*tid, NULL);
-        free(tid);
+        //pthread_join(*tid, NULL);
+        //free(tid);
     }
 
     void UserInformation::startListeningForNotifications() {
@@ -176,9 +176,9 @@ namespace userInformation {
         while(_this->numberOfSessions > 0) {
             cout << "dentro do while" << endl;
             sleep(rand()%5);
-            sem_wait(&((*_this).hasItems));
+            sem_wait(&(_this->hasItems));
             cout << "has items" << endl;
-            sem_wait(&((*_this).freeCritialSession));
+            sem_wait(&(_this->freeCritialSession));
             cout << "SC is free" << endl;
 
             // this if shouldn't be needed, but better safe than sorry

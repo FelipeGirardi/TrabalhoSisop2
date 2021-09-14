@@ -12,38 +12,47 @@
 #include "include/FileManager.hpp"
 #include "../Common/include/Notification.hpp"
 #include "include/NotificationManager.hpp"
+#include "include/GlobalManager.hpp"
 
 using namespace std;
 using namespace profileSessionManager;
 using namespace userInformation;
 using namespace notification;
 
-unordered_map<string,UserInformation> users;
 ProfileSessionManager sessionManager;
+NotificationManager notificationManager;
+GlobalManager globalManager;
+FileManager fileManager;
 
 int main() {
 
     cout << "MAIN" << endl;
 
-    FileManager fileManager;
-    users = fileManager.getUsersFromFile();
-    sessionManager.setUsers(users);
+    unordered_map<string,UserInformation> users = fileManager.getUsersFromFile();
 
-    sessionManager.createNewSession("@joana");
-    sessionManager.createNewSession("@moritz");
-    sessionManager.newNotificationSentBy("@moritz", "10");
+    GlobalManager::sessionManager = sessionManager;
+    GlobalManager::notifManager = notificationManager;
+    GlobalManager::sessionManager.setUsers(users);
 
-    sleep(2);
 
-    sessionManager.endSession("@joana");
-
-    sleep(2);
-
-    sessionManager.newNotificationSentBy("@moritz", "22");
+    GlobalManager::sessionManager.createNewSession("@joana");
+    GlobalManager::sessionManager.createNewSession("@moritz");
+    //GlobalManager::sessionManager.newNotificationSentBy("@moritz", "10");
 
     sleep(2);
 
-    sessionManager.createNewSession("@joana");
+    GlobalManager::sessionManager.endSession("@joana");
+
+    sleep(2);
+
+    //GlobalManager::sessionManager.newNotificationSentBy("@moritz", "22");
+   // sessionManager.addNewFollowerToUser("@moritz", "@joana");
+
+    sleep(2);
+
+    GlobalManager::sessionManager.createNewSession("@joana");
+    sleep(2);
+    GlobalManager::sessionManager.newNotificationSentBy("@joana", "44");
 
     pthread_exit(0);
     return 0;
