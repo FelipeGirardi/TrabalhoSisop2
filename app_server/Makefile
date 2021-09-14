@@ -18,14 +18,15 @@ COMMON_OBJ_DIR = ../common/$(OBJ_DIR)
 #	g++ -o $(BIN_DIR)/serverApp $(OBJ_DIR)/*.o $(COMMON_OBJ_DIR)/*.o -lpthread
 
 build_server:
-	g++ -std=c++11 -c MainTest.cpp src/profile_session_manager.cpp \
+	g++ -std=c++11 -c src/tcp_server.cpp src/profile_session_manager.cpp \
 	src/user_information.cpp \
 	src/utils/StringExtensions.cpp \
 	src/FileManager.cpp \
 	../Common/src/Notification.cpp \
 	src/NotificationManager.cpp \
 	src/utils/ListExtensions.cpp \
-	src/GlobalManager.cpp
+	src/GlobalManager.cpp \
+	src/Session.cpp
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o -lpthread
 

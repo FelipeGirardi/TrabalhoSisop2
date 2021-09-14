@@ -6,6 +6,8 @@
 #include <list>
 #include <pthread.h>
 
+#include "Session.hpp"
+
 using namespace std;
 using std::string;
 
@@ -14,8 +16,6 @@ namespace userInformation {
     class UserInformation {
 
         private:
-
-
 
             list<string> followers; // names of followers
 
@@ -36,12 +36,14 @@ namespace userInformation {
 
         public:
 
-            string username;
             //TODO: maybe make this private and add some setters and getters
+            string username;
             int numberOfSessions;
             pthread_t consumerTid;
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             sem_t freeCritialSession, hasItems;
+            list<Session> sessions;
+
             /* Initializers */
             UserInformation();
             UserInformation(string username);

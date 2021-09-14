@@ -1,5 +1,5 @@
-#ifndef TRABALHOSISOP2_COMMUNICATIONMANAGER_H
-#define TRABALHOSISOP2_COMMUNICATIONMANAGER_H
+#ifndef COMMUNICATIONMANAGER_H
+#define COMMUNICATIONMANAGER_H
 
 #define DATA        1
 #define CMD         2
@@ -11,8 +11,8 @@ namespace communicationManager {
         uint16_t type;          // Tipo do pacote
         uint16_t seqn;          // Número de sequência
         uint16_t length;        // Comprimento
-        time_t timestamp;       // Timestamp
-        char* _payload;         // Dados do pacote
+        uint16_t timestamp;       // Timestamp
+        char _payload[BUFFER_SIZE];         // Dados do pacote
     };
 
     class CommunicationManager {
@@ -26,4 +26,4 @@ namespace communicationManager {
 }
 
 
-#endif //TRABALHOSISOP2_COMMUNICATIONMANAGER_H
+#endif //COMMUNICATIONMANAGER_H
