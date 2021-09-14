@@ -49,33 +49,35 @@ int main(int argc, char *argv[])
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
         printf("ERROR connecting\n");
 
-    printf("Enter the message: ");
-    bzero(pkt._payload, sizeof(pkt._payload));
-    fgets(pkt._payload, sizeof(pkt._payload), stdin);
+    while(1) {
+        printf("Enter the message: ");
+        bzero(pkt._payload, sizeof(pkt._payload));
+        fgets(pkt._payload, sizeof(pkt._payload), stdin);
 
-    pkt.type = 1;
-    pkt.seqn = 2;
-    pkt.length = strlen(pkt._payload);
-    pkt.timestamp = 0;
-    printf("payload %s\n", pkt._payload);
+        pkt.type = 1;
+        pkt.seqn = 2;
+        pkt.length = strlen(pkt._payload);
+        pkt.timestamp = 0;
+        printf("payload %s\n", pkt._payload);
 
-    /* write in the socket */
-    n = write(sockfd, &pkt, sizeof(pkt));
-    if (n < 0)
-        printf("ERROR writing to socket\n");
+        /* write in the socket */
+        n = write(sockfd, &pkt, sizeof(pkt));
+        if (n < 0)
+            printf("ERROR writing to socket\n");
 
-    bzero(buffer,256);
+        bzero(buffer,256);
 
-    /* read from the socket */
-    packet pktResponse;
-    int bufferInt;
-    bufferInt = read(sockfd, &pktResponse, sizeof(packet));
-    //n = read(sockfd, buffer, 256);
-    strcpy(buffer, pktResponse._payload);
-    if (bufferInt < 0)
-        printf("ERROR reading from socket\n");
+        /* read from the socket */
+        packet pktResponse;
+        int bufferInt;
+        bufferInt = read(sockfd, &pktResponse, sizeof(packet));
+        //n = read(sockfd, buffer, 256);
+        strcpy(buffer, pktResponse._payload);
+        if (bufferInt < 0)
+            printf("ERROR reading from socket\n");
 
-    printf("BUFFER %s\n",buffer);
+        printf("BUFFER %s\n",buffer);
+    }
 
     close(sockfd);
     return 0;

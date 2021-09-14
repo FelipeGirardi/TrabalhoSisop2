@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "../include/utils/ListExtensions.hpp"
+#include "../include/GlobalManager.hpp"
 
 //TODO: move this from here
 struct arg_struct {
@@ -186,7 +187,7 @@ namespace userInformation {
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "consuming not with ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
-               // NotificationManager::sendNotificationTo(_this->username, consumedItem);
+                GlobalManager::notifManager.sendNotificationTo(_this->username, consumedItem);
             } else {
                 cout << "not possible to consume" << endl;
             }

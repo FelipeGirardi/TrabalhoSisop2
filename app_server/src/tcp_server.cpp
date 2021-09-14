@@ -18,6 +18,7 @@
 #include "../include/FileManager.hpp"
 #include "../include/CommunicationManager.hpp"
 #include "../include/ClientAuthData.hpp"
+#include "../include/GlobalManager.hpp"
 #define PORT 4000
 
 using namespace userInformation;
@@ -27,6 +28,8 @@ using namespace communicationManager;
 unordered_map<string, UserInformation> users;
 FileManager fileManager;
 ProfileSessionManager sessionManager;
+GlobalManager globalManager;
+NotificationManager notificationManager;
 
 int send_packet(int socket, Packet *package);
 void *auth_client_func(void *data);
@@ -37,6 +40,17 @@ void closeAppHandler(int n_signal);
 int main(int argc, char* argv[])
 {
     cout << "** Primeiro print **\n";
+
+
+    unordered_map<string,UserInformation> users = fileManager.getUsersFromFile();
+
+    GlobalManager::sessionManager = sessionManager;
+    GlobalManager::notifManager = notificationManager;
+    GlobalManager::sessionManager.setUsers(users);
+
+    GlobalManager::sessionManager.createNewSession("@moritz");
+
+
 	int sockfd, option = 1;
 	struct sockaddr_in serv_addr;
 
@@ -93,12 +107,15 @@ int main(int argc, char* argv[])
             // Cria thread da autenticação do cliente
 //            pthread_t auth_thread;
             client_auth_data.client_socket = client_sockfd;
+            client_auth_data.userID = "@joana"; //TODO tirar mock
+            GlobalManager::sessionManager.createNewSession("@joana");
 //            int *result;
 //            cout << "** Vai criar thread auth **\n";
             ClientAuthData *clData = (ClientAuthData*) malloc(sizeof (ClientAuthData));
             *clData = client_auth_data;
-            cout << "socket id cldata" << clData->client_socket;
-            cout << "socket id client_auth data" << client_auth_data.client_socket;
+
+            cout << "socket id cldata " << clData->client_socket;
+            cout << "socket id client_auth data " << client_auth_data.client_socket;
 //            pthread_create(&auth_thread, NULL, &auth_client_func, (void*)clData);
 //            pthread_join(auth_thread, (void **) &result);
             // TO DO: Checa autenticação
@@ -146,11 +163,9 @@ void *auth_client_func(void *data) {
 }
 
 void *client_thread_func(void *data) {
-    int client_socket, bufferInt, userID;  // sem notif_sockfd por enquanto
+    int client_socket, bufferInt;  // sem notif_sockfd por enquanto
     char buffer[BUFFER_SIZE];
-    //UserInformation *currentUser;	    // perfil do usuário da thread
     ClientAuthData *clientData = (ClientAuthData*) data;
-    // session_t *currentSession;
     setbuf(stdout, NULL);
 
     // Extração dos argumentos
@@ -221,10 +236,12 @@ void *client_thread_func(void *data) {
         char response[BUFFER_SIZE] = " ";
         if(strcmp(cmd,"FOLLOW") == 0) {
             //follow(profiles, cur_user, data, response);
+            GlobalManager::sessionManager.addNewFollowerToUser(clientData->userID, data);
             cout << "recebeu follow" << endl;
             strcpy(response, "** bombou follow **");
         } else if(strcmp(cmd,"SEND") == 0) {
             //new_notification(profiles, cur_user, data, response);
+            GlobalManager::notifManager.newNotificationSentBy(clientData->userID, data);
             cout << "recebeu send" << endl;
             strcpy(response, "** bombou send");
         } else {
@@ -243,10 +260,11 @@ void *client_thread_func(void *data) {
 
         cout << "** Envia pacote **\n";
         // Envia pacote da mensagem (TO DO: decidir local da função)
-        if (send_packet(client_socket, &package) < 0) {
-            break;
-        }
-        bzero(response, 256);
+        send_packet(client_socket, &package);
+        cout << "oi1" <<  endl;
+        bzero(response, BUFFER_SIZE);
+        cout << "oi" <<  endl;
+
     }
 
     //TODO: verificar fechamento da thread

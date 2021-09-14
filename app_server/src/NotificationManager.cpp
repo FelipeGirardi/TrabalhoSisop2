@@ -5,6 +5,7 @@
 #include "../include/NotificationManager.hpp"
 #include "../../Common/include/Notification.hpp"
 #include "../include/profile_session_manager.hpp"
+#include "../include/GlobalManager.hpp"
 #include <unordered_map>
 #include <string>
 
@@ -43,8 +44,8 @@ using namespace profileSessionManager;
     }
 
     void NotificationManager::newNotificationSentBy(string username, string notification) {
-        // Criar objeto notification (id, pendingReaders)
-        //ProfileSessionManager::newNotificationSentBy(username, notification.getID());
+        //TODO Criar objeto notification (id, pendingReaders)
+        GlobalManager::sessionManager.newNotificationSentBy(username, notification);
     }
 
     int NotificationManager::getPendingReaders(string username) {

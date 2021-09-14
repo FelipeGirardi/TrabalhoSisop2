@@ -41,6 +41,7 @@ namespace profileSessionManager {
 
     void ProfileSessionManager::newNotificationSentBy(string username, string notificationID) {
 
+        cout << "newNotificationSentBy" << username << " " << " " << endl;
         list<string> followers = this->users[username].getFollowers();
         for (string follower : followers) {
             if (this->users.find(follower) == this->users.end()) {continue;}
@@ -87,6 +88,7 @@ namespace profileSessionManager {
     }
 
     void ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
+        cout << "addNewFollowerToUser " << follower << " " << toBeFollowed << " " << endl;
         if (this->users.find(toBeFollowed) == this->users.end()) { return; }
         this->users[toBeFollowed].addNewFollower(follower);
     }
