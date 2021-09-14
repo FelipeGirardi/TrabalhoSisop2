@@ -16,13 +16,11 @@ struct arg_struct {
 namespace userInformation {
 
     UserInformation::UserInformation() {
-
-	cout << "first initializer" << endl;
-
+        cout << "first initializer" << endl;
     }
 
     UserInformation::UserInformation(string username) {
-	cout << "second initializer" << endl;
+	    cout << "second initializer" << endl;
         this->username = username;
         //this->pendingNotifications = {};
         this->numberOfSessions = 0;
@@ -136,19 +134,12 @@ namespace userInformation {
 
     void UserInformation::startListeningForNotifications() {
 
-        //pthread_t *tid = (pthread_t *) malloc(sizeof (pthread_t));
-        //*tid = (unsigned long int) rand();
-        //this->consumerTid = *tid;
-
-        //this->tid[0] = (unsigned long int) rand();
         cout << "creating thread " << this->consumerTid << endl;
 
         if (pthread_create(&(this->consumerTid), NULL, this->consumer, (void *) this)) {
             cout << "not possible to create consumer thread" << endl;
             //free(args);
         }
-        //pthread_join(*tid, NULL);
-        //free(tid);
     }
 
     void * UserInformation::producer(void *arg) {
@@ -182,7 +173,6 @@ namespace userInformation {
             cout << v << " ";
         }
         cout <<endl;
-
         while(_this->numberOfSessions > 0) {
             for (auto v : _this->pendingNotifications) {
                 cout << v << " ";
@@ -196,25 +186,15 @@ namespace userInformation {
 
             // this if shouldn't be needed, but better safe than sorry
             if (!_this->pendingNotifications.empty()) {
-                cout << "oi" << endl;
-                sleep(5);
-
-                cout << endl;
-                cout << "bbbbbbbbbb  " << _this->pendingNotifications.front() << endl;
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "consuming not with ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
-                if (!_this->pendingNotifications.empty()) {
-                    cout << "aaaaaa  " << _this->pendingNotifications.front() << endl;
-                }
                // NotificationManager::sendNotificationTo(_this->username, consumedItem);
             } else {
                 cout << "not possible to consume" << endl;
             }
-            cout << "b";
 
             sem_post(&(_this->freeCritialSession));
-            cout << "c";
 
         }
         cout << "ending consumer thread" << endl;
