@@ -174,9 +174,6 @@ namespace userInformation {
         }
         cout <<endl;
         while(_this->numberOfSessions > 0) {
-            for (auto v : _this->pendingNotifications) {
-                cout << v << " ";
-            }
             cout << "dentro do while" << endl;
             sleep(rand()%5);
             sem_wait(&((*_this).hasItems));
