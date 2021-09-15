@@ -174,14 +174,14 @@ int main(int argc, char* argv[])
 
 void *auth_client_func(void *data) {
     int sockfd;
-    AuthResult *result = (AuthResult *) malloc(sizeof (AuthResult));
+    AuthResult *result = new AuthResult;
     cout << "aaaa" << endl;
     ClientAuthData *authData = (ClientAuthData*) data;
     cout << "client socket auth data" << authData->client_socket;
     sockfd = authData->client_socket;
     AuthResult resultado = authenticate(sockfd);
     result->result = resultado.result;
-    result->username = resultado.username;
+    result->username.assign(resultado.username);
 
     if (result->result < 0) {
         cout << "\n** Erro na autenticacao **\n";
@@ -320,7 +320,9 @@ AuthResult authenticate(int clientSocket) {
     // Verificando existência do usuário
     Session newSession;
     newSession.commandSocket = clientSocket;
-    n = GlobalManager::sessionManager.createNewSession(buffer, newSession);
+    finalResult.username = buffer;
+    finalResult.username.pop_back();
+    n = GlobalManager::sessionManager.createNewSession(finalResult.username, newSession);
 
     // Criando pacote para enviar
     Packet package;
@@ -332,7 +334,6 @@ AuthResult authenticate(int clientSocket) {
     if (n == 1) {
         strcpy(package._payload, "authenticated");
         finalResult.result = 1;
-        finalResult.username = buffer;
         cout << "success logging user" << endl;
     } else {
         strcpy(package._payload, "** failed to authenticate **");
@@ -344,6 +345,8 @@ AuthResult authenticate(int clientSocket) {
     // Enviando resposta
     if (GlobalManager::commManager.send_packet(clientSocket, &package) < 0) {
         cout << "nao foi possivel enviar" <<endl;
+    } else {
+        cout << "enviado" << endl;
     }
 
     return finalResult;

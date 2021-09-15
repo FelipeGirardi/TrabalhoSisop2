@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
     bzero(buffer,256);
     printf("Enter the name: ");
     fgets(buffer, 256, stdin);
+
     n = write(sockfd, buffer, 256);
     if (n < 0) {
         printf("ERROR writing name to socket\n");

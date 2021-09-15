@@ -3,6 +3,7 @@
 #include <list>
 #include <pthread.h>
 #include "../include/profile_session_manager.hpp"
+#include "../include/GlobalManager.hpp"
 
 using namespace std;
 using namespace userInformation;
@@ -42,6 +43,10 @@ namespace profileSessionManager {
     void ProfileSessionManager::newNotificationSentBy(string username, string notificationID) {
 
         cout << "newNotificationSentBy " << username << " " << " " << endl;
+        cout << "users" << endl << endl;
+
+        GlobalManager::printItself();
+
         list<string> followers = this->users[username].getFollowers();
         cout << "followers size " << followers.size() << endl;
         for (string follower : followers) {
@@ -56,8 +61,15 @@ namespace profileSessionManager {
     // 0 = nao criou
     int ProfileSessionManager::createNewSession(string username, Session session) {
 
+        GlobalManager::printItself();
+
+        cout << "hey" << endl;
+        UserInformation aa = GlobalManager::sessionManager.getUsers()[username];
+        cout << aa.username << endl;
+        cout << "how" << endl;
         // check if user exists
-        if (this->users.find(username) == this->users.end()) {
+        if (GlobalManager::sessionManager.getUsers().find(username) ==
+        GlobalManager::sessionManager.getUsers().end()) {
             // user doesn't exist
             cout << "user doesnt exist" << endl;
             UserInformation newUserInfo = UserInformation(username);

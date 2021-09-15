@@ -46,6 +46,9 @@ using namespace profileSessionManager;
     }
 
     void NotificationManager::sendNotificationTo(string username, string notificationID) {
+
+        cout << "sendNotificationTo " << username << " " << notificationID << endl;
+
         if (this->notifications.find(notificationID) == this->notifications.end()) {
             cout << "not possible to send notification bc it doesn't exist" << endl;
             return;

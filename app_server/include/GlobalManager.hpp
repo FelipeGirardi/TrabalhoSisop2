@@ -17,6 +17,7 @@ public:
     static ProfileSessionManager sessionManager;
     static NotificationManager notifManager;
     static CommunicationManager commManager;
+    static void printItself();
     GlobalManager();
 
 };

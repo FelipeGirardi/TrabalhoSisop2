@@ -112,18 +112,21 @@ namespace userInformation {
 
     void UserInformation::produceNewNotification(string notificationID) {
 
-        struct arg_struct my_args;
-        my_args.userInformation = this;
-        my_args.notificationID = notificationID;
+        cout << "producing new notification" << endl;
 
-        struct arg_struct *args = (struct arg_struct *) malloc(sizeof(struct arg_struct));
-        *args = my_args;
+        cout << "malloc" << endl;
+        struct arg_struct *args = new struct arg_struct;
+        cout << "aaa" << endl;
+        args->userInformation = this;
+        cout << "bbb" << endl;
+        args->notificationID.assign(notificationID);
+        cout << "malloc tid" << endl;
+//        pthread_t tid = (pthread_t *) malloc(sizeof (pthread_t));
+//        *tid = (unsigned long int) rand();
+        pthread_t tid;
+        cout << "Producer ID" << (unsigned long int) tid << endl;
 
-        pthread_t *tid = (pthread_t *) malloc(sizeof (pthread_t));
-        *tid = (unsigned long int) rand();
-        cout << "Producer ID" << (unsigned long int) *tid << endl;
-
-        if (pthread_create(tid, NULL, this->producer, (void *) args)) {
+        if (pthread_create(&tid, NULL, this->producer, (void *) args)) {
             cout << "not possible to create producer thread" << endl;
             //free(args);
         }
@@ -131,6 +134,7 @@ namespace userInformation {
         // será que é assim?
         //pthread_join(*tid, NULL);
         //free(tid);
+
     }
 
     void UserInformation::startListeningForNotifications() {
@@ -187,6 +191,7 @@ namespace userInformation {
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "consuming not with ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
+                cout << "a" << endl;
                 GlobalManager::notifManager.sendNotificationTo(_this->username, consumedItem);
             } else {
                 cout << "not possible to consume" << endl;

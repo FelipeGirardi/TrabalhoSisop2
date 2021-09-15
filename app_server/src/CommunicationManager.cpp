@@ -8,6 +8,7 @@
 #include <time.h>
 #include <pthread.h>
 #include <errno.h>
+#include <iostream>
 #include <list>
 #include "../include/Session.hpp"
 #include "../include/CommunicationManager.hpp"
@@ -74,6 +75,7 @@ namespace communicationManager {
     }
 
     int CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet *package) {
+        cout << "sendPacketToSessions" << sessions.size() << endl;
         int returnValue = 0;
         for (Session session : sessions) {
             if (this->send_packet(session.commandSocket, package) >= 0) {
@@ -85,15 +87,19 @@ namespace communicationManager {
 
     int CommunicationManager::sendNotificationToSessions(list<Session> sessions, Notification notification) {
 
-        Packet *packet;
+        cout << "sendNotificationToSessions" << endl;
+        Packet *packet = new Packet;
         packet->length = 0;
         packet->seqn = 0;
         packet->timestamp = 0;
         packet->type = 0;
 
+        cout << "created packet" << endl;
         const char *cstr = notification.toString().c_str();
+        cout << "not to string" << notification.toString() << endl;
         strncpy(packet->_payload, cstr, BUFFER_SIZE);
 
+        cout << "gonna send payload = " << packet->_payload << endl;
         return sendPacketToSessions(sessions, packet);
 
     }
