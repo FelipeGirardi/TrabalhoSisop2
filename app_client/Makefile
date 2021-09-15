@@ -23,8 +23,8 @@ all: build-directories
 # Main object files
 ###
 
-ConcurrentCommandLine.o: $(SRC_DIR)/io/ConcurrentCommandLine.cpp
-	g++ -o $(OBJ_DIR)/ConcurrentCommandLine.o -c $(SRC_DIR)/io/ConcurrentCommandLine.cpp $(INCLUDE_PATH)
+ConcurrentCommandLine.o: $(SRC_DIR)/main/io/ConcurrentCommandLine.cpp
+	g++ -o $(OBJ_DIR)/ConcurrentCommandLine.o -c $(SRC_DIR)/main/io/ConcurrentCommandLine.cpp $(INCLUDE_PATH)
 
 ###
 # Test object files
