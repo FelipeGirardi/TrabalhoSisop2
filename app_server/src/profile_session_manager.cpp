@@ -41,9 +41,11 @@ namespace profileSessionManager {
 
     void ProfileSessionManager::newNotificationSentBy(string username, string notificationID) {
 
-        cout << "newNotificationSentBy" << username << " " << " " << endl;
+        cout << "newNotificationSentBy " << username << " " << " " << endl;
         list<string> followers = this->users[username].getFollowers();
+        cout << "followers size " << followers.size() << endl;
         for (string follower : followers) {
+            cout << "follower" << follower;
             if (this->users.find(follower) == this->users.end()) {continue;}
             this->users[follower].produceNewNotification(notificationID);
         }

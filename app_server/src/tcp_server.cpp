@@ -50,27 +50,28 @@ int main(int argc, char* argv[])
 {
     cout << "** Primeiro print **\n";
 
+    GlobalManager::sessionManager = sessionManager;
+    GlobalManager::notifManager = notificationManager;
+    GlobalManager::commManager = comunicationManager;
+
     users = fileManager.getUsersFromFile();
     notifications = fileManager.getNotificationsFromFile();
+    GlobalManager::sessionManager.setUsers(users);
+    GlobalManager::notifManager.setNotifications(notifications);
 
-    cout << "users" << endl;
+    cout << "users" << endl << endl;
 
-    for (auto user : users) {
+    for (auto user : GlobalManager::sessionManager.getUsers()) {
         UserInformation userInfo = user.second;
         cout << userInfo.toString() << endl;
     }
 
-    cout << "notifications" << endl;
+    cout << "notifications" << endl << endl;
 
-    for (auto notification : notifications) {
+    for (auto notification : GlobalManager::notifManager.getNotifications()) {
         Notification notif = notification.second;
         cout << notif.toString() << endl;
     }
-
-    GlobalManager::sessionManager = sessionManager;
-    GlobalManager::notifManager = notificationManager;
-    GlobalManager::commManager = comunicationManager;
-    GlobalManager::sessionManager.setUsers(users);
 
 	int sockfd, option = 1;
 	struct sockaddr_in serv_addr;
@@ -131,7 +132,7 @@ int main(int argc, char* argv[])
             client_auth_data.client_socket = client_sockfd;
 //            int *result;
             cout << "** Vai criar thread auth **\n";
-            ClientAuthData *clData = (ClientAuthData*) malloc(sizeof (ClientAuthData));
+            ClientAuthData *clData = new ClientAuthData;
             cout << "retornou do malloc" << endl;
             clData->client_socket = client_auth_data.client_socket;
             cout << "socket id cldata " << clData->client_socket << endl;
@@ -148,7 +149,8 @@ int main(int argc, char* argv[])
                 break;
             } else  {
                 cout << "Na main, auth bem sucedida" << endl;
-                clData->userID = myResult->username;
+                cout << "gotten username = " << myResult->username;
+                clData->userID.assign(myResult->username);
                 cout << "gotten username = " << clData->userID;
                 // Creates thread for receiving user's commands
                 pthread_t client_thread;
@@ -203,29 +205,6 @@ void *client_thread_func(void *data) {
     // Extração dos argumentos
     client_socket = clientData->client_socket;
     cout << "socket id" << client_socket <<endl;
-    //sockfd_n = clientData->notif_sockfd;
-    //users = clientData->users;
-    //userID = clientData->userID;
-
-    // TODO: pegar currentUser através do ID (será int ou string?)
-    // currentUser = sessionManager.getUserByUsername(username);
-
-    // TODO: adicionar classe session dentro do UserInformation
-//    if (cur_user->session_1.isopen == false) {
-//        cur_user->session_1.isopen = true;
-//        cur_user->session_1.cmdsockfd = sockfd;
-//        cur_user->session_1.nsockfd = sockfd_n;
-//        cur_session = &(cur_user->session_1);
-//    }
-//    else if (cur_user->session_2.isopen == false) {
-//        cur_user->session_2.isopen = true;
-//        cur_user->session_2.cmdsockfd = sockfd;
-//        cur_user->session_2.nsockfd = sockfd_n;
-//        cur_session = &(cur_user->session_2);;
-//    }
-//    else {
-//        cur_session = NULL;
-//    }
 
     // TO DO: thread das notificações
 //    pthread_t n_thread;
@@ -314,7 +293,7 @@ void closeAppHandler(int n_signal) {
     // salva status dos perfis no arquivo
     cout << "Salvando perfis...\n";
     fileManager.saveUsersOnFile(users);
-    fileManager.saveNotificationsOnFile(notifications);
+    //fileManager.saveNotificationsOnFile(notifications);
     //TODO: salvar notificacoes tbm
     cout << "Perfis salvos!\n";
     exit(0);
@@ -348,8 +327,10 @@ AuthResult authenticate(int clientSocket) {
     package.type = DATA;
     package.seqn = 0;
     package.timestamp = time(NULL);
+    bzero(package._payload, BUFFER_SIZE);
+
     if (n == 1) {
-        strcpy(package._payload, "** bombou auth **");
+        strcpy(package._payload, "authenticated");
         finalResult.result = 1;
         finalResult.username = buffer;
         cout << "success logging user" << endl;
@@ -358,7 +339,7 @@ AuthResult authenticate(int clientSocket) {
         finalResult.result = -1;
         cout << " attempted to log but was unsuccessful" << endl;
     }
-    package.length = strlen(package._payload) + 1;
+    package.length = sizeof (Packet);
 
     // Enviando resposta
     if (GlobalManager::commManager.send_packet(clientSocket, &package) < 0) {
