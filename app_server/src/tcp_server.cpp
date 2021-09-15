@@ -53,6 +53,20 @@ int main(int argc, char* argv[])
     users = fileManager.getUsersFromFile();
     notifications = fileManager.getNotificationsFromFile();
 
+    cout << "users" << endl;
+
+    for (auto user : users) {
+        UserInformation userInfo = user.second;
+        cout << userInfo.toString() << endl;
+    }
+
+    cout << "notifications" << endl;
+
+    for (auto notification : notifications) {
+        Notification notif = notification.second;
+        cout << notif.toString() << endl;
+    }
+
     GlobalManager::sessionManager = sessionManager;
     GlobalManager::notifManager = notificationManager;
     GlobalManager::commManager = comunicationManager;
@@ -325,7 +339,9 @@ AuthResult authenticate(int clientSocket) {
     cout << "buffer = " << buffer << endl;
 
     // Verificando existência do usuário
-    n = GlobalManager::sessionManager.createNewSession(buffer);
+    Session newSession;
+    newSession.commandSocket = clientSocket;
+    n = GlobalManager::sessionManager.createNewSession(buffer, newSession);
 
     // Criando pacote para enviar
     Packet package;

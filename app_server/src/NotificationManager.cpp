@@ -46,9 +46,15 @@ using namespace profileSessionManager;
     }
 
     void NotificationManager::sendNotificationTo(string username, string notificationID) {
-        if (this->notifications.find(notificationID) == this->notifications.end()) {return;}
+        if (this->notifications.find(notificationID) == this->notifications.end()) {
+            cout << "not possible to send notification bc it doesn't exist" << endl;
+            return;
+        }
         unordered_map<string, UserInformation> users = GlobalManager::sessionManager.getUsers();
-        if (users.find(username) == users.end()) {return;}
+        if (users.find(username) == users.end()) {
+            cout << "not possible to send notification bc user doesn't exist" << endl;
+            return;
+        }
 
         list<Session> sessions = users[username].sessions;
         int quantitySent = GlobalManager::commManager.sendNotificationToSessions(sessions,

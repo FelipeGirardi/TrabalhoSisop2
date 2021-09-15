@@ -48,7 +48,7 @@ namespace profileSessionManager {
         * @Param username: the user who wants to login/create account
         * @Return int: a bool indicating if creation of session was possible
         */
-        int createNewSession(string username);
+        int createNewSession(string username, Session session);
 
         /*
         * Method called by Communication Manager

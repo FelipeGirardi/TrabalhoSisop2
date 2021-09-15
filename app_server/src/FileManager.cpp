@@ -99,6 +99,7 @@ void FileManager::saveNotificationsOnFile(unordered_map<string, Notification> no
 
 }
 unordered_map<string, Notification> FileManager::getNotificationsFromFile() {
+    cout << "aaaaaa" << endl;
     unordered_map <string, Notification> notifications;
     StringExtensions stringParser;
 
@@ -106,17 +107,25 @@ unordered_map<string, Notification> FileManager::getNotificationsFromFile() {
     ifstream myfile (this->notificationsFilename);
     if (myfile.is_open())
     {
+        cout << "open" << endl;
         while ( getline (myfile,line) )
         {
+            cout << "NOTIF LINE" << line << endl;
             vector<string> splitedString = stringParser.split(line, this->delimiter);
+            if (splitedString.size() < 2) {
+                cout << "Invalid file line";
+                break;
+            }
+            vector<string> splitedStringArgs = stringParser.split(splitedString[1], this->arrayDelimiter);
+            cout << "Splitted string size" << splitedStringArgs.size() << endl;
 
             //TODO: dar um jeito nesse 5
-            if (splitedString.size() == 5) {
-                string id = splitedString[0];
-                string text = splitedString[1];
-                string username = splitedString[2];
-                long int time = stoi(splitedString[3]);
-                int pendingReaders = stoi(splitedString[4]);
+            if (splitedStringArgs.size() == 5) {
+                string id = splitedStringArgs[0];
+                string text = splitedStringArgs[1];
+                string username = splitedStringArgs[2];
+                long int time = stoi(splitedStringArgs[3]);
+                int pendingReaders = stoi(splitedStringArgs[4]);
 
                 Notification newNotif = Notification(id, text, username,
                                                      time, pendingReaders);

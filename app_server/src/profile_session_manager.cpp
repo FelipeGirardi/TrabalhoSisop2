@@ -52,7 +52,7 @@ namespace profileSessionManager {
 
     // 1 = criou
     // 0 = nao criou
-    int ProfileSessionManager::createNewSession(string username) {
+    int ProfileSessionManager::createNewSession(string username, Session session) {
 
         // check if user exists
         if (this->users.find(username) == this->users.end()) {
@@ -60,6 +60,7 @@ namespace profileSessionManager {
             cout << "user doesnt exist" << endl;
             UserInformation newUserInfo = UserInformation(username);
             this->users[username] = newUserInfo;
+
         }
 
         int currentNumberSessions = this->users[username].getNumberOfSessions();
@@ -68,6 +69,9 @@ namespace profileSessionManager {
             cout << "number of sessions of user is 0" << endl;
             this->users[username].startListeningForNotifications();
         }
+
+        // Success on creating new session for user
+        this->users[username].sessions.push_back(session);
         this->users[username].incrementNumberOfSessions();
         return 1;
 
