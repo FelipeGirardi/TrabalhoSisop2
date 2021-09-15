@@ -123,17 +123,18 @@ int main(int argc, char* argv[])
             cout << "socket id cldata " << clData->client_socket << endl;
             cout << "socket id client_auth data " << client_auth_data.client_socket << endl;
             pthread_create(&auth_thread, NULL, &auth_client_func, (void*)clData);
+            void *resultOfAuthentication;
+            pthread_join(auth_thread, &resultOfAuthentication);
 
-            AuthResult *resultOfAuthentication;
-            pthread_join(auth_thread, (void **) resultOfAuthentication);
-            cout << "Result of auth" << resultOfAuthentication->result << endl;
+            cout << "Result of auth" << ((AuthResult *)resultOfAuthentication)->result << endl;
+            AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
-            if (resultOfAuthentication->result < 0) {
+            if (myResult->result < 0) {
                 cout << "Na main, falha na auth" << endl;
                 break;
             } else  {
                 cout << "Na main, auth bem sucedida" << endl;
-                clData->userID = resultOfAuthentication->username;
+                clData->userID = myResult->username;
                 cout << "gotten username = " << clData->userID;
                 // Creates thread for receiving user's commands
                 pthread_t client_thread;
@@ -163,7 +164,8 @@ void *auth_client_func(void *data) {
     cout << "client socket auth data" << authData->client_socket;
     sockfd = authData->client_socket;
     AuthResult resultado = authenticate(sockfd);
-    *result = resultado;
+    result->result = resultado.result;
+    result->username = resultado.username;
 
     if (result->result < 0) {
         cout << "\n** Erro na autenticacao **\n";
@@ -173,8 +175,9 @@ void *auth_client_func(void *data) {
         cout << "username = " << result->username << endl;
     }
 
-    pthread_exit((void *)result);
-    return 0;
+    cout << "saindo da thread auth" << endl;
+    return (void *) result;
+
 }
 
 void *client_thread_func(void *data) {
