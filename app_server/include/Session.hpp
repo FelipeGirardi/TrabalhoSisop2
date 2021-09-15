@@ -17,6 +17,7 @@ using namespace std;
 //} session_t;
 
 class Session {
+public:
     string ownerUsername;
     int commandSocket;
     int notificationSocket;

@@ -8,9 +8,15 @@
 #include <time.h>
 #include <pthread.h>
 #include <errno.h>
+#include <list>
+#include "../include/Session.hpp"
 #include "../include/CommunicationManager.hpp"
 #include "../include/ClientAuthData.hpp"
+#include "../../Common/include/Notification.hpp"
 #define PORT 4000
+
+using namespace std;
+using namespace notification;
 
 namespace communicationManager {
     int read_text(int socket, char *buffer) {
@@ -50,25 +56,46 @@ namespace communicationManager {
         //    return n;
     }
 
-    int send_packet(int socket, Packet *package) {
-        //    int n;
-        //
-        //    // Enviando metadados
-        //    n = write(socket, package, sizeof(packet));
-        //    if (n < 0){
-        //        printf("ERROR writing metadata to socket\n");
-        //        n = -1;
-        //    }
-        //    // ..
-        //
-        //    // Enviando payload
-        //    n = write(socket, package->_payload, package->length);
-        //    if (n < 0){
-        //        printf("ERROR writing data to socket\n");
-        //        n = -1;
-        //    }
-        //    // ..
-        //
-        //    return n;
+    int CommunicationManager::send_packet(int socket, Packet *package) {
+        int n;
+        // Enviando metadados
+        n = write(socket, package, sizeof(Packet));
+        if (n < 0){
+            printf("ERROR writing metadata to socket\n");
+            n = -1;
+        }
+        // Enviando payload
+        n = write(socket, package->_payload, package->length);
+        if (n < 0){
+            printf("ERROR writing data to socket\n");
+            n = -1;
+        }
+        return n;
     }
+
+    int CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet *package) {
+        int returnValue = 0;
+        for (Session session : sessions) {
+            if (this->send_packet(session.commandSocket, package) >= 0) {
+                returnValue ++;
+            }
+        }
+        return returnValue;
+    }
+
+    int CommunicationManager::sendNotificationToSessions(list<Session> sessions, Notification notification) {
+
+        Packet *packet;
+        packet->length = 0;
+        packet->seqn = 0;
+        packet->timestamp = 0;
+        packet->type = 0;
+
+        const char *cstr = notification.toString().c_str();
+        strncpy(packet->_payload, cstr, BUFFER_SIZE);
+
+        return sendPacketToSessions(sessions, packet);
+
+    }
+
 }

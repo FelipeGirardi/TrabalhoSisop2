@@ -6,6 +6,7 @@
 
 ProfileSessionManager GlobalManager::sessionManager;
 NotificationManager GlobalManager::notifManager;
+CommunicationManager GlobalManager::commManager;
 
 GlobalManager::GlobalManager() {
 

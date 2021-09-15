@@ -50,7 +50,9 @@ namespace profileSessionManager {
         //pthread_join();
     }
 
-    void ProfileSessionManager::createNewSession(string username) {
+    // 1 = criou
+    // 0 = nao criou
+    int ProfileSessionManager::createNewSession(string username) {
 
         // check if user exists
         if (this->users.find(username) == this->users.end()) {
@@ -61,12 +63,13 @@ namespace profileSessionManager {
         }
 
         int currentNumberSessions = this->users[username].getNumberOfSessions();
-        if (currentNumberSessions >= 2) { return; }
+        if (currentNumberSessions >= 2) { return 0; }
         if (currentNumberSessions == 0) {
             cout << "number of sessions of user is 0" << endl;
             this->users[username].startListeningForNotifications();
         }
         this->users[username].incrementNumberOfSessions();
+        return 1;
 
     }
 

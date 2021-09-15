@@ -46,9 +46,9 @@ namespace profileSessionManager {
         * Creates consumer thread
         *
         * @Param username: the user who wants to login/create account
-        *
+        * @Return int: a bool indicating if creation of session was possible
         */
-        void createNewSession(string username);
+        int createNewSession(string username);
 
         /*
         * Method called by Communication Manager

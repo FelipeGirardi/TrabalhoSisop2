@@ -4,8 +4,10 @@
 
 #include "../include/NotificationManager.hpp"
 #include "../../Common/include/Notification.hpp"
+#include <time.h>
 #include "../include/profile_session_manager.hpp"
 #include "../include/GlobalManager.hpp"
+#include "../include/CommunicationManager.hpp"
 #include <unordered_map>
 #include <string>
 
@@ -13,9 +15,12 @@ using namespace std;
 using namespace notification;
 using namespace profileSessionManager;
 
-    NotificationManager::NotificationManager() {}
+    NotificationManager::NotificationManager() {
+        this->idNextNotification = 0;
+    }
 
     NotificationManager::NotificationManager(unordered_map <string, Notification> notifications) {
+        this->idNextNotification = 0;
         this->setNotifications(notifications);
     }
 
@@ -36,16 +41,39 @@ using namespace profileSessionManager;
         }
     }
 
+    void NotificationManager::addNewNotification(Notification notification) {
+
+    }
+
     void NotificationManager::sendNotificationTo(string username, string notificationID) {
-        if (this->notifications.find(notificationID) == this->notifications.end()) {}
-        else {
-            //CommunicationManager::sendNotificationTo(username, this->notifications[notificationID]);
-        }
+        if (this->notifications.find(notificationID) == this->notifications.end()) {return;}
+        unordered_map<string, UserInformation> users = GlobalManager::sessionManager.getUsers();
+        if (users.find(username) == users.end()) {return;}
+
+        list<Session> sessions = users[username].sessions;
+        int quantitySent = GlobalManager::commManager.sendNotificationToSessions(sessions,
+                                                              this->notifications[notificationID]);
+
+        cout << quantitySent << " notifications sent" << endl;
     }
 
     void NotificationManager::newNotificationSentBy(string username, string notification) {
-        //TODO Criar objeto notification (id, pendingReaders)
-        GlobalManager::sessionManager.newNotificationSentBy(username, notification);
+
+        long int currentTime = static_cast<long int> (time(NULL));
+        int pendingReaders = this->getPendingReaders(username);
+
+        string notificationID = to_string(this->idNextNotification);
+        Notification newNotification = Notification(notificationID,
+                                                    notification, username,
+                                                    currentTime,
+                                                    pendingReaders);
+
+        //SC aqui?
+        this->notifications[notificationID] = newNotification;
+        idNextNotification ++;
+
+        GlobalManager::sessionManager.newNotificationSentBy(username,
+                                                            notificationID);
     }
 
     int NotificationManager::getPendingReaders(string username) {

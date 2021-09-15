@@ -26,30 +26,37 @@ using namespace profileSessionManager;
 using namespace communicationManager;
 
 unordered_map<string, UserInformation> users;
+unordered_map<string,Notification> notifications;
 FileManager fileManager;
 ProfileSessionManager sessionManager;
 GlobalManager globalManager;
 NotificationManager notificationManager;
+CommunicationManager comunicationManager;
 
 int send_packet(int socket, Packet *package);
 void *auth_client_func(void *data);
 void *client_thread_func(void *data);
 // void *notification_thread(void *args);
 void closeAppHandler(int n_signal);
+typedef struct AuthResult {
+    int result;
+    string username;
+}AuthResult;
+AuthResult authenticate(int clientSocket);
+
+
 
 int main(int argc, char* argv[])
 {
     cout << "** Primeiro print **\n";
 
-
-    unordered_map<string,UserInformation> users = fileManager.getUsersFromFile();
+    users = fileManager.getUsersFromFile();
+    notifications = fileManager.getNotificationsFromFile();
 
     GlobalManager::sessionManager = sessionManager;
     GlobalManager::notifManager = notificationManager;
+    GlobalManager::commManager = comunicationManager;
     GlobalManager::sessionManager.setUsers(users);
-
-    GlobalManager::sessionManager.createNewSession("@moritz");
-
 
 	int sockfd, option = 1;
 	struct sockaddr_in serv_addr;
@@ -78,7 +85,7 @@ int main(int argc, char* argv[])
     // carrega estruturas de dados do arquivo (usuários + notificações se precisar)
     //unordered_map<string,UserInformation> users_retrieval = fileManager.getUsersFromFile();
     //sessionManager.setUsers(users_retrieval);
-    ClientAuthData client_auth_data;
+
     //client_auth_data.users = users_retrieval;
 
     // seta signal de fechar app do servidor
@@ -104,32 +111,35 @@ int main(int argc, char* argv[])
 //                continue;
 //            }
 
-            // Cria thread da autenticação do cliente
-//            pthread_t auth_thread;
+            // Creates thread for receiving username
+            ClientAuthData client_auth_data;
+            pthread_t auth_thread;
             client_auth_data.client_socket = client_sockfd;
-            client_auth_data.userID = "@joana"; //TODO tirar mock
-            GlobalManager::sessionManager.createNewSession("@joana");
 //            int *result;
-//            cout << "** Vai criar thread auth **\n";
+            cout << "** Vai criar thread auth **\n";
             ClientAuthData *clData = (ClientAuthData*) malloc(sizeof (ClientAuthData));
-            *clData = client_auth_data;
+            cout << "retornou do malloc" << endl;
+            clData->client_socket = client_auth_data.client_socket;
+            cout << "socket id cldata " << clData->client_socket << endl;
+            cout << "socket id client_auth data " << client_auth_data.client_socket << endl;
+            pthread_create(&auth_thread, NULL, &auth_client_func, (void*)clData);
 
-            cout << "socket id cldata " << clData->client_socket;
-            cout << "socket id client_auth data " << client_auth_data.client_socket;
-//            pthread_create(&auth_thread, NULL, &auth_client_func, (void*)clData);
-//            pthread_join(auth_thread, (void **) &result);
-            // TO DO: Checa autenticação
-//            if (*result < 0)
-//                close(notifsockfd);
-//            else {
+            AuthResult *resultOfAuthentication;
+            pthread_join(auth_thread, (void **) resultOfAuthentication);
+            cout << "Result of auth" << resultOfAuthentication->result << endl;
 
-            // Criando thread para interação com usuário
-            pthread_t client_thread;
-//            client_auth_data.userID = *result;
-            cout << "** Vai criar thread cliente **\n";
-            pthread_create(&client_thread, NULL, &client_thread_func, (void *) clData);
-
-//            }
+            if (resultOfAuthentication->result < 0) {
+                cout << "Na main, falha na auth" << endl;
+                break;
+            } else  {
+                cout << "Na main, auth bem sucedida" << endl;
+                clData->userID = resultOfAuthentication->username;
+                cout << "gotten username = " << clData->userID;
+                // Creates thread for receiving user's commands
+                pthread_t client_thread;
+                cout << "** Vai criar thread cliente **\n";
+                pthread_create(&client_thread, NULL, &client_thread_func, (void *) clData);
+            }
 
             client_sockfd = 0;
             //notifsockfd = 0;
@@ -137,28 +147,33 @@ int main(int argc, char* argv[])
     }
 
     if (close(sockfd) < 0) {
-        cout << "** Erro fechando o socket **\n";
+        cout << "** Erro fechando o socket **" << endl;
+    } else {
+        cout << "** Sucesso fechando o socket **" << endl;
     }
 
     return 0;
 }
 
 void *auth_client_func(void *data) {
-//    int sockfd;
-//    int *userID;
-//    ClientAuthData *authData = (ClientAuthData*) data;
-//
-//    sockfd = authData->client_sockfd;
-//    users = authData->users;
-//
-//    // TO DO: autenticação (no CommunicationManager do cliente)
-//    //*userID = authenticate(sockfd, users);
-//    if (*userID < 0) {
-//        cout << "\n** Erro na autenticacao **\n";
-//        close(sockfd);
-//    }
-//
-//    pthread_exit(userID);
+    int sockfd;
+    AuthResult *result = (AuthResult *) malloc(sizeof (AuthResult));
+    cout << "aaaa" << endl;
+    ClientAuthData *authData = (ClientAuthData*) data;
+    cout << "client socket auth data" << authData->client_socket;
+    sockfd = authData->client_socket;
+    AuthResult resultado = authenticate(sockfd);
+    *result = resultado;
+
+    if (result->result < 0) {
+        cout << "\n** Erro na autenticacao **\n";
+        close(sockfd);
+    } else {
+        cout << "Retorno com sucesso da auth" << endl;
+        cout << "username = " << result->username << endl;
+    }
+
+    pthread_exit((void *)result);
     return 0;
 }
 
@@ -260,22 +275,20 @@ void *client_thread_func(void *data) {
 
         cout << "** Envia pacote **\n";
         // Envia pacote da mensagem (TO DO: decidir local da função)
-        send_packet(client_socket, &package);
+        if (GlobalManager::commManager.send_packet(client_socket, &package) < 0) {
+            cout << "nao foi possivel enviar" <<endl;
+        }
         cout << "oi1" <<  endl;
         bzero(response, BUFFER_SIZE);
         cout << "oi" <<  endl;
 
     }
 
-    //TODO: verificar fechamento da thread
-//    cur_user->open_sessions--;
-//    cur_session->isopen = false;
+    GlobalManager::sessionManager.endSession(clientData->userID);
 //    pthread_cancel(n_thread);
-//    close(sockfd_n);
     cout << "** Fecha socket **\n";
     close(client_socket);
-//    cout << cur_user->username << " disconnected\n";
-
+    cout << clientData->userID << " disconnected\n";
     return 0;
 }
 
@@ -284,27 +297,55 @@ void closeAppHandler(int n_signal) {
     // salva status dos perfis no arquivo
     cout << "Salvando perfis...\n";
     fileManager.saveUsersOnFile(users);
+    fileManager.saveNotificationsOnFile(notifications);
     //TODO: salvar notificacoes tbm
     cout << "Perfis salvos!\n";
     exit(0);
 }
+AuthResult authenticate(int clientSocket) {
 
-int send_packet(int socket, Packet *package) {
-
+    AuthResult finalResult;
+    cout << "authenticate" << endl;
     int n;
+    char buffer[BUFFER_SIZE];
 
-    // Enviando metadados
-    n = write(socket, package, sizeof(Packet));
-    if (n < 0){
-        printf("ERROR writing metadata to socket\n");
-        n = -1;
+    // Lendo username
+    bzero(buffer, BUFFER_SIZE);
+    cout << "oi client socket = " << clientSocket << endl;
+    n = read(clientSocket, buffer, 256);
+    if (n < 0) {
+        printf("ERROR reading from socket");
+        finalResult.result = -1;
+        return finalResult;
     }
-    // Enviando payload
-    n = write(socket, package->_payload, package->length);
-    if (n < 0){
-        printf("ERROR writing data to socket\n");
-        n = -1;
-    }
-    return n;
+    cout << "Sucesso na leitura" << endl;
+    cout << "buffer = " << buffer << endl;
 
+    // Verificando existência do usuário
+    n = GlobalManager::sessionManager.createNewSession(buffer);
+
+    // Criando pacote para enviar
+    Packet package;
+    package.type = DATA;
+    package.seqn = 0;
+    package.timestamp = time(NULL);
+    if (n == 1) {
+        strcpy(package._payload, "** bombou auth **");
+        finalResult.result = 1;
+        finalResult.username = buffer;
+        cout << "success logging user" << endl;
+    } else {
+        strcpy(package._payload, "** failed to authenticate **");
+        finalResult.result = -1;
+        cout << " attempted to log but was unsuccessful" << endl;
+    }
+    package.length = strlen(package._payload) + 1;
+
+    // Enviando resposta
+    if (GlobalManager::commManager.send_packet(clientSocket, &package) < 0) {
+        cout << "nao foi possivel enviar" <<endl;
+    }
+
+    return finalResult;
 }
+

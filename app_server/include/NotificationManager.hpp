@@ -17,6 +17,7 @@ using namespace notification;
 class NotificationManager {
 
     private:
+        int idNextNotification;
         unordered_map <string, Notification> notifications; // <notification ID> : <notification object>
 
         int getPendingReaders(string username);
@@ -32,6 +33,7 @@ class NotificationManager {
 
         /* Setters */
         void setNotifications(unordered_map <string, Notification> notifications);
+        void addNewNotification(Notification notification);
 
         /* Others */
         /*
@@ -47,6 +49,7 @@ class NotificationManager {
          *
          */
         void newNotificationSentBy(string username, string notification);
+
 };
 
 

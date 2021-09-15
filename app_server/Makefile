@@ -26,7 +26,8 @@ build_server:
 	src/NotificationManager.cpp \
 	src/utils/ListExtensions.cpp \
 	src/GlobalManager.cpp \
-	src/Session.cpp
+	src/Session.cpp \
+	src/CommunicationManager.cpp
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o -lpthread
 
