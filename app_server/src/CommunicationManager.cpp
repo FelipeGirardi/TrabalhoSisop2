@@ -60,17 +60,20 @@ namespace communicationManager {
     int CommunicationManager::send_packet(int socket, Packet *package) {
         int n;
         // Enviando metadados
+        cout << "vai enviar pacote" << endl;
+        package->printItself();
+
         n = write(socket, package, sizeof(Packet));
         if (n < 0){
-            printf("ERROR writing metadata to socket\n");
+            printf("ERROR writing to socket\n");
             n = -1;
         }
         // Enviando payload
-        n = write(socket, package->_payload, package->length);
-        if (n < 0){
-            printf("ERROR writing data to socket\n");
-            n = -1;
-        }
+//        n = write(socket, package->_payload, package->length);
+//        if (n < 0){
+//            printf("ERROR writing data to socket\n");
+//            n = -1;
+//        }
         return n;
     }
 
@@ -78,7 +81,7 @@ namespace communicationManager {
         cout << "sendPacketToSessions" << sessions.size() << endl;
         int returnValue = 0;
         for (Session session : sessions) {
-            if (this->send_packet(session.commandSocket, package) >= 0) {
+            if (this->send_packet(session.notificationSocket, package) >= 0) {
                 returnValue ++;
             }
         }
@@ -89,19 +92,62 @@ namespace communicationManager {
 
         cout << "sendNotificationToSessions" << endl;
         Packet *packet = new Packet;
-        packet->length = 0;
-        packet->seqn = 0;
-        packet->timestamp = 0;
-        packet->type = 0;
+        packet->timestamp = time(NULL);
+        packet->type = NOTIFICATION;
 
         cout << "created packet" << endl;
-        const char *cstr = notification.toString().c_str();
+        string notString = notification.toString();
+        notString.pop_back();
+        const char *cstr = notString.c_str();
         cout << "not to string" << notification.toString() << endl;
+        cout << "cstring" << cstr;
+        bzero(packet->_payload, BUFFER_SIZE);
         strncpy(packet->_payload, cstr, BUFFER_SIZE);
-
+        packet->length = sizeof(packet->_payload);
         cout << "gonna send payload = " << packet->_payload << endl;
         return sendPacketToSessions(sessions, packet);
 
+    }
+
+    string CommunicationManager::stringDescribingType(PacketType type) {
+        switch (type) {
+            case SEND:
+                return "SEND";
+            case FOLLOW:
+                return "FOLLOW";
+            case EXIT:
+                return "EXIT";
+            case USERNAME:
+              return "USERNAME";
+            default:
+                return "";
+        }
+    }
+
+    Packet CommunicationManager::createAckPacketForType(PacketType type) {
+
+        string responseString = "Uhu! " + this->stringDescribingType(type) + " recebido com sucesso! :)";
+
+        Packet package;
+        package.type = SERVER_ACK;
+        package.timestamp = time(NULL);
+        bzero(package._payload, BUFFER_SIZE);
+        strncpy(package._payload, responseString.c_str(), BUFFER_SIZE);
+        package.length = strlen(package._payload);
+        return package;
+    }
+
+    Packet CommunicationManager::createGenericNackPacket() {
+
+        string responseString = "Erro!";
+
+        Packet package;
+        package.type = SERVER_ERROR;
+        package.timestamp = time(NULL);
+        bzero(package._payload, BUFFER_SIZE);
+        strncpy(package._payload, responseString.c_str(), BUFFER_SIZE);
+        package.length = strlen(package._payload);
+        return package;
     }
 
 }

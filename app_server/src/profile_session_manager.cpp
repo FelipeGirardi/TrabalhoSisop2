@@ -58,15 +58,9 @@ namespace profileSessionManager {
     }
 
     // 1 = criou
-    // 0 = nao criou
+    // -1 = nao criou
     int ProfileSessionManager::createNewSession(string username, Session session) {
 
-        GlobalManager::printItself();
-
-        cout << "hey" << endl;
-        UserInformation aa = GlobalManager::sessionManager.getUsers()[username];
-        cout << aa.username << endl;
-        cout << "how" << endl;
         // check if user exists
         if (GlobalManager::sessionManager.getUsers().find(username) ==
         GlobalManager::sessionManager.getUsers().end()) {
@@ -78,7 +72,7 @@ namespace profileSessionManager {
         }
 
         int currentNumberSessions = this->users[username].getNumberOfSessions();
-        if (currentNumberSessions >= 2) { return 0; }
+        if (currentNumberSessions >= 2) { return -1; }
         if (currentNumberSessions == 0) {
             cout << "number of sessions of user is 0" << endl;
             this->users[username].startListeningForNotifications();

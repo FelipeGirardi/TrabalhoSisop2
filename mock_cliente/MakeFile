@@ -1,11 +1,28 @@
+sender:
+	g++ -std=c++11 -c mock_client_sender.cpp \
+    ../common/src/Packet.cpp \
+    ../common/src/PacketType.cpp
+	g++ -o sender mock_client_sender.o Packet.o PacketType.o
+clean:
+	rm *.o
+	rm listener
+	rm sender
 
-listener:
-	g++ -std=c++11 mock_client_listener.c
-	g++ -o listener mock_client_listener.o
+Sfelipe:
+	make sender
+	./sender localhost
+
+Lfelipe:
+	make listener
 	./listener localhost
 
+build_server:
+	g++ -std=c++11 -c mock_client_listener.cpp mock_client_listener.cpp \
+	../common/src/Packet.cpp \
+	../common/src/PacketType.cpp
 
-sender:
-	g++ -std=c++11 mock_client.c
-	g++ -o client mock_client.o
-	./client localhost
+listener1:
+	make build_server
+	g++ -o serverApp mock_client_listener.o Packet.o PacketType.o -lpthread
+	./serverApp localhost
+

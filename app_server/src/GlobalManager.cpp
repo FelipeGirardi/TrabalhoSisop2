@@ -19,7 +19,6 @@ void GlobalManager::printItself() {
         string key = user.first;
         UserInformation userInfo = user.second;
         cout << "key = " << key << endl;
-        cout << "key size = " << key.length() << endl;
         cout << userInfo.toString() << endl;
     }
 

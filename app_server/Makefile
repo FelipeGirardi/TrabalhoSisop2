@@ -22,12 +22,14 @@ build_server:
 	src/user_information.cpp \
 	src/utils/StringExtensions.cpp \
 	src/FileManager.cpp \
-	../Common/src/Notification.cpp \
+	../common/src/Notification.cpp \
 	src/NotificationManager.cpp \
 	src/utils/ListExtensions.cpp \
 	src/GlobalManager.cpp \
 	src/Session.cpp \
-	src/CommunicationManager.cpp
+	src/CommunicationManager.cpp \
+	../common/src/Packet.cpp \
+	../common/src/PacketType.cpp
 	mv *.o $(BUILD_DIR)
 	g++ -o $(BUILD_DIR)/serverApp build/*.o -lpthread
 

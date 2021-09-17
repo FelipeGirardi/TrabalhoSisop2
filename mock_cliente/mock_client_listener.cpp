@@ -6,24 +6,21 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <iostream>
+#include "../common/include/Packet.hpp"
+#include "../common/include/PacketType.hpp"
 
 #define PORT 4000
 
-typedef struct __packet{
-    uint16_t type; //Tipo do pacote (p.ex. DATA | CMD)
-    uint16_t seqn; //Número de sequência
-    uint16_t length; //Comprimento do payload
-    uint16_t timestamp; // Timestamp do dado
-    char _payload [256]; //Dados da mensagem
-} packet;
+using namespace std;
 
 int main(int argc, char *argv[])
 {
-    int sockfd, n;
+    int commandsocket, notifsocket, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
 
-    packet pkt;
+    Packet pkt;
 
     char buffer[256];
     if (argc < 2) {
@@ -37,44 +34,65 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+    //command
+    if ((commandsocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         printf("ERROR opening socket\n");
-
+        return 0;
+    }
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(PORT);
     serv_addr.sin_addr = *((struct in_addr *)server->h_addr);
     bzero(&(serv_addr.sin_zero), 8);
-
-
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
+    if (connect(commandsocket,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
         printf("ERROR connecting\n");
         return 0;
     }
 
+    //notificacoes
+    if ((notifsocket = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        printf("ERROR opening notif socket\n");
+        return 0;
+    }
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_addr = *((struct in_addr *)server->h_addr);
+    bzero(&(serv_addr.sin_zero), 8);
+    if (connect(notifsocket,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
+        printf("ERROR connecting to notif socket\n");
+        return 0;
+    }
+
+    //nome
     bzero(buffer,256);
     printf("Enter the name: ");
     fgets(buffer, 256, stdin);
 
-    n = write(sockfd, buffer, 256);
+    n = write(commandsocket, buffer, 256);
     if (n < 0) {
         printf("ERROR writing name to socket\n");
         return 0;
     }
 
-    while(1) {
+    //while(1) {
         bzero(buffer,256);
         /* read from the socket */
-        packet pktResponse;
+        Packet *pktResponse = new Packet;
         int bufferInt;
-        bufferInt = read(sockfd, &pktResponse, sizeof(packet));
+        bufferInt = read(notifsocket, pktResponse, sizeof(Packet));
+        cout << "leu algo do socket" << endl;
+
         //n = read(sockfd, buffer, 256);
-        strcpy(buffer, pktResponse._payload);
+        cout << "vai printar o pacote"<< endl;
+        pktResponse->printItself();
+        strcpy(buffer, pktResponse->_payload);
         if (bufferInt < 0)
             printf("ERROR reading from socket\n");
         else
             printf("BUFFER response %s\n",buffer);
-    }
+    //}
 
-    close(sockfd);
+    close(notifsocket);
+    close(commandsocket);
+
     return 0;
 }

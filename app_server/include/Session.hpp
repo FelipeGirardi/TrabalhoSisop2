@@ -18,7 +18,6 @@ using namespace std;
 
 class Session {
 public:
-    string ownerUsername;
     int commandSocket;
     int notificationSocket;
 };

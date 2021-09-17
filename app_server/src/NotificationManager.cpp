@@ -16,11 +16,11 @@ using namespace notification;
 using namespace profileSessionManager;
 
     NotificationManager::NotificationManager() {
-        this->idNextNotification = 0;
+        this->idNextNotification = 2;
     }
 
     NotificationManager::NotificationManager(unordered_map <string, Notification> notifications) {
-        this->idNextNotification = 0;
+        this->idNextNotification = 2;
         this->setNotifications(notifications);
     }
 
