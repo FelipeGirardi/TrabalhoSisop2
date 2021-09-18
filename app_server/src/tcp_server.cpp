@@ -216,7 +216,7 @@ void *client_thread_func(void *data) {
         bufferInt = read(client_socket, pkt, sizeof(Packet));
         cout << "leu algo do socket" << endl;
 
-        if (bufferInt < 0 || pkt->type == EXIT) {
+        if (bufferInt < 0 || pkt->type == EXIT || buffer[0] == '\0' || buffer[0] == '\n') {
             free(pkt);
             printf("ERROR reading from socket. Disconecting.");
             break;
@@ -291,7 +291,7 @@ AuthResult authenticate(Session *session) {
     cout << "oi notification socket = " << session->notif_socket << endl;
 
     readResult = read(session->client_socket, buffer, BUFFER_SIZE);
-    if (readResult < 0) {
+    if (readResult < 0 || buffer[0] == '\0' || buffer[0] == '\n') {
         printf("ERROR reading from socket");
         finalResult.result = -1;
         close(session->client_socket);
