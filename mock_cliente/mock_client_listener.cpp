@@ -89,10 +89,7 @@ int main(int argc, char *argv[])
         cout << "vai printar o pacote"<< endl;
         pktResponse->printItself();
         strcpy(buffer, pktResponse->_payload);
-        if (bufferInt < 0)
-            printf("ERROR reading from socket\n");
-        else
-            printf("BUFFER response %s\n",buffer);
+        printf("BUFFER response %s\n",buffer);
 
         free(pktResponse);
     }

@@ -72,6 +72,20 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    bzero(buffer,256);
+
+    /* read from the socket */
+    Packet *usernameResponsePKT = new Packet;
+    int usernameResponse = read(commandsocket, usernameResponsePKT, sizeof(Packet));
+    if (usernameResponse < 0) {
+        printf("ERROR reading username response from socket\n");
+        close(commandsocket);
+        close(notifsocket);
+        return 0;
+    } else {
+        usernameResponsePKT->printItself();
+    }
+
     while(1) {
         printf("Enter the message: ");
         bzero(pkt._payload, 256);

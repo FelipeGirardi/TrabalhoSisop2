@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 
             if (myResult->result < 0) {
                 cout << "Na main, falha na auth" << endl;
-                break;
+                continue;
             } else  {
                 cout << "Na main, auth bem sucedida" << endl;
                 cout << "gotten username = " << myResult->username;
@@ -322,9 +322,6 @@ AuthResult authenticate(Session *session) {
         *package = GlobalManager::commManager.createGenericNackPacket();
         finalResult.result = -1;
         cout << " attempted to log but was unsuccessful" << endl;
-        close(session->notif_socket);
-        close(session->client_socket);
-        cout << "close sockets" << endl;
     }
 
     // Enviando resposta
@@ -333,8 +330,13 @@ AuthResult authenticate(Session *session) {
         //TODO: talvez cortar sessao do usuario
         cout << "nao foi possivel enviar" <<endl;
     } else {
-        finalResult.result = 1;
         cout << "enviado" << endl;
+    }
+
+    if (finalResult.result == -1) {
+        close(session->notif_socket);
+        close(session->client_socket);
+        cout << "close sockets" << endl;
     }
 
     //free package ?
