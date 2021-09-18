@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <string>
 #include <list>
+#include <semaphore.h>
 
 using namespace std;
 using namespace notification;
@@ -25,6 +26,7 @@ using namespace profileSessionManager;
         list<int> keys;
         for(auto kv : notifications) { keys.push_back(stoi(kv.first)); }
         this->idNextNotification = *(max_element(keys.begin(), keys.end())) + 1;
+        sem_init(&(this->freeCritialSession), 0, 1);
 
     }
 
@@ -71,15 +73,15 @@ using namespace profileSessionManager;
         long int currentTime = static_cast<long int> (time(NULL));
         int pendingReaders = this->getPendingReaders(username);
 
+        sem_wait(&freeCritialSession);
         string notificationID = to_string(this->idNextNotification);
         Notification newNotification = Notification(notificationID,
                                                     notification, username,
                                                     currentTime,
                                                     pendingReaders);
-
-        //SC aqui?
         this->notifications[notificationID] = newNotification;
         idNextNotification ++;
+        sem_post(&freeCritialSession);
 
         GlobalManager::sessionManager.newNotificationSentBy(username,
                                                             notificationID);

@@ -9,6 +9,7 @@
 #include "../../Common/include/Notification.hpp"
 #include <unordered_map>
 #include <string>
+#include <semaphore.h>
 
 using namespace std;
 using namespace userInformation;
@@ -21,6 +22,7 @@ class NotificationManager {
         unordered_map <string, Notification> notifications; // <notification ID> : <notification object>
 
         int getPendingReaders(string username);
+        sem_t freeCritialSession;
     public:
         /* Initializers */
         NotificationManager();
