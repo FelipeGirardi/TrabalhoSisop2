@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <string>
 #include "user_information.hpp"
-#include "../../common/include/Notification.hpp"
+#include "../../Common/include/Notification.hpp"
 
 using namespace userInformation;
 using namespace notification;
