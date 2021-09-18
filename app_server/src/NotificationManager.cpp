@@ -8,24 +8,24 @@
 #include "../include/profile_session_manager.hpp"
 #include "../include/GlobalManager.hpp"
 #include "../include/CommunicationManager.hpp"
+#include <algorithm>
 #include <unordered_map>
 #include <string>
+#include <list>
 
 using namespace std;
 using namespace notification;
 using namespace profileSessionManager;
 
-    NotificationManager::NotificationManager() {
-        this->idNextNotification = 2;
-    }
-
-    NotificationManager::NotificationManager(unordered_map <string, Notification> notifications) {
-        this->idNextNotification = 2;
-        this->setNotifications(notifications);
-    }
+    NotificationManager::NotificationManager() { }
 
     void NotificationManager::setNotifications(unordered_map <string, Notification> notifications) {
         this->notifications = notifications;
+
+        list<int> keys;
+        for(auto kv : notifications) { keys.push_back(stoi(kv.first)); }
+        this->idNextNotification = *(max_element(keys.begin(), keys.end())) + 1;
+
     }
 
     unordered_map <string, Notification> NotificationManager::getNotifications() {

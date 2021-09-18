@@ -24,7 +24,6 @@ class NotificationManager {
     public:
         /* Initializers */
         NotificationManager();
-        NotificationManager(unordered_map <string, Notification> notifications);
 
         /* Getters */
         Notification getNotificationByID(string notificationID);

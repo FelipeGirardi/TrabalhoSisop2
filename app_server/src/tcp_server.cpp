@@ -266,9 +266,8 @@ void closeAppHandler(int n_signal) {
     signal(n_signal, SIG_IGN);
     // salva status dos perfis no arquivo
     cout << "Salvando perfis e notificações...\n";
-    fileManager.saveUsersOnFile(users);
-    //TODO: salvar notificacoes tbm
-    //fileManager.saveNotificationsOnFile(notifications);
+    fileManager.saveUsersOnFile(GlobalManager::sessionManager.getUsers());
+    fileManager.saveNotificationsOnFile(GlobalManager::notifManager.getNotifications());
     cout << "Perfis e notificações salvos!\n";
     exit(0);
 }
@@ -289,6 +288,7 @@ AuthResult authenticate(Session *session) {
     readResult = read(session->client_socket, buffer, BUFFER_SIZE);
     if (readResult < 0 || buffer[0] == '\0' || buffer[0] == '\n') {
         printf("ERROR reading from socket");
+        cout << "buffer" << buffer;
         finalResult.result = -1;
         close(session->client_socket);
         close(session->notif_socket);

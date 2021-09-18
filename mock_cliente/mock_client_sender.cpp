@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
 
     while(1) {
         printf("Enter the message: ");
+
         bzero(pkt._payload, 256);
         fgets(pkt._payload, sizeof(pkt._payload), stdin);
         pkt._payload[strcspn(pkt._payload, "\n")] = 0;
