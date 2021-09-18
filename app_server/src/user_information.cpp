@@ -5,6 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <algorithm>
+#include <list>
+
 #include "../include/utils/ListExtensions.hpp"
 #include "../include/GlobalManager.hpp"
 
@@ -14,6 +17,7 @@ struct arg_struct {
     string notificationID;
 };
 
+using namespace std;
 namespace userInformation {
 
     UserInformation::UserInformation() {
@@ -47,7 +51,13 @@ namespace userInformation {
     }
 
     void UserInformation::addNewFollower(string follower) {
-        this->followers.push_back(follower);
+        if (find(this->followers.begin(),
+                 this->followers.end(), follower) == this->followers.end()) {
+            cout << "user" << this->username << "nao segue" << follower;
+            this->followers.push_back(follower);
+            return;
+        }
+        cout << "user" << this->username << "segue" << follower;
     }
     void UserInformation::addNewFollowers(list <string> followers) {
         for (string follower : followers) {
