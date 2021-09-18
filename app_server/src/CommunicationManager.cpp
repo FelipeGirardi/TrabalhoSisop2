@@ -12,7 +12,7 @@
 #include <list>
 #include "../include/Session.hpp"
 #include "../include/CommunicationManager.hpp"
-#include "../include/ClientAuthData.hpp"
+#include "../include/Session.hpp"
 #include "../../Common/include/Notification.hpp"
 #define PORT 4000
 
@@ -81,7 +81,7 @@ namespace communicationManager {
         cout << "sendPacketToSessions" << sessions.size() << endl;
         int returnValue = 0;
         for (Session session : sessions) {
-            if (this->send_packet(session.notificationSocket, package) >= 0) {
+            if (this->send_packet(session.notif_socket, package) >= 0) {
                 returnValue ++;
             }
         }

@@ -73,12 +73,16 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    //while(1) {
+    while(1) {
         bzero(buffer,256);
         /* read from the socket */
         Packet *pktResponse = new Packet;
         int bufferInt;
         bufferInt = read(notifsocket, pktResponse, sizeof(Packet));
+        if (bufferInt < 0) {
+            cout << "erro na leitura. Disconnecting" << endl;
+            break;
+        }
         cout << "leu algo do socket" << endl;
 
         //n = read(sockfd, buffer, 256);
@@ -89,7 +93,9 @@ int main(int argc, char *argv[])
             printf("ERROR reading from socket\n");
         else
             printf("BUFFER response %s\n",buffer);
-    //}
+
+        free(pktResponse);
+    }
 
     close(notifsocket);
     close(commandsocket);

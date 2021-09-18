@@ -76,7 +76,8 @@ int main(int argc, char *argv[])
         printf("Enter the message: ");
         bzero(pkt._payload, 256);
         fgets(pkt._payload, sizeof(pkt._payload), stdin);
-
+        pkt._payload[strcspn(pkt._payload, "\n")] = 0;
+        cout << "packet after strcspn" << pkt._payload << endl;
         pkt.type = SEND;
         pkt.length = strlen(pkt._payload);
         pkt.timestamp = 0;

@@ -1,26 +1,24 @@
-//
-// Created by Laura Corssac on 9/14/21.
-//
+#ifndef SESSION_HPP
+#define SESSION_HPP
 
-#ifndef SESSION_H
-#define SESSION_H
-
+#include <pthread.h>
+#include <stdbool.h>
 #include <string>
+#include <unordered_map>
+//#include "user_information.hpp"
 
+//using namespace userInformation;
 using namespace std;
-//typedef struct __session {
-//    struct __profile *owner;
-//    int id;
-//    bool isopen;
-//    int cmdsockfd;
-//    int nsockfd;
-//} session_t;
 
 class Session {
-public:
-    int commandSocket;
-    int notificationSocket;
+    public:
+        int client_socket;               // Socket do cliente
+        int notif_socket;                // Socket das notificações
+        string userID;                   // Id do usuário (TALVEZ O ID TENHA QUE SER INT EM VEZ DE STRING)
+        bool operator == (const Session& c) const {
+            return client_socket == c.client_socket && notif_socket == c.notif_socket && userID == c.userID;
+        }
+        bool operator != (const Session& c) const { return !operator==(c); }
 };
 
-
-#endif //SESSION_H
+#endif //SESSION_HPP

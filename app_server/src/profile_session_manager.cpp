@@ -85,7 +85,7 @@ namespace profileSessionManager {
 
     }
 
-    void ProfileSessionManager::endSession(string username) {
+    void ProfileSessionManager::endSession(string username, Session session) {
 
         if (this->users.find(username) == this->users.end()) { return; }
 
@@ -99,6 +99,9 @@ namespace profileSessionManager {
             this->users[username].stopListeningForNotifications();
             this->users[username].decrementNumberOfSessions();
         }
+        this->users[username].sessions.remove(session);
+        cout << "now the number of sessions is" << this->users[username].getNumberOfSessions() << endl;
+        cout << "and the lenght of sessions is" << this->users[username].sessions.size() << endl;
 
     }
 

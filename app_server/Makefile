@@ -26,7 +26,6 @@ build_server:
 	src/NotificationManager.cpp \
 	src/utils/ListExtensions.cpp \
 	src/GlobalManager.cpp \
-	src/Session.cpp \
 	src/CommunicationManager.cpp \
 	../common/src/Packet.cpp \
 	../common/src/PacketType.cpp

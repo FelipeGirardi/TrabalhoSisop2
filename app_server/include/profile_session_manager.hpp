@@ -58,7 +58,7 @@ namespace profileSessionManager {
         * @Param username: the user who wants to end one session
         *
         */
-        void endSession(string username);
+        void endSession(string username, Session session);
 
         /**
          * Adds a new username (follower) to the list of followers of an user (toBeFollowed)
