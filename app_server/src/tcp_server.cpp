@@ -216,8 +216,9 @@ void *client_thread_func(void *data) {
         bufferInt = read(client_socket, pkt, sizeof(Packet));
         cout << "leu algo do socket" << endl;
 
-        if (bufferInt < 0 || pkt->type == EXIT || buffer[0] == '\0' || buffer[0] == '\n') {
+        if (bufferInt < 0 || !(pkt->type == SEND || pkt->type == FOLLOW || pkt->type == EXIT)) {
             free(pkt);
+            cout << "buffer" << buffer <<endl;
             printf("ERROR reading from socket. Disconecting.");
             break;
         }
@@ -238,12 +239,7 @@ void *client_thread_func(void *data) {
         } else if(pkt->type == EXIT) {
             cout << "recebeu exit" << endl;
             *package = GlobalManager::commManager.createAckPacketForType(pkt->type);
-            free(pkt);
-            free(package);
-            break;
-        } else {
-            *package = GlobalManager::commManager.createGenericNackPacket();
-            cout << "comando invalido" << endl;
+            _exit = 1;
         }
 
         cout << "** Envia pacote ACK/NACK recebimento de comando **" << endl;
