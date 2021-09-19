@@ -7,11 +7,11 @@ University assignment for Operating Systems 2 class. This is a client/server Twi
 
 # Pre-requirements
 
-| Name    | Description                  | Ubuntu Command             |
-|---------|------------------------------|----------------------------|
-| G++     | GNU Compiler for C++         | `sudo apt install g++`     |
-| Make    | Build tool                   | `sudo apt install make`    |
-| NCurses | Console manipulation library | `sudo apt install ncurses` |
+| Name    | Description                  | Ubuntu Command                 |
+|---------|------------------------------|--------------------------------|
+| G++     | GNU Compiler for C++         | `sudo apt install g++`         |
+| Make    | Build tool                   | `sudo apt install make`        |
+| NCurses | Console manipulation library | `sudo apt install ncurses-bin` |
 
 # How to compile?
 Run `make` in the project directory. You can also compile individual subprojects by running `make` in the subproject directory.
