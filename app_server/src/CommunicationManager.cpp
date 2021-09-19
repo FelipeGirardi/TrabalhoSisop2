@@ -20,16 +20,17 @@ using namespace std;
 using namespace notification;
 
 namespace communicationManager {
-    int read_text(int socket, char *buffer) {
+    int read_text(int socket, char* buffer) {
         //    int n;
         //    n = read(socket, buffer, BUFFER_SIZE);
         //    if (n < 0)
         //        printf("ERROR reading from socket");
         //
         //    return n;
+        return 0; // Avoid compilation warning.
     }
 
-    int read_packet(int socket, Packet *package, char *buffer) {
+    int read_packet(int socket, Packet* package, char* buffer) {
         //    int n;
         //    char payload[128]="";
         //
@@ -55,16 +56,17 @@ namespace communicationManager {
         //    printf("Here is the message: %s\n", payload);
         //
         //    return n;
+        return 0; // Avoid compilation warning.
     }
 
-    int CommunicationManager::send_packet(int socket, Packet *package) {
+    int CommunicationManager::send_packet(int socket, Packet* package) {
         int n;
         // Enviando metadados
         cout << "vai enviar pacote" << endl;
         package->printItself();
 
         n = write(socket, package, sizeof(Packet));
-        if (n < 0){
+        if (n < 0) {
             printf("ERROR writing to socket\n");
             n = -1;
         }
@@ -77,12 +79,12 @@ namespace communicationManager {
         return n;
     }
 
-    int CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet *package) {
+    int CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
         cout << "sendPacketToSessions" << sessions.size() << endl;
         int returnValue = 0;
         for (Session session : sessions) {
             if (this->send_packet(session.notif_socket, package) >= 0) {
-                returnValue ++;
+                returnValue++;
             }
         }
         return returnValue;
@@ -91,14 +93,14 @@ namespace communicationManager {
     int CommunicationManager::sendNotificationToSessions(list<Session> sessions, Notification notification) {
 
         cout << "sendNotificationToSessions" << endl;
-        Packet *packet = new Packet;
+        Packet* packet = new Packet;
         packet->timestamp = time(NULL);
         packet->type = NOTIFICATION;
 
         cout << "created packet" << endl;
         string notString = notification.toString();
         notString.pop_back();
-        const char *cstr = notString.c_str();
+        const char* cstr = notString.c_str();
         cout << "not to string" << notification.toString() << endl;
         cout << "cstring" << cstr;
         bzero(packet->_payload, BUFFER_SIZE);
@@ -111,16 +113,16 @@ namespace communicationManager {
 
     string CommunicationManager::stringDescribingType(PacketType type) {
         switch (type) {
-            case SEND:
-                return "SEND";
-            case FOLLOW:
-                return "FOLLOW";
-            case EXIT:
-                return "EXIT";
-            case USERNAME:
-              return "USERNAME";
-            default:
-                return "";
+        case SEND:
+            return "SEND";
+        case FOLLOW:
+            return "FOLLOW";
+        case EXIT:
+            return "EXIT";
+        case USERNAME:
+            return "USERNAME";
+        default:
+            return "";
         }
     }
 
