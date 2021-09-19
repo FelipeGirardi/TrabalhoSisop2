@@ -85,3 +85,6 @@ Temporary Items
 */out/
 */bin/
 */build/
+app_client/cmake-build-debug/
+app_server/cmake-build-debug/
+common/cmake-build-debug/
