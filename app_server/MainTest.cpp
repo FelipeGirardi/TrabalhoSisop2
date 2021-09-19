@@ -6,60 +6,54 @@
 #include <unordered_map>
 #include <list>
 #include <unistd.h>
+#include <pthread.h>
 #include "include/profile_session_manager.hpp"
 #include "include/user_information.hpp"
 #include "include/FileManager.hpp"
-#include "../common/include/Notification.hpp"
+#include "../Common/include/Notification.hpp"
+#include "include/NotificationManager.hpp"
+#include "include/GlobalManager.hpp"
 
 using namespace std;
 using namespace profileSessionManager;
 using namespace userInformation;
 using namespace notification;
 
-unordered_map<string, UserInformation> users;
+ProfileSessionManager sessionManager;
+NotificationManager notificationManager;
+GlobalManager globalManager;
+FileManager fileManager;
 
 int main() {
 
-    //    list<string> test_list = {"1","2","3"};
-    //    list<string> followers_test = {"@renan", "@lize"};
-    //    Notification notif_test = Notification("1", "ola", "@laura", 29102, 2);
-    //
-    //    unordered_map<string, UserInformation> users;
-    //    unordered_map<string, Notification> notifications;
-    //
-    //    notifications["1"] = notif_test;
-    //
-    //    users["@mo"] = UserInformation(test_list,followers_test);
-    //    users["@joana"] = UserInformation(test_list, {});
-    //    users["@pedrinho"] = UserInformation({},{});
-    //    users["@yoda"] = UserInformation({},followers_test);
-    //
-    //    FileManager fileManager;
-    //    ProfileSessionManager sessionManager;
-    //
-    //    fileManager.saveUsersOnFile(users);
-    //    fileManager.saveNotificationsOnFile(notifications);
-    //
-    //    unordered_map<string,UserInformation> users_retrieval = fileManager.getUsersFromFile();
-    //    unordered_map<string,Notification> notif_retrieval = fileManager.getNotificationsFromFile();
-    //    sessionManager.setUsers(users_retrieval);
-    //    sessionManager.setNotifications(notifications);
+    cout << "MAIN" << endl;
 
-    //    cout << "USERS" << endl;
-    //    for (auto user_pair: sessionManager.getUsers()) {
-    //        cout << user_pair.first << endl;
-    //        cout << user_pair.second.toString() << endl;
-    //    }
-    //    cout << endl << endl;
-    //    cout << endl << endl;
-    //    cout << "NOTIFICATIONS" << endl;
-    //
-    //    for (auto notif_pair: sessionManager.getNotifications()) {
-    //        cout << notif_pair.first << endl;
-    //        cout << notif_pair.second.toString() << endl;
-    //    }
+    unordered_map<string,UserInformation> users = fileManager.getUsersFromFile();
+
+    GlobalManager::sessionManager = sessionManager;
+    GlobalManager::notifManager = notificationManager;
+    GlobalManager::sessionManager.setUsers(users);
 
 
+    GlobalManager::sessionManager.createNewSession("@joana");
+    GlobalManager::sessionManager.createNewSession("@moritz");
+    //GlobalManager::sessionManager.newNotificationSentBy("@moritz", "10");
 
+    sleep(2);
+
+    GlobalManager::sessionManager.endSession("@joana");
+
+    sleep(2);
+
+    //GlobalManager::sessionManager.newNotificationSentBy("@moritz", "22");
+   // sessionManager.addNewFollowerToUser("@moritz", "@joana");
+
+    sleep(2);
+
+    GlobalManager::sessionManager.createNewSession("@joana");
+    sleep(2);
+    GlobalManager::sessionManager.newNotificationSentBy("@joana", "44");
+
+    pthread_exit(0);
     return 0;
 }

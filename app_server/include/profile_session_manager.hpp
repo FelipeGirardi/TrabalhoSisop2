@@ -2,7 +2,7 @@
 #define PROFILE_SESSION_MANAGER_HPP
 
 #include "user_information.hpp"
-#include "../../common/include/Notification.hpp"
+#include "../../Common/include/Notification.hpp"
 
 #include <unordered_map>
 #include <string>
@@ -35,21 +35,38 @@ namespace profileSessionManager {
 
         /*
          * Method called by Notification Manager
-         * Creates producer thread
          *
          * @Param username: the user who sent the notification
          * @Param notificationID: the ID of notification to be sent to all followers of `username`
          */
-        static void newNotificationSentBy(string username, string notificationID);
+        void newNotificationSentBy(string username, string notificationID);
 
         /*
         * Method called by Communication Manager
         * Creates consumer thread
         *
         * @Param username: the user who wants to login/create account
+        * @Return int: a bool indicating if creation of session was possible
+        */
+        int createNewSession(string username, Session session);
+
+        /*
+        * Method called by Communication Manager
+        * It decrements the number of sessions of user
+         * Collateral effect: if it is the only session of user, consumer thread is ended.
+        *
+        * @Param username: the user who wants to end one session
         *
         */
-        static void createNewSession(string username);
+        void endSession(string username, Session session);
+
+        /**
+         * Adds a new username (follower) to the list of followers of an user (toBeFollowed)
+         *
+         * @param follower - username of new user to be added to the list
+         * @param toBeFollowed  - username the user whose list is gonna be changed
+         */
+        void addNewFollowerToUser(string follower, string toBeFollowed);
 
     };
 }
