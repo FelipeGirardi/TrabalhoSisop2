@@ -2,13 +2,12 @@
 // Created by Laura Corssac on 9/6/21.
 //
 
-#include "../include/Notification.hpp"
-
+#include "Notification.hpp"
+#include "StringExtensions.hpp"
 #include <unordered_map>
 #include <vector>
 #include <list>
 #include <string>
-#include "../../app_server/include/utils/StringExtensions.hpp"
 
 using namespace std;
 
@@ -16,8 +15,8 @@ namespace notification {
 
     Notification::Notification() { }
     Notification::Notification(string id, string text, string username,
-                               long int time,
-                               int pendingReaders) {
+        long int time,
+        int pendingReaders) {
         this->id = id;
         this->text = text;
         this->username = username;
@@ -25,9 +24,25 @@ namespace notification {
         this->pendingReaders = pendingReaders;
     }
 
-    Notification notificationFromString(string sourceString) {
+    Notification* Notification::parseBytes(const char* bytes)
+    {
+        if (bytes != nullptr)
+        {
+            auto parsedNotification = (Notification*)bytes;
+            return new Notification(*parsedNotification);
+        }
 
-        StringExtensions stringParser;
+        return nullptr;
+    }
+
+    Notification Notification::parseCsvString(const char* csvString)
+    {
+        return notificationFromString(string(csvString));
+    }
+
+    Notification Notification::notificationFromString(string sourceString) {
+
+        Common::StringExtensions stringParser;
         vector<string> splitedString = stringParser.split(sourceString, ',');
 
         //TODO: dar um jeito nesse 5
@@ -39,9 +54,10 @@ namespace notification {
             int pendingReaders = stoi(splitedString[4]);
 
             Notification newNotif = Notification(id, text, username,
-                                                 time, pendingReaders);
+                time, pendingReaders);
             return newNotif;
-        } else {
+        }
+        else {
             Notification emptyNot;
             return emptyNot;
         }
@@ -75,7 +91,7 @@ namespace notification {
     void Notification::setTime(long int time) {
         this->time = time;
     }
-    void Notification::setPendingReaders(int pendingReaders){
+    void Notification::setPendingReaders(int pendingReaders) {
         this->pendingReaders = pendingReaders;
     }
     string Notification::toString() {
@@ -88,4 +104,9 @@ namespace notification {
         return return_string;
     }
 
+    char* Notification::toBytes()
+    {
+        auto notificationCopy = new Notification(*this);
+        return (char*)notificationCopy;
+    }
 }

@@ -10,21 +10,42 @@
 
 SRC_DIR = src
 OBJ_DIR = out
+BIN_DIR = bin
+TEST_DIR = tests
+HEADERS_DIR = include
+INCLUDE_PATH = -I$(HEADERS_DIR)
 
-all: build-directories Notification.o Packet.o PacketType.o
+all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o
 
 ###
-# Object files
+# Main object files
 ###
 
 Notification.o: $(SRC_DIR)/Notification.cpp
-	g++ -std=c++11 -o $(OBJ_DIR)/Notification.o -c $(SRC_DIR)/Notification.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/Notification.o -c $(SRC_DIR)/Notification.cpp $(INCLUDE_PATH)
 
 Packet.o: $(SRC_DIR)/Packet.cpp
-	g++ -std=c++11 -o $(OBJ_DIR)/Packet.o -c $(SRC_DIR)/Packet.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/Packet.o -c $(SRC_DIR)/Packet.cpp $(INCLUDE_PATH)
 
 PacketType.o: $(SRC_DIR)/PacketType.cpp
-	g++ -std=c++11 -o $(OBJ_DIR)/PacketType.o -c $(SRC_DIR)/PacketType.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/PacketType.o -c $(SRC_DIR)/PacketType.cpp $(INCLUDE_PATH)
+
+StringExtensions.o: $(SRC_DIR)/StringExtensions.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/StringExtensions.cpp $(INCLUDE_PATH)
+
+###
+# Test object files
+###
+
+NotificationTest.o: $(TEST_DIR)/NotificationTest.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/NotificationTest.o -c $(TEST_DIR)/NotificationTest.cpp $(INCLUDE_PATH)
+
+###
+# Test executables
+###
+
+NotificationTest: NotificationTest.o Notification.o StringExtensions.o
+	g++ -std=c++11 -o $(BIN_DIR)/NotificationTest.out $(OBJ_DIR)/NotificationTest.o $(OBJ_DIR)/Notification.o $(OBJ_DIR)/StringExtensions.o
 
 ###
 # Scripts
@@ -32,6 +53,11 @@ PacketType.o: $(SRC_DIR)/PacketType.cpp
 
 build-directories:
 	@[ ! -d $(OBJ_DIR) ] && mkdir $(OBJ_DIR) || true
+	@[ ! -d $(BIN_DIR) ] && mkdir $(BIN_DIR) || true
+
+check: build-directories NotificationTest
+	./$(BIN_DIR)/NotificationTest.out
 
 clean:
 	@[ -d $(OBJ_DIR) ] && rm -r $(OBJ_DIR) || true
+	@[ ! -d $(BIN_DIR) ] && mkdir $(BIN_DIR) || true

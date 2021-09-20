@@ -20,6 +20,8 @@ namespace notification {
         /* Initializers */
         Notification();
         Notification(string id, string text, string username, long int time, int pendingReaders);
+        static Notification* parseBytes(const char* bytes);
+        static Notification parseCsvString(const char* csvString);
 
         /* Getters */
         string getID();
@@ -44,7 +46,10 @@ namespace notification {
          * Obs.: LET THE COMMA AT THE END
          */
         string toString();
+        char* toBytes();
 
+    private:
+        static Notification notificationFromString(string sourceString);
     };
 }
 

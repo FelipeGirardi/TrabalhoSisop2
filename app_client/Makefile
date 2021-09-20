@@ -14,17 +14,30 @@ BIN_DIR = bin
 TEST_DIR = tests
 HEADERS_DIR = $(SRC_DIR)/headers
 COMMON_OBJ_DIR = ../common/$(OBJ_DIR)
-INCLUDE_PATH = -I$(HEADERS_DIR)
+INCLUDE_PATH = -I$(HEADERS_DIR) -I../common/include
 LIBRARIES = -lpthread -lncurses
 
-all: build-directories
+all: build-directories ClientApp.o CommandLineParser.o ConcurrentCommandLine.o SessionManager.o Socket.o
+	g++ -o $(BIN_DIR)/clientApp $(OBJ_DIR)/ClientApp.o $(OBJ_DIR)/CommandLineParser.o $(OBJ_DIR)/ConcurrentCommandLine.o $(OBJ_DIR)/SessionManager.o $(OBJ_DIR)/Socket.o $(COMMON_OBJ_DIR)/*.o $(LIBRARIES)
 
 ###
 # Main object files
 ###
 
+ClientApp.o: $(SRC_DIR)/main/ClientApp.cpp
+	g++ -o $(OBJ_DIR)/ClientApp.o -c $(SRC_DIR)/main/ClientApp.cpp $(INCLUDE_PATH)
+
+CommandLineParser.o: $(SRC_DIR)/main/io/CommandLineParser.cpp
+	g++ -o $(OBJ_DIR)/CommandLineParser.o -c $(SRC_DIR)/main/io/CommandLineParser.cpp $(INCLUDE_PATH)
+
 ConcurrentCommandLine.o: $(SRC_DIR)/main/io/ConcurrentCommandLine.cpp
 	g++ -o $(OBJ_DIR)/ConcurrentCommandLine.o -c $(SRC_DIR)/main/io/ConcurrentCommandLine.cpp $(INCLUDE_PATH)
+
+SessionManager.o: $(SRC_DIR)/main/io/SessionManager.cpp
+	g++ -o $(OBJ_DIR)/SessionManager.o -c $(SRC_DIR)/main/io/SessionManager.cpp $(INCLUDE_PATH)
+
+Socket.o: $(SRC_DIR)/main/io/Socket.cpp
+	g++ -o $(OBJ_DIR)/Socket.o -c $(SRC_DIR)/main/io/Socket.cpp $(INCLUDE_PATH)
 
 ###
 # Test object files

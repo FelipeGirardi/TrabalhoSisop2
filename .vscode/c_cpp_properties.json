@@ -4,7 +4,8 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/app_client/src/headers"
+                "${workspaceFolder}/app_client/src/headers",
+                "${workspaceFolder}/common/include"
             ],
             "defines": [
                 "_DEBUG",
