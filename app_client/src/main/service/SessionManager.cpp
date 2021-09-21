@@ -4,7 +4,7 @@
  * \author Marlize Ramos
  * \author Renan Kummer
  */
-#include "io/SessionManager.hpp"
+#include "service/SessionManager.hpp"
 #include "exception/HostNotFoundException.hpp"
 #include "exception/SocketNotCreatedException.hpp"
 #include "exception/AuthenticationFailedException.hpp"
@@ -16,13 +16,14 @@
 #include <netinet/in.h>
 #include <netdb.h>
 
-using namespace ClientApp::IO;
+using namespace ClientApp::Service;
 using namespace std;
 
 using ClientApp::Exception::HostNotFoundException;
 using ClientApp::Exception::SocketNotCreatedException;
 using ClientApp::Exception::AuthenticationFailedException;
 using ClientApp::Exception::SocketConnectionDeniedException;
+using ClientApp::IO::Socket;
 
 // Static variables
 
@@ -32,7 +33,7 @@ mutex SessionManager::managerMutex_;
 
 // Public methods
 
-SessionSockets SessionManager::connect(std::string profileId, std::string host, int port)
+SessionSockets SessionManager::connect(string profileId, string host, int port)
 {
     managerMutex_.lock();
 

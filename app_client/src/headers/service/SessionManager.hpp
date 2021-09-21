@@ -12,12 +12,12 @@
 
 namespace ClientApp
 {
-    namespace IO
+    namespace Service
     {
         struct SessionSockets
         {
-            Socket senderSocket;
-            Socket listenerSocket;
+            IO::Socket senderSocket;
+            IO::Socket listenerSocket;
         };
 
         class SessionManager
@@ -27,10 +27,10 @@ namespace ClientApp
             static void disconnect();
 
         private:
-            static Socket createSocket(std::string host);
+            static IO::Socket createSocket(std::string host);
             static hostent* createHostEntry(std::string host);
             static int createSocketDescriptor();
-            static Socket connectSocketToServer(int socketDescriptor, const hostent* hostEntry, int port);
+            static IO::Socket connectSocketToServer(int socketDescriptor, const hostent* hostEntry, int port);
             static void authenticateProfile(std::string profileId);
 
             static bool isConnected_;
