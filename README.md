@@ -18,12 +18,14 @@ Run `make` in the project directory. You can also compile individual subprojects
 
 # How to run?
 To run the server application:
-
 ``` bash
-./<project-directory>/app_server/bin/serverApp
+./app_server/bin/serverApp
 ```
 
 To run the client application:
 ``` bash
-./<project-directory>/app_client/bin/clientApp
+./app_client/bin/clientApp <profile> 127.0.0.1 4000
+
+# -- Example --
+# ./app_client/bin/clientApp @johndoe 127.0.0.1 4000
 ```
