@@ -2,8 +2,25 @@
 // Created by Laura Corssac on 9/17/21.
 //
 
-#include "../include/Packet.hpp"
+#include "Packet.hpp"
 #include <stdio.h>
+
+Packet* Packet::fromBytes(const char* bytes)
+{
+    if (bytes != nullptr)
+    {
+        auto parsedNotification = (Packet*)bytes;
+        return new Packet(*parsedNotification);
+    }
+
+    return nullptr;
+}
+
+char* Packet::toBytes()
+{
+    auto packetCopy = new Packet(*this);
+    return (char*)packetCopy;
+}
 
 void Packet::printItself() {
     printf("type: %d\n", this->type);
