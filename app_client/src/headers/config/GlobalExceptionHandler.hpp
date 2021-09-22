@@ -13,7 +13,7 @@ namespace ClientApp
         class GlobalExceptionHandler
         {
         public:
-            static void enable();
+            static bool enable();
             static void handleUncaughtException();
         };
     }

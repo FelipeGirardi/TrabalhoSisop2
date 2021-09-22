@@ -60,6 +60,9 @@ void SessionManager::disconnect()
 {
     managerMutex_.lock();
 
+    Packet exitPacket = { EXIT, 256, 0, "EXIT" };
+    sockets_->senderSocket.send(exitPacket);
+
     ::close(sockets_->listenerSocket.getDescriptor());
     ::close(sockets_->senderSocket.getDescriptor());
     isConnected_ = false;

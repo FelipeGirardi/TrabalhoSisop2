@@ -29,6 +29,7 @@ bool ConcurrentCommandLine::initialize()
         initscr();
         cbreak();
         curs_set(0);
+        scrollok(stdscr, TRUE);
 
         hideInput();
 

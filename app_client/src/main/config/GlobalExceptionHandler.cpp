@@ -15,9 +15,10 @@ using ClientApp::IO::ConcurrentCommandLine;
 
 // Public methods
 
-void GlobalExceptionHandler::enable()
+bool GlobalExceptionHandler::enable()
 {
     set_terminate(handleUncaughtException);
+    return true;
 }
 
 void GlobalExceptionHandler::handleUncaughtException()

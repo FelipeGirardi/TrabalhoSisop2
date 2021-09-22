@@ -8,7 +8,9 @@
 #include "io/ConcurrentCommandLine.hpp"
 #include "exception/SocketReadFailedException.hpp"
 #include "exception/SocketWriteFailedException.hpp"
+#include "exception/ServerNotAcknowledgedException.hpp"
 #include "Notification.hpp"
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -21,6 +23,7 @@ using namespace std;
 using notification::Notification;
 using ClientApp::Exception::SocketReadFailedException;
 using ClientApp::Exception::SocketWriteFailedException;
+using ClientApp::Exception::ServerNotAcknowledgedException;
 
 // Static variables
 
@@ -42,8 +45,9 @@ void Socket::send(Packet packet)
     if (response < 0)
         throw new SocketWriteFailedException(socketDescriptor_);
 
-    // TODO: How to parse this ack?
     auto ackNotification = receive();
+    if (ackNotification.getID() == to_string(SERVER_ERROR))
+        throw new ServerNotAcknowledgedException(socketDescriptor_);
 }
 
 void Socket::send(const char* bytes)
@@ -53,17 +57,20 @@ void Socket::send(const char* bytes)
         throw new SocketWriteFailedException(socketDescriptor_);
 
     auto ackNotification = receive();
+    if (ackNotification.getID() == to_string(SERVER_ERROR))
+        throw new ServerNotAcknowledgedException(socketDescriptor_);
 }
 
 Notification Socket::receive()
 {
-    auto buffer = new char[bufferSize_];
-    auto response = read(socketDescriptor_, buffer, bufferSize_);
+    Packet incomingPacket;
+
+    auto response = read(socketDescriptor_, &incomingPacket, bufferSize_);
     if (response < 0)
         throw new SocketReadFailedException(socketDescriptor_);
 
-    auto notification = Notification::parseCsvString(buffer);
-    delete buffer;
+    if (incomingPacket.type == NOTIFICATION)
+        return Notification::parseCsvString(incomingPacket._payload);
 
-    return notification;
+    return Notification(to_string(incomingPacket.type), incomingPacket._payload, "./serverApp", 0, 0);
 }
