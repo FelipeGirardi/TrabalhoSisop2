@@ -46,7 +46,6 @@ int main(int argc, char** argv)
     // Disclaimer: Currently the server has some odd behaviors. 
     // - We're ignoring messages with trash data sent after real messages.
     // - Same messages are sent again when logging in.
-    // - Messages are only received after someone sends a messages.
     // - Sometimes messages are not received.
     // - I managed to reproduce a concurrency issue by logging in with two users too fast (they started receiving messages from themselves).
 }
