@@ -111,7 +111,7 @@ Socket SessionManager::connectSocketToServer(int socketDescriptor, const hostent
 
 void SessionManager::authenticateProfile(std::string profileId)
 {
-    profileId += "\n"; // FIXME: Server is dropping last char.
+    profileId;
 
     try
     {

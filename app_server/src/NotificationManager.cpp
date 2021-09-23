@@ -62,16 +62,29 @@ using namespace profileSessionManager;
         }
 
         list<Session> sessions = users[username].sessions;
-        int quantitySent = GlobalManager::commManager.sendNotificationToSessions(sessions,
+        int sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
                                                               this->notifications[notificationID]);
+        if (sent == 1) {
+            this->notifications[notificationID].decrementPendingReaders();
+        }
+        int pendingReaders = this->notifications[notificationID].getPendingReaders();
+        cout << "notification still has to be sent to " <<  pendingReaders << " pending readers" << endl;
+        if (pendingReaders == 0) {
+            //SC?
+            cout << "notification sent to all readers. Deleting notification." << endl;
+            this->notifications.erase(notificationID);
+        }
 
-        cout << quantitySent << " notifications sent" << endl;
     }
 
     void NotificationManager::newNotificationSentBy(string username, string notification) {
 
         long int currentTime = static_cast<long int> (time(NULL));
         int pendingReaders = this->getPendingReaders(username);
+        if (pendingReaders == 0) {
+            cout << "user has no follower. Notification being ignored" << endl;
+            return;
+        }
 
         sem_wait(&freeCritialSession);
         string notificationID = to_string(this->idNextNotification);
@@ -88,15 +101,7 @@ using namespace profileSessionManager;
     }
 
     int NotificationManager::getPendingReaders(string username) {
-        ProfileSessionManager profSessionManager;
-        UserInformation userWhoSentMessage = profSessionManager.getUserByUsername(username);
-        list<string> followerNames = userWhoSentMessage.getFollowers();
-        int pendingReaders = 0;
-        for(string followerName : followerNames) {
-            //UserInformation follower = profSessionManager.getUserByUsername(followerName);
-            //int nSessions = follower.getNumberOfSessions();
-            pendingReaders += 1;
-        }
-        return pendingReaders;
+        UserInformation userWhoSentMessage = GlobalManager::sessionManager.getUserByUsername(username);
+        return userWhoSentMessage.getFollowers().size();
     }
 

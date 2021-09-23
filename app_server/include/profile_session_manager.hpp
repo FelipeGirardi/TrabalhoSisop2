@@ -45,20 +45,19 @@ namespace profileSessionManager {
         * Method called by Communication Manager
         * Creates consumer thread
         *
-        * @Param username: the user who wants to login/create account
         * @Return int: a bool indicating if creation of session was possible
         */
-        int createNewSession(string username, Session session);
+        int createNewSession(Session session);
 
         /*
         * Method called by Communication Manager
         * It decrements the number of sessions of user
          * Collateral effect: if it is the only session of user, consumer thread is ended.
         *
-        * @Param username: the user who wants to end one session
+        * @Param session: the session or the user to be deleted
         *
         */
-        void endSession(string username, Session session);
+        void endSession(Session session);
 
         /**
          * Adds a new username (follower) to the list of followers of an user (toBeFollowed)

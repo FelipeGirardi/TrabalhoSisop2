@@ -2,6 +2,7 @@
 #include <iostream>
 #include <list>
 #include <pthread.h>
+#include <unistd.h> //close()
 #include "../include/profile_session_manager.hpp"
 #include "../include/GlobalManager.hpp"
 
@@ -45,8 +46,6 @@ namespace profileSessionManager {
         cout << "newNotificationSentBy " << username << " " << " " << endl;
         cout << "users" << endl << endl;
 
-        GlobalManager::printItself();
-
         list<string> followers = this->users[username].getFollowers();
         cout << "followers size " << followers.size() << endl;
         for (string follower : followers) {
@@ -54,14 +53,19 @@ namespace profileSessionManager {
             if (this->users.find(follower) == this->users.end()) {continue;}
             this->users[follower].produceNewNotification(notificationID);
         }
-        //pthread_join();
+
     }
 
-    // 1 = criou
-    // -1 = nao criou
-    int ProfileSessionManager::createNewSession(string username, Session session) {
+    /*
+     * Retorno:
+     * 1 = criou sessao com sucesso
+     * -1 = nao criou
+    */
+    int ProfileSessionManager::createNewSession(Session session) {
 
         // check if user exists
+        string username = session.userID;
+
         if (GlobalManager::sessionManager.getUsers().find(username) ==
         GlobalManager::sessionManager.getUsers().end()) {
             // user doesn't exist
@@ -69,6 +73,8 @@ namespace profileSessionManager {
             UserInformation newUserInfo = UserInformation(username);
             this->users[username] = newUserInfo;
 
+        } else {
+            cout << "user already exists" << endl;
         }
 
         int currentNumberSessions = this->users[username].getNumberOfSessions();
@@ -85,23 +91,30 @@ namespace profileSessionManager {
 
     }
 
-    void ProfileSessionManager::endSession(string username, Session session) {
+    void ProfileSessionManager::endSession(Session session) {
 
-        if (this->users.find(username) == this->users.end()) { return; }
+        if (this->users.find(session.userID) == this->users.end()) { return; }
 
-        int numberOfSessions = this->users[username].getNumberOfSessions();
+        int numberOfSessions = this->users[session.userID].getNumberOfSessions();
 
         if ( numberOfSessions == 2) {
             cout << "number of sessions of user is 2" << endl;
-            this->users[username].decrementNumberOfSessions();
+            this->users[session.userID].decrementNumberOfSessions();
         } else if(numberOfSessions == 1) {
             cout << "number of sessions of user is 1" << endl;
-            this->users[username].stopListeningForNotifications();
-            this->users[username].decrementNumberOfSessions();
+            this->users[session.userID].stopListeningForNotifications();
+            this->users[session.userID].decrementNumberOfSessions();
         }
-        this->users[username].sessions.remove(session);
-        cout << "now the number of sessions is" << this->users[username].getNumberOfSessions() << endl;
-        cout << "and the lenght of sessions is" << this->users[username].sessions.size() << endl;
+        this->users[session.userID].sessions.remove(session);
+
+        cout << this->users[session.userID].username << " sessions after remove:" << endl;
+        for (Session sess : this->users[session.userID].sessions)
+            cout << sess.client_socket << ' ' << sess.notif_socket << ' ' << sess.userID << endl;
+
+        cout << "now the number of sessions is " << this->users[session.userID].getNumberOfSessions() << endl;
+        cout << "and the length of sessions is " << this->users[session.userID].sessions.size() << endl;
+        close(session.notif_socket);
+        close(session.client_socket);
 
     }
 

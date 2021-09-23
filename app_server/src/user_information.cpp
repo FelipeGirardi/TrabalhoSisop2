@@ -20,12 +20,9 @@ struct arg_struct {
 using namespace std;
 namespace userInformation {
 
-    UserInformation::UserInformation() {
-        cout << "first initializer" << endl;
-    }
+    UserInformation::UserInformation() { }
 
     UserInformation::UserInformation(string username) {
-	    cout << "second initializer" << endl;
         this->username = username;
         //this->pendingNotifications = {};
         this->numberOfSessions = 0;
@@ -35,29 +32,22 @@ namespace userInformation {
     }
 
     UserInformation::UserInformation(string username, list<string> pendingNotifications, list <string> followers) {
-	    cout << "third initializer" << endl;
         this->username = username;
         this->pendingNotifications = pendingNotifications;
         this->followers = followers;
         this->numberOfSessions = 0;
         sem_init(&(this->freeCritialSession), 0, 1);
-        cout << "this user has" << pendingNotifications.size()  << "pending notifications" << endl;
         sem_init(&(this->hasItems), 0, pendingNotifications.size());
     }
 
-    UserInformation::~UserInformation()
-    {
-        cout << "destructing" << this->username << endl;
-    }
+    UserInformation::~UserInformation() { }
 
     void UserInformation::addNewFollower(string follower) {
         if (find(this->followers.begin(),
                  this->followers.end(), follower) == this->followers.end()) {
-            cout << "user" << this->username << "nao segue" << follower;
             this->followers.push_back(follower);
             return;
         }
-        cout << "user" << this->username << "segue" << follower;
     }
     void UserInformation::addNewFollowers(list <string> followers) {
         for (string follower : followers) {
@@ -87,17 +77,17 @@ namespace userInformation {
         fullString += this->username;
         fullString += '\n';
 
-        fullString += "Followers:\n";
+        fullString += "Followers: ";
         for (string follower : this->followers) {
             fullString += follower + " ";
         }
         fullString += '\n';
-        fullString += "Notifications:\n";
+        fullString += "Notifications: ";
         for (string notification : this->pendingNotifications) {
             fullString += notification + " ";
         }
         fullString += '\n';
-        fullString += "NumberOfSessions:\n";
+        fullString += "NumberOfSessions: ";
         fullString += to_string(this->numberOfSessions);
         return fullString;
 
@@ -126,15 +116,13 @@ namespace userInformation {
 
         cout << "malloc" << endl;
         struct arg_struct *args = new struct arg_struct;
-        cout << "aaa" << endl;
+
         args->userInformation = this;
-        cout << "bbb" << endl;
         args->notificationID.assign(notificationID);
-        cout << "malloc tid" << endl;
+
 //        pthread_t tid = (pthread_t *) malloc(sizeof (pthread_t));
 //        *tid = (unsigned long int) rand();
         pthread_t tid;
-        cout << "Producer ID" << (unsigned long int) tid << endl;
 
         if (pthread_create(&tid, NULL, this->producer, (void *) args)) {
             cout << "not possible to create producer thread" << endl;
@@ -148,8 +136,6 @@ namespace userInformation {
     }
 
     void UserInformation::startListeningForNotifications() {
-
-        cout << "creating thread " << this->consumerTid << endl;
 
         if (pthread_create(&(this->consumerTid), NULL, this->consumer, (void *) this)) {
             cout << "not possible to create consumer thread" << endl;
@@ -173,7 +159,7 @@ namespace userInformation {
         sem_post(&(_this->freeCritialSession));
         sem_post(&(_this->hasItems));
 
-        cout << "returning from producer" <<endl;
+        cout << "returning from producer thread" <<endl;
         //free(my_arg_struct);
         return 0;
 
@@ -201,7 +187,6 @@ namespace userInformation {
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "consuming not with ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
-                cout << "a" << endl;
                 GlobalManager::notifManager.sendNotificationTo(_this->username, consumedItem);
             } else {
                 cout << "not possible to consume" << endl;
