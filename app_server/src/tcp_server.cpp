@@ -273,8 +273,6 @@ void closeAppHandler(int n_signal) {
 
 AuthResult authenticate(Session *session) {
 
-    cout << "inside authenticate" << endl;
-
     AuthResult finalResult;
     int readResult;
     char buffer[BUFFER_SIZE];
@@ -297,9 +295,6 @@ AuthResult authenticate(Session *session) {
     // Verificando existência do usuário
 
     finalResult.username = buffer;
-
-    //TODO: tirar no cliente final
-    finalResult.username.pop_back();
 
     session->userID.assign(finalResult.username);
     int resultOfSessionCreation = GlobalManager::sessionManager.createNewSession(finalResult.username,
@@ -333,7 +328,7 @@ AuthResult authenticate(Session *session) {
         cout << "close sockets" << endl;
     }
 
-    //free package ?
+    free(package);
 
     return finalResult;
 }

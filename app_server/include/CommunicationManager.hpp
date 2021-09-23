@@ -14,8 +14,6 @@ namespace communicationManager {
     private:
         int sendPacketToSessions(list<Session> sessions, Packet *package);
     public:
-        int read_text(int socket, char *buffer);
-        int read_packet(int socket, Packet *package, char *buffer);
         int send_packet(int socket, Packet *package);
         int sendNotificationToSessions(list<Session> sessions, Notification notification);
         Packet createAckPacketForType(PacketType type);

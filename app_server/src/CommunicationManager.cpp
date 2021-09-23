@@ -20,45 +20,6 @@ using namespace std;
 using namespace notification;
 
 namespace communicationManager {
-    int read_text(int socket, char* buffer) {
-        //    int n;
-        //    n = read(socket, buffer, BUFFER_SIZE);
-        //    if (n < 0)
-        //        printf("ERROR reading from socket");
-        //
-        //    return n;
-        return 0; // Avoid compilation warning.
-    }
-
-    int read_packet(int socket, Packet* package, char* buffer) {
-        //    int n;
-        //    char payload[128]="";
-        //
-        //    // Lendo bytestream
-        //    n = read(socket, buffer, BUFFER_SIZE);
-        //    if (n < 0) {
-        //        printf("ERROR reading from socket\n");
-        //        n = -1;
-        //    }
-        //    // ..
-        //
-        //    // Montando pacote
-        //    package->type = buffer[0] | buffer[1] << 8;
-        //    package->seqn = buffer[2] | buffer[3] << 8;
-        //    package->length = buffer[4] | buffer[5] << 8;
-        //    //package->timestamp = buffer [8] | buffer[9] | buffer[10] | buffer[11] | buffer [12] | buffer [13] | buffer[14] | buffer[15];
-        //    package->_payload = payload;
-        //
-        //    // Montando payload
-        //    for(int i = 0; i < 7; i++) {
-        //        payload[i] = buffer[i];
-        //    }
-        //    printf("Here is the message: %s\n", payload);
-        //
-        //    return n;
-        return 0; // Avoid compilation warning.
-    }
-
     int CommunicationManager::send_packet(int socket, Packet* package) {
         int n;
         package->printItself();
@@ -130,7 +91,7 @@ namespace communicationManager {
 
     Packet CommunicationManager::createAckPacketForType(PacketType type) {
 
-        cout << "inside creating ACK packet" << endl;
+        cout << "Creating ACK packet" << endl;
         string responseString = "Uhu! " + this->stringDescribingType(type) + " recebido com sucesso! :)";
 
         Packet package;
@@ -144,7 +105,7 @@ namespace communicationManager {
 
     Packet CommunicationManager::createGenericNackPacket() {
 
-        cout << "inside creating NACK packet" << endl;
+        cout << "Creating NACK packet" << endl;
         string responseString = "Erro!";
 
         Packet package;

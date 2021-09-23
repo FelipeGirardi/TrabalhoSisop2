@@ -46,8 +46,6 @@ namespace profileSessionManager {
         cout << "newNotificationSentBy " << username << " " << " " << endl;
         cout << "users" << endl << endl;
 
-        GlobalManager::printItself();
-
         list<string> followers = this->users[username].getFollowers();
         cout << "followers size " << followers.size() << endl;
         for (string follower : followers) {
@@ -55,11 +53,14 @@ namespace profileSessionManager {
             if (this->users.find(follower) == this->users.end()) {continue;}
             this->users[follower].produceNewNotification(notificationID);
         }
-        //pthread_join();
+
     }
 
-    // 1 = criou
-    // -1 = nao criou
+    /*
+     * Retorno:
+     * 1 = criou sessao com sucesso
+     * -1 = nao criou
+    */
     int ProfileSessionManager::createNewSession(string username, Session session) {
 
         // check if user exists
@@ -109,7 +110,7 @@ namespace profileSessionManager {
             cout << sess.client_socket << ' ' << sess.notif_socket << ' ' << sess.userID << endl;
 
         cout << "now the number of sessions is " << this->users[session.userID].getNumberOfSessions() << endl;
-        cout << "and the lenght of sessions is " << this->users[session.userID].sessions.size() << endl;
+        cout << "and the length of sessions is " << this->users[session.userID].sessions.size() << endl;
         close(session.notif_socket);
         close(session.client_socket);
 
