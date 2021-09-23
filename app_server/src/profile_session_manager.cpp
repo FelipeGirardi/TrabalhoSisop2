@@ -61,9 +61,11 @@ namespace profileSessionManager {
      * 1 = criou sessao com sucesso
      * -1 = nao criou
     */
-    int ProfileSessionManager::createNewSession(string username, Session session) {
+    int ProfileSessionManager::createNewSession(Session session) {
 
         // check if user exists
+        string username = session.userID;
+
         if (GlobalManager::sessionManager.getUsers().find(username) ==
         GlobalManager::sessionManager.getUsers().end()) {
             // user doesn't exist

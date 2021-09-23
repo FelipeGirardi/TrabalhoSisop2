@@ -43,8 +43,7 @@ int main(int argc, char** argv)
     // TODO: Capture scroll up/down when user presses arrow up/down (optional).
     // TODO: Capture exit signals (ctrl+d).
 
-    // Disclaimer: Currently the server has some odd behaviors. 
-    // - We're ignoring messages with trash data sent after real messages.
+    // Disclaimer: Currently the server has some odd behaviors.
     // - Same messages are sent again when logging in.
     // - Sometimes messages are not received.
     // - I managed to reproduce a concurrency issue by logging in with two users too fast (they started receiving messages from themselves).
@@ -58,6 +57,6 @@ void testHardcodedInteractions(SessionSockets sockets, string profileId)
     // sockets.senderSocket.send(followPacket);
 
     Packet sendPacket = { SEND, 14, 0 };
-    strcat(sendPacket._payload, string("Hello from " + profileId + " ").c_str());
+    strcat(sendPacket._payload, string("Hello from " + profileId).c_str());
     sockets.senderSocket.send(sendPacket);
 }

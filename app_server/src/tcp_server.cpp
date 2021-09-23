@@ -140,14 +140,12 @@ int main(int argc, char* argv[])
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
             if (myResult->result < 0) {
-                cout << "Na main, falha na auth" << endl;
+                cout << "Falha na auth" << endl;
                 continue;
             } else  {
-                cout << "Na main, auth bem sucedida" << endl;
-                cout << "gotten username = " << myResult->username;
-                newSession->userID.assign(myResult->username);
-                cout << "gotten username = " << newSession->userID;
-                // Creates thread for receiving user's commands
+                cout << "Auth bem sucedida" << endl;
+                cout << "new session username = " << newSession->userID << endl;
+                // Cria thread para receber comandos do usuario
                 pthread_t client_thread;
                 cout << "** Vai criar thread cliente **\n";
                 pthread_create(&client_thread, NULL, &client_thread_func, (void *) newSession);
@@ -207,50 +205,47 @@ void *client_thread_func(void *data) {
     Session *session = (Session*) data;
     client_socket = session->client_socket;
 
-    cout << "socket id" << client_socket <<endl;
-
     // inicia leitura de comandos do cliente
     cout << "** Vai iniciar leitura de comandos **\n";
     while(!_exit) {
         bzero(buffer, BUFFER_SIZE);
-        Packet *pkt = new Packet;
-        bufferInt = read(client_socket, pkt, sizeof(Packet));
-        cout << "leu algo do socket" << endl;
 
-        if (bufferInt < 0 || !(pkt->type == SEND || pkt->type == FOLLOW || pkt->type == EXIT)) {
-            free(pkt);
-            cout << "buffer" << buffer <<endl;
+        Packet *receivedPacket = new Packet;
+        bufferInt = read(client_socket, receivedPacket, sizeof(Packet));
+
+        if (bufferInt < 0 || !(receivedPacket->type == SEND || receivedPacket->type == FOLLOW || receivedPacket->type == EXIT)) {
+            free(receivedPacket);
             printf("ERROR reading from socket. Disconecting.");
             break;
         }
+        cout << "received packet:" << endl;
+        receivedPacket->printItself();
+        strcpy(buffer, receivedPacket->_payload);
 
-        pkt->printItself();
-        // tirar \n
-        strcpy(buffer, pkt->_payload);
-        Packet *package = new Packet;
+        Packet *responsePacket = new Packet;
 
-        if(pkt->type == FOLLOW) {
-            GlobalManager::sessionManager.addNewFollowerToUser(session->userID, pkt->_payload);
+        if(receivedPacket->type == FOLLOW) {
+            GlobalManager::sessionManager.addNewFollowerToUser(session->userID, receivedPacket->_payload);
             cout << "recebeu follow" << endl;
-            *package = GlobalManager::commManager.createAckPacketForType(pkt->type);
-        } else if(pkt->type == SEND) {
-            GlobalManager::notifManager.newNotificationSentBy(session->userID, pkt->_payload);
+            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
+        } else if(receivedPacket->type == SEND) {
+            GlobalManager::notifManager.newNotificationSentBy(session->userID, receivedPacket->_payload);
             cout << "recebeu send" << endl;
-            *package = GlobalManager::commManager.createAckPacketForType(pkt->type);
-        } else if(pkt->type == EXIT) {
+            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
+        } else if(receivedPacket->type == EXIT) {
             cout << "recebeu exit" << endl;
-            *package = GlobalManager::commManager.createAckPacketForType(pkt->type);
+            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
             _exit = 1;
         }
 
         cout << "** Envia pacote ACK/NACK recebimento de comando **" << endl;
-        if (GlobalManager::commManager.send_packet(client_socket, package) < 0) {
+        if (GlobalManager::commManager.send_packet(client_socket, responsePacket) < 0) {
             cout << "nao foi possivel enviar" <<endl;
         } else {
             cout << "pacote de response enviado com sucesso" << endl;
         }
-        free(pkt);
-        free(package);
+        free(receivedPacket);
+        free(responsePacket);
 
     }
 
@@ -283,38 +278,35 @@ AuthResult authenticate(Session *session) {
     readResult = read(session->client_socket, buffer, BUFFER_SIZE);
     if (readResult < 0 || buffer[0] == '\0' || buffer[0] == '\n') {
         printf("ERROR reading from socket");
-        cout << "buffer" << buffer;
         finalResult.result = -1;
         close(session->client_socket);
         close(session->notif_socket);
         return finalResult;
     }
-    cout << "Sucesso na leitura" << endl;
+    cout << "Read username successfully" << endl;
     cout << "buffer = " << buffer << endl;
 
     // Verificando existência do usuário
 
     finalResult.username = buffer;
-
     session->userID.assign(finalResult.username);
-    int resultOfSessionCreation = GlobalManager::sessionManager.createNewSession(finalResult.username,
-                                                                                 *session);
+    int resultOfSessionCreation = GlobalManager::sessionManager.createNewSession(*session);
 
     // Criando pacote para enviar
-    Packet *package = new Packet;
+    Packet *responsePacket = new Packet;
 
     if (resultOfSessionCreation == 1) {
         finalResult.result = 1;
         cout << "success logging user" << endl;
-        *package = GlobalManager::commManager.createAckPacketForType(USERNAME);
+        *responsePacket = GlobalManager::commManager.createAckPacketForType(USERNAME);
     } else {
-        *package = GlobalManager::commManager.createGenericNackPacket();
+        *responsePacket = GlobalManager::commManager.createGenericNackPacket();
         finalResult.result = -1;
         cout << " attempted to log but was unsuccessful" << endl;
     }
 
     // Enviando resposta
-    if (GlobalManager::commManager.send_packet(session->client_socket, package) < 0) {
+    if (GlobalManager::commManager.send_packet(session->client_socket, responsePacket) < 0) {
         finalResult.result = -1;
         //TODO: talvez cortar sessao do usuario
         cout << "nao foi possivel enviar" <<endl;
@@ -328,7 +320,7 @@ AuthResult authenticate(Session *session) {
         cout << "close sockets" << endl;
     }
 
-    free(package);
+    free(responsePacket);
 
     return finalResult;
 }
