@@ -126,10 +126,11 @@ int main(int argc, char* argv[])
 //            int *result;
             cout << "** Vai criar thread auth **\n";
             Session *newSession = new Session;
-            cout << "retornou do malloc" << endl;
             newSession->client_socket = client_sockfd;
             newSession->notif_socket = notif_sockfd;
-            cout << "socket id new session " << newSession->client_socket << endl;
+
+            cout << "client id new session " << newSession->client_socket << endl;
+            cout << "notification id new session " << newSession->notif_socket << endl;
             pthread_create(&auth_thread, NULL, &auth_client_func, (void*)newSession);
 
             void *resultOfAuthentication;
@@ -254,10 +255,8 @@ void *client_thread_func(void *data) {
     }
 
     cout << "Termina sessão com usuário" << endl;
-    GlobalManager::sessionManager.endSession(session->userID, *session);
+    GlobalManager::sessionManager.endSession(*session);
     cout << "** Fecha socket **\n";
-    close(session->client_socket);
-    close(session->notif_socket);
     cout << session->userID << " disconnected\n";
     return 0;
 }
@@ -282,8 +281,6 @@ AuthResult authenticate(Session *session) {
 
     // Lendo username
     bzero(buffer, BUFFER_SIZE);
-    cout << "oi client socket = " << session->client_socket << endl;
-    cout << "oi notification socket = " << session->notif_socket << endl;
 
     readResult = read(session->client_socket, buffer, BUFFER_SIZE);
     if (readResult < 0 || buffer[0] == '\0' || buffer[0] == '\n') {
@@ -304,6 +301,7 @@ AuthResult authenticate(Session *session) {
     //TODO: tirar no cliente final
     finalResult.username.pop_back();
 
+    session->userID.assign(finalResult.username);
     int resultOfSessionCreation = GlobalManager::sessionManager.createNewSession(finalResult.username,
                                                                                  *session);
 

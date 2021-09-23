@@ -94,6 +94,10 @@ namespace notification {
     void Notification::setPendingReaders(int pendingReaders) {
         this->pendingReaders = pendingReaders;
     }
+    void Notification::decrementPendingReaders() {
+        this->pendingReaders -= 1;
+    }
+
     string Notification::toString() {
         string return_string;
         return_string += this->id + ',';

@@ -65,9 +65,10 @@ Notification Socket::receive()
 {
     Packet incomingPacket;
 
-    auto response = read(socketDescriptor_, &incomingPacket, bufferSize_);
-    if (response < 0)
+    auto response = read(socketDescriptor_, &incomingPacket, sizeof(Packet));
+    if (response < 0) {
         throw new SocketReadFailedException(socketDescriptor_);
+    }
 
     if (incomingPacket.type == NOTIFICATION)
         return Notification::parseCsvString(incomingPacket._payload);

@@ -36,6 +36,8 @@ namespace notification {
         void setUsername(string username);
         void setTime(long int time);
         void setPendingReaders(int pendingReaders);
+        void decrementPendingReaders();
+
 
         /* Others */
         /*
