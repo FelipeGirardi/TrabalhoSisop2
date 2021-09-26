@@ -111,8 +111,6 @@ Socket SessionManager::connectSocketToServer(int socketDescriptor, const hostent
 
 void SessionManager::authenticateProfile(std::string profileId)
 {
-    profileId;
-
     try
     {
         sockets_->senderSocket.send(profileId.c_str());
