@@ -3,7 +3,8 @@
 //
 
 #include "Packet.hpp"
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
 
 Packet* Packet::fromBytes(const char* bytes)
 {

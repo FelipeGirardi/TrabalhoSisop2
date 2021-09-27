@@ -43,22 +43,22 @@ void Socket::send(Packet packet)
 {
     auto response = write(socketDescriptor_, &packet, sizeof(packet));
     if (response < 0)
-        throw new SocketWriteFailedException(socketDescriptor_);
+        throw SocketWriteFailedException(socketDescriptor_);
 
     auto ackNotification = receive();
     if (ackNotification.getID() == to_string(SERVER_ERROR))
-        throw new ServerNotAcknowledgedException(socketDescriptor_);
+        throw ServerNotAcknowledgedException(socketDescriptor_);
 }
 
 void Socket::send(const char* bytes)
 {
     auto response = write(socketDescriptor_, bytes, sizeof(bytes));
     if (response < 0)
-        throw new SocketWriteFailedException(socketDescriptor_);
+        throw SocketWriteFailedException(socketDescriptor_);
 
     auto ackNotification = receive();
     if (ackNotification.getID() == to_string(SERVER_ERROR))
-        throw new ServerNotAcknowledgedException(socketDescriptor_);
+        throw ServerNotAcknowledgedException(socketDescriptor_);
 }
 
 Notification Socket::receive()
@@ -66,9 +66,8 @@ Notification Socket::receive()
     Packet incomingPacket;
 
     auto response = read(socketDescriptor_, &incomingPacket, sizeof(Packet));
-    if (response < 0) {
-        throw new SocketReadFailedException(socketDescriptor_);
-    }
+    if (response < 0)
+        throw SocketReadFailedException(socketDescriptor_);
 
     if (incomingPacket.type == NOTIFICATION)
         return Notification::parseCsvString(incomingPacket._payload);

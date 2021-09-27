@@ -5,6 +5,7 @@
  * \author Renan Kummer
  */
 #include "service/SessionManager.hpp"
+#include "io/CommandLineParser.hpp"
 #include "exception/HostNotFoundException.hpp"
 #include "exception/SocketNotCreatedException.hpp"
 #include "exception/AuthenticationFailedException.hpp"
@@ -24,6 +25,7 @@ using ClientApp::Exception::SocketNotCreatedException;
 using ClientApp::Exception::AuthenticationFailedException;
 using ClientApp::Exception::SocketConnectionDeniedException;
 using ClientApp::IO::Socket;
+using ClientApp::IO::CommandLineParser;
 
 // Static variables
 
@@ -80,7 +82,7 @@ hostent* SessionManager::createHostEntry(std::string host)
 {
     auto hostEntry = gethostbyname(host.c_str());
     if (hostEntry == nullptr)
-        throw new HostNotFoundException(host);
+        throw HostNotFoundException(host);
 
     return hostEntry;
 }
@@ -89,7 +91,7 @@ int SessionManager::createSocketDescriptor()
 {
     auto socketDescriptor = ::socket(AF_INET, SOCK_STREAM, 0);
     if (socketDescriptor == -1)
-        throw new SocketNotCreatedException();
+        throw SocketNotCreatedException();
 
     return socketDescriptor;
 }
@@ -104,21 +106,20 @@ Socket SessionManager::connectSocketToServer(int socketDescriptor, const hostent
 
     auto response = ::connect(socketDescriptor, (struct sockaddr*)&socketAddress, sizeof(socketAddress));
     if (response < 0)
-        throw new SocketConnectionDeniedException();
+        throw SocketConnectionDeniedException();
 
     return Socket(socketDescriptor);
 }
 
 void SessionManager::authenticateProfile(std::string profileId)
 {
-    profileId;
-
     try
     {
-        sockets_->senderSocket.send(profileId.c_str());
+        auto standardProfileId = CommandLineParser::standardizeProfileId(profileId);
+        sockets_->senderSocket.send(standardProfileId.c_str());
     }
     catch (...)
     {
-        throw new AuthenticationFailedException(profileId);
+        throw AuthenticationFailedException(profileId);
     }
 }

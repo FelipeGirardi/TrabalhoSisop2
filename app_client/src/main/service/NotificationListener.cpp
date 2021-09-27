@@ -26,12 +26,8 @@ void NotificationListener::listen(Socket listenerSocket)
     {
         auto notification = listenerSocket.receive();
 
-        // TODO: Identify why server sends trash in messages
-        // if (!notification.getUsername().empty())
-        // {
         auto printableNotification = formatNotification(notification);
         ConcurrentCommandLine::writeLine(printableNotification);
-        // }
     }
 }
 
@@ -55,5 +51,6 @@ string NotificationListener::formatNotification(Notification notification)
 
     // [21/09/2021 01:50] 
     // @username: The message
-    return "[" + formattedTime + "]\n" + profileId + ": " + notification.getText() + "\n";
+    return string("[") + formattedTime + string("]\n") +
+        profileId + string(": ") + notification.getText() + string("\n");
 }
