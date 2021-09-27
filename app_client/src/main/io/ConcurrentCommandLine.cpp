@@ -5,12 +5,19 @@
  * \author Renan Kummer
  */
 #include <curses.h>
+#include <iostream>
+#include <limits>
+#include <ios>
+#include <csignal>
+#include <cstdlib>
 #include "io/ConcurrentCommandLine.hpp"
+#include "io/CommandLineParser.hpp"
+#include "StringExtensions.hpp"
 
 using namespace ClientApp::IO;
+using namespace std;
 
-using std::mutex;
-using std::string;
+using Common::StringExtensions;
 
 // Static variables
 
@@ -65,14 +72,18 @@ string ConcurrentCommandLine::readLine(int maxChars)
     string input;
     if (isInitialized() && maxChars > 0)
     {
+        printw("You: ");
+        refresh();
         showInput();
 
         char* rawInput = new char[maxChars + 1];
-        getnstr(rawInput, maxChars);
+        auto numCharsRead = getnstr(rawInput, maxChars);
         rawInput[maxChars] = '\0';
 
         input = string(rawInput);
 
+        printw("\n");
+        refresh();
         hideInput();
     }
 
@@ -93,6 +104,15 @@ void ConcurrentCommandLine::writeLine(string output)
     cliMutex_.unlock();
 }
 
+void ConcurrentCommandLine::waitInput()
+{
+    int enteredKey = ERR;
+    while ((enteredKey = getch()) == ERR) {}
+
+    cliMutex_.lock();
+    ungetch(enteredKey);
+    cliMutex_.unlock();
+}
 
 // Private methods
 
@@ -108,12 +128,12 @@ void ConcurrentCommandLine::setInitialized(bool isInitialized)
 
 void ConcurrentCommandLine::showInput()
 {
-    nodelay(stdscr, FALSE);
+    // nodelay(stdscr, FALSE);
     echo();
 }
 
 void ConcurrentCommandLine::hideInput()
 {
-    nodelay(stdscr, TRUE);
+    // nodelay(stdscr, TRUE);
     noecho();
 }

@@ -20,6 +20,7 @@ namespace ClientApp
             static bool terminate();
             static std::string readLine(int maxChars);
             static void writeLine(std::string output);
+            static void waitInput();
 
         private:
             static bool isInitialized();

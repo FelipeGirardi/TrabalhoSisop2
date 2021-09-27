@@ -17,11 +17,11 @@ COMMON_OBJ_DIR = ../common/$(OBJ_DIR)
 INCLUDE_PATH = -I$(HEADERS_DIR) -I../common/include
 LIBRARIES = -lpthread -lncurses
 
-all: build-directories ClientApp.o GlobalExceptionHandler.o GlobalSignalHandler.o CommandLineParser.o ConcurrentCommandLine.o Socket.o NotificationListener.o SessionManager.o
+all: build-directories ClientApp.o GlobalExceptionHandler.o GlobalSignalHandler.o CommandLineParser.o ConcurrentCommandLine.o Socket.o MessageWriter.o NotificationListener.o SessionManager.o
 	g++ -std=c++11 -o $(BIN_DIR)/clientApp $(OBJ_DIR)/ClientApp.o $(COMMON_OBJ_DIR)/*.o \
 	    $(OBJ_DIR)/GlobalExceptionHandler.o $(OBJ_DIR)/GlobalSignalHandler.o \
 		$(OBJ_DIR)/CommandLineParser.o $(OBJ_DIR)/ConcurrentCommandLine.o $(OBJ_DIR)/Socket.o \
-		$(OBJ_DIR)/NotificationListener.o $(OBJ_DIR)/SessionManager.o \
+		$(OBJ_DIR)/MessageWriter.o $(OBJ_DIR)/NotificationListener.o $(OBJ_DIR)/SessionManager.o \
 		$(LIBRARIES)
 
 ###
@@ -45,6 +45,9 @@ ConcurrentCommandLine.o: $(SRC_DIR)/main/io/ConcurrentCommandLine.cpp
 
 Socket.o: $(SRC_DIR)/main/io/Socket.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/Socket.o -c $(SRC_DIR)/main/io/Socket.cpp $(INCLUDE_PATH)
+
+MessageWriter.o: $(SRC_DIR)/main/service/MessageWriter.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/MessageWriter.o -c $(SRC_DIR)/main/service/MessageWriter.cpp $(INCLUDE_PATH)
 
 NotificationListener.o: $(SRC_DIR)/main/service/NotificationListener.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/NotificationListener.o -c $(SRC_DIR)/main/service/NotificationListener.cpp $(INCLUDE_PATH)

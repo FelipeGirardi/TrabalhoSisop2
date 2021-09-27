@@ -6,6 +6,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <cstring>
 
 using namespace Common;
 using namespace std;
@@ -20,4 +21,13 @@ vector<string> StringExtensions::split(const string& s, char delim) {
     }
 
     return result;
+}
+
+std::string StringExtensions::toUppercase(string s)
+{
+    string uppercaseString;
+    for (auto ch : s)
+        uppercaseString += (char)toupper(ch);
+
+    return uppercaseString;
 }
