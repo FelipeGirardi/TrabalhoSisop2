@@ -54,7 +54,6 @@ void *notification_thread(void *args);
 
 int main(int argc, char* argv[])
 {
-    cout << "** Primeiro print **\n";
 
     //instanciação dos managers
     GlobalManager::sessionManager = sessionManager;
@@ -74,10 +73,10 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);  // zera buffer do stdout
 
-    cout << "** Vai criar socket **\n";
+    cout << "Criando socket servidor\n";
     // cria socket TCP verificando erro
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        cout << "** Erro abrindo socket **\n";
+        cout << "ERRO abrindo socket **\n";
         return 0;
     }
 
@@ -89,17 +88,16 @@ int main(int argc, char* argv[])
     serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     bzero(&(serv_addr.sin_zero), 8);
 
-    cout << "** Vai fazer bind **\n";
     // faz o bind
+    cout << "Fazendo bind IP e porta\n";
     if (::bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        cout << "** Erro no bind **\n";
+        cout << "ERRO no bind **\n";
         return 0;
     }
 
     // seta signal de fechar app do servidor
     signal(SIGINT, closeAppHandler);
 
-    cout << "** Vai fazer listen **\n";
     // loop do listen de conexões
     if (listen(sockfd, 5) == 0) {
         int client_sockfd, notif_sockfd; // usar notif_sockfd se precisar
@@ -107,15 +105,15 @@ int main(int argc, char* argv[])
             // aceita conexão do cliente
             struct sockaddr_in client_address;
             socklen_t client_length = sizeof(struct sockaddr_in);
-            cout << "** Vai fazer accept **\n";
+            cout << "Esperando conexão canal de comandos\n";
             if ((client_sockfd = accept(sockfd, (struct sockaddr *) &client_address, &client_length)) == -1) {
-                cout << "** Erro aceitando conexao do cliente **\n";
+                cout << "ERRO aceitando conexão canal de comandos\n";
                 continue;
             }
-
+            cout << "Esperando conexão canal de notificações\n";
             // accept do canal de notificação vai aqui se precisar
             if ((notif_sockfd = accept(sockfd, (struct sockaddr *) &client_address, &client_length)) == -1) {
-                cout << "ERROR on accepting notifications channel\n";
+                cout << "ERRO aceitando conexão canal de notificações\n";
                 continue;
             }
 
@@ -124,30 +122,26 @@ int main(int argc, char* argv[])
             pthread_t auth_thread;
 
 //            int *result;
-            cout << "** Vai criar thread auth **\n";
+            cout << "Criando thread autenticação **\n";
             Session *newSession = new Session;
             newSession->client_socket = client_sockfd;
             newSession->notif_socket = notif_sockfd;
 
-            cout << "client id new session " << newSession->client_socket << endl;
-            cout << "notification id new session " << newSession->notif_socket << endl;
+            //cout << "client id new session " << newSession->client_socket << endl;
+            //cout << "notification id new session " << newSession->notif_socket << endl;
             pthread_create(&auth_thread, NULL, &auth_client_func, (void*)newSession);
 
             void *resultOfAuthentication;
             pthread_join(auth_thread, &resultOfAuthentication);
 
-            cout << "Result of auth" << ((AuthResult *)resultOfAuthentication)->result << endl;
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
             if (myResult->result < 0) {
-                cout << "Falha na auth" << endl;
                 continue;
             } else  {
-                cout << "Auth bem sucedida" << endl;
-                cout << "new session username = " << newSession->userID << endl;
                 // Cria thread para receber comandos do usuario
                 pthread_t client_thread;
-                cout << "** Vai criar thread cliente **\n";
+                cout << "Criando thread de leitura de comandos\n";
                 pthread_create(&client_thread, NULL, &client_thread_func, (void *) newSession);
             }
 
@@ -157,9 +151,9 @@ int main(int argc, char* argv[])
     }
 
     if (close(sockfd) < 0) {
-        cout << "** Erro fechando o socket **" << endl;
+        cout << "ERRO fechando o socket" << endl;
     } else {
-        cout << "** Sucesso fechando o socket **" << endl;
+        cout << "Sucesso fechando o socket" << endl;
     }
 
     return 0;
@@ -177,21 +171,18 @@ void *auth_client_func(void *data) {
 
     //casting de parametros
     Session *session = (Session*) data;
-    cout << "client socket auth data" << session->client_socket;
 
     AuthResult authResult = authenticate(session);
     result->result = authResult.result;
     result->username.assign(authResult.username);
 
     if (result->result < 0) {
-        cout << "\n** Erro na autenticacao **\n";
+        cout << "ERRO na autenticacao" << endl;
 
     } else {
-        cout << "Retorno com sucesso da auth" << endl;
-        cout << "username = " << result->username << endl;
+        cout << "Retorno com sucesso da autenticação de " << result->username << endl;
     }
 
-    cout << "saindo da thread auth" << endl;
     return (void *) result;
 
 }
@@ -206,7 +197,7 @@ void *client_thread_func(void *data) {
     client_socket = session->client_socket;
 
     // inicia leitura de comandos do cliente
-    cout << "** Vai iniciar leitura de comandos **\n";
+    cout << "Iniciando leitura de comandos\n";
     while(!_exit) {
         bzero(buffer, BUFFER_SIZE);
 
@@ -215,10 +206,10 @@ void *client_thread_func(void *data) {
 
         if (bufferInt < 0 || !(receivedPacket->type == SEND || receivedPacket->type == FOLLOW || receivedPacket->type == EXIT)) {
             free(receivedPacket);
-            printf("ERROR reading from socket. Disconecting.");
+            printf("ERRO lendo do socket. Desconectando.");
             break;
         }
-        cout << "received packet:" << endl;
+        cout << "Pacote recebido:" << endl;
         receivedPacket->printItself();
         strcpy(buffer, receivedPacket->_payload);
 
@@ -226,23 +217,23 @@ void *client_thread_func(void *data) {
 
         if(receivedPacket->type == FOLLOW) {
             GlobalManager::sessionManager.addNewFollowerToUser(session->userID, receivedPacket->_payload);
-            cout << "recebeu follow" << endl;
+            cout << "Recebeu comando FOLLOW" << endl;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
         } else if(receivedPacket->type == SEND) {
             GlobalManager::notifManager.newNotificationSentBy(session->userID, receivedPacket->_payload);
-            cout << "recebeu send" << endl;
+            cout << "Recebeu comando SEND" << endl;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
         } else if(receivedPacket->type == EXIT) {
-            cout << "recebeu exit" << endl;
+            cout << "Recebeu comando EXIT" << endl;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
             _exit = 1;
         }
 
-        cout << "** Envia pacote ACK/NACK recebimento de comando **" << endl;
+        cout << "Enviando pacote ACK/NACK recebimento de comando **" << endl;
         if (GlobalManager::commManager.send_packet(client_socket, responsePacket) < 0) {
-            cout << "nao foi possivel enviar" <<endl;
+            cout << "Não foi possivel enviar ACK/NACK" <<endl;
         } else {
-            cout << "pacote de response enviado com sucesso" << endl;
+            cout << "ACK/NACK enviado com sucesso" << endl;
         }
         free(receivedPacket);
         free(responsePacket);
@@ -251,8 +242,7 @@ void *client_thread_func(void *data) {
 
     cout << "Termina sessão com usuário" << endl;
     GlobalManager::sessionManager.endSession(*session);
-    cout << "** Fecha socket **\n";
-    cout << session->userID << " disconnected\n";
+    cout << session->userID << " desconectado\n";
     return 0;
 }
 
@@ -277,14 +267,13 @@ AuthResult authenticate(Session *session) {
 
     readResult = read(session->client_socket, buffer, BUFFER_SIZE);
     if (readResult < 0 || buffer[0] == '\0' || buffer[0] == '\n') {
-        printf("ERROR reading from socket");
+        printf("ERRO lendo do socket");
         finalResult.result = -1;
         close(session->client_socket);
         close(session->notif_socket);
         return finalResult;
     }
-    cout << "Read username successfully" << endl;
-    cout << "buffer = " << buffer << endl;
+    cout << "Recebeu username " << buffer << " com sucesso" << endl;
 
     // Verificando existência do usuário
 
@@ -297,27 +286,27 @@ AuthResult authenticate(Session *session) {
 
     if (resultOfSessionCreation == 1) {
         finalResult.result = 1;
-        cout << "success logging user" << endl;
+        cout << "Sucesso logando usuario" << endl;
         *responsePacket = GlobalManager::commManager.createAckPacketForType(USERNAME);
     } else {
         *responsePacket = GlobalManager::commManager.createGenericNackPacket();
         finalResult.result = -1;
-        cout << " attempted to log but was unsuccessful" << endl;
+        cout << "ERRO logando usuario" << endl;
     }
 
     // Enviando resposta
     if (GlobalManager::commManager.send_packet(session->client_socket, responsePacket) < 0) {
         finalResult.result = -1;
         //TODO: talvez cortar sessao do usuario
-        cout << "nao foi possivel enviar" <<endl;
+        cout << "ERRO no envido do pacote ACK/NACK" <<endl;
     } else {
-        cout << "enviado" << endl;
+        cout << "Pacote ACK/NACK enviado com sucesso" << endl;
     }
 
     if (finalResult.result == -1) {
         close(session->notif_socket);
         close(session->client_socket);
-        cout << "close sockets" << endl;
+        cout << "Fechados os sockets" << endl;
     }
 
     free(responsePacket);

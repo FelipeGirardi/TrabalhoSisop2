@@ -49,30 +49,33 @@ using namespace profileSessionManager;
 
     void NotificationManager::sendNotificationTo(string username, string notificationID) {
 
-        cout << "sendNotificationTo " << username << " " << notificationID << endl;
+        cout << "iniciando envio de notificação id " << notificationID << " às sessões de " << username << endl;
 
         if (this->notifications.find(notificationID) == this->notifications.end()) {
-            cout << "not possible to send notification bc it doesn't exist" << endl;
+            cout << "erro mandando notificação. notificação não existe." << endl;
             return;
         }
         unordered_map<string, UserInformation> users = GlobalManager::sessionManager.getUsers();
         if (users.find(username) == users.end()) {
-            cout << "not possible to send notification bc user doesn't exist" << endl;
+            cout << "erro mandando notificação. usuário não existe." << endl;
             return;
         }
 
         list<Session> sessions = users[username].sessions;
         int sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
-                                                              this->notifications[notificationID]);
+                                                                          this->notifications[notificationID]);
+
         if (sent == 1) {
             this->notifications[notificationID].decrementPendingReaders();
         }
         int pendingReaders = this->notifications[notificationID].getPendingReaders();
-        cout << "notification still has to be sent to " <<  pendingReaders << " pending readers" << endl;
+
         if (pendingReaders == 0) {
-            //SC?
-            cout << "notification sent to all readers. Deleting notification." << endl;
+            //sc?
+            cout << "notificação foi mandada para todos os usuários pendentes. deletando." << endl;
             this->notifications.erase(notificationID);
+        } else {
+            cout << "notificação pendente a " <<  pendingReaders << " usuários" << endl;
         }
 
     }
@@ -82,7 +85,7 @@ using namespace profileSessionManager;
         long int currentTime = static_cast<long int> (time(NULL));
         int pendingReaders = this->getPendingReaders(username);
         if (pendingReaders == 0) {
-            cout << "user has no follower. Notification being ignored" << endl;
+            cout << "Usuário não tem nenhum seguidor. Notificação ignorada." << endl;
             return;
         }
 
