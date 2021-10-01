@@ -78,6 +78,7 @@ namespace userInformation {
             Session getSessionWithID(string sessionID);
             void addNewSession(string sessionID, Session session);
             void removeSession(string sessionID);
+            unordered_map<string, Session> getSessions();
 
     };
 }

@@ -44,6 +44,10 @@ namespace userInformation {
         return !(this->sessions.find(username) == this->sessions.end());
     }
 
+    unordered_map<string, Session> UserInformation::getSessions() {
+        return this->sessions;
+    }
+
     void UserInformation::addNewSession(string sessionID, Session session) {
         this->sessions[sessionID] = session;
     }

@@ -40,7 +40,7 @@ CommunicationManager comunicationManager;
 //TODO: mudar de lugar
 typedef struct AuthResult {
     ErrorCodes result;
-    SessionAuth sessionAuth;
+    SessionAuth *sessionAuth;
 }AuthResult;
 
 // Declaracao funcoes auxiliares
@@ -125,15 +125,14 @@ int main(int argc, char* argv[])
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
             if (myResult->result == SUCCESS) {
-                if (myResult->sessionAuth.getSocketType() == COMMAND_SOCKET) {
+                if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
                     // Cria thread para receber comandos do usuario
                     pthread_t client_thread;
                     cout << "Criando thread de leitura de comandos" << endl;
-                    SessionAuth *pointerToSessionAuth = (SessionAuth*) malloc(sizeof(SessionAuth));
-                    *pointerToSessionAuth = myResult->sessionAuth;
+                    SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
-                    UserInformation user = GlobalManager::sessionManager.getUserByUsername(myResult->sessionAuth.getProfileId());
+                    UserInformation user = GlobalManager::sessionManager.getUserByUsername(myResult->sessionAuth->getProfileId());
                     user.startListeningForNotifications();
                 }
             }
@@ -170,7 +169,7 @@ void *auth_client_func(void *data) {
         return (void *) finalResult;
     }
     SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
-    finalResult->sessionAuth = *sessionAuth;
+    finalResult->sessionAuth = sessionAuth;
     cout << "Recebeu dados de autenticação corretamente" << endl;
 
     ErrorCodes sessionCreationResult = GlobalManager::sessionManager.createNewSession(*sessionAuth, client_socket);

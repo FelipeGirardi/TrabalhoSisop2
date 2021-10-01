@@ -60,8 +60,10 @@ using namespace profileSessionManager;
             cout << "erro mandando notificação. usuário não existe." << endl;
             return;
         }
-
-        list<Session> sessions = users[username].sessions;
+        list<Session> sessions;
+        for (auto kv : users[username].getSessions()) {
+            sessions.push_back(kv.second);
+        }
         int sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
                                                                           this->notifications[notificationID]);
 
@@ -71,7 +73,6 @@ using namespace profileSessionManager;
         int pendingReaders = this->notifications[notificationID].getPendingReaders();
 
         if (pendingReaders == 0) {
-            //sc?
             cout << "notificação foi mandada para todos os usuários pendentes. deletando." << endl;
             this->notifications.erase(notificationID);
         } else {
