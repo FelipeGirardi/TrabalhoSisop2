@@ -60,4 +60,4 @@ check: build-directories NotificationTest
 
 clean:
 	@[ -d $(OBJ_DIR) ] && rm -r $(OBJ_DIR) || true
-	@[ ! -d $(BIN_DIR) ] && mkdir $(BIN_DIR) || true
+	@[ -d $(BIN_DIR) ] && rm -r $(BIN_DIR) || true
