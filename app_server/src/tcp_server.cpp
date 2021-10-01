@@ -216,9 +216,14 @@ void *client_thread_func(void *data) {
         Packet *responsePacket = new Packet;
 
         if(receivedPacket->type == FOLLOW) {
-            GlobalManager::sessionManager.addNewFollowerToUser(session->userID, receivedPacket->_payload);
             cout << "Recebeu comando FOLLOW" << endl;
-            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
+            int resultOfFollow = GlobalManager::sessionManager.addNewFollowerToUser(session->userID,
+                                                                                    receivedPacket->_payload);
+            if (resultOfFollow == 1)
+                *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
+            else
+                *responsePacket = GlobalManager::commManager.createGenericNackPacket();
+
         } else if(receivedPacket->type == SEND) {
             GlobalManager::notifManager.newNotificationSentBy(session->userID, receivedPacket->_payload);
             cout << "Recebeu comando SEND" << endl;

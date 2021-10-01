@@ -68,8 +68,7 @@ namespace userInformation {
             void addNewNotification(string notificationID);
             void getNotifications();
 
-            void addNewFollower(string follower);
-            void addNewFollowers(list<string> followers);
+            int addNewFollower(string follower);
             string toString();
 
             /**

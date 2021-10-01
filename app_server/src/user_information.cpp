@@ -42,18 +42,16 @@ namespace userInformation {
 
     UserInformation::~UserInformation() { }
 
-    void UserInformation::addNewFollower(string follower) {
+    int UserInformation::addNewFollower(string follower) {
         if (find(this->followers.begin(),
                  this->followers.end(), follower) == this->followers.end()) {
             this->followers.push_back(follower);
-            return;
+            return 1;
+        } else {
+            return -1;
         }
     }
-    void UserInformation::addNewFollowers(list <string> followers) {
-        for (string follower : followers) {
-            this->addNewFollower(follower);
-        }
-    }
+
     void UserInformation::setFollowers(list <string> followers) {
         this->followers = followers;
     }

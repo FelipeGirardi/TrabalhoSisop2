@@ -109,10 +109,26 @@ namespace profileSessionManager {
 
     }
 
-    void ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
+    /*
+     * Retorno:
+     * 1 = deu follow com sucesso
+     * -1 = nao deu follow
+    */
+    int ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
         cout << "Adicionando novo seguidor " << follower << "ao usuário " << toBeFollowed << " " << endl;
-        if (this->users.find(toBeFollowed) == this->users.end()) { return; }
-        this->users[toBeFollowed].addNewFollower(follower);
+
+        if (follower.compare(toBeFollowed) == 0) {
+            cout << "Não é possível seguir a si mesmo. Seu narcisista." << endl;
+            return -1;
+        }
+
+        if (this->users.find(toBeFollowed) == this->users.end()) {
+            cout << "Não foi possível seguir " << toBeFollowed << " pois ele não existe." << endl;
+            return -1;
+        }
+
+        return this->users[toBeFollowed].addNewFollower(follower);
+
     }
 
 
