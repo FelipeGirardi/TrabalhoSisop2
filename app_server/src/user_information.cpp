@@ -25,7 +25,6 @@ namespace userInformation {
     UserInformation::UserInformation(string username) {
         this->username = username;
         //this->pendingNotifications = {};
-        this->numberOfSessions = 0;
         //this->followers = {};
         sem_init(&(this->freeCritialSession), 0, 1);
         sem_init(&(this->hasItems), 0, 0);
@@ -35,12 +34,23 @@ namespace userInformation {
         this->username = username;
         this->pendingNotifications = pendingNotifications;
         this->followers = followers;
-        this->numberOfSessions = 0;
         sem_init(&(this->freeCritialSession), 0, 1);
         sem_init(&(this->hasItems), 0, pendingNotifications.size());
     }
 
     UserInformation::~UserInformation() { }
+
+    bool UserInformation::hasSessionWithID(string sessionID) {
+        return !(this->sessions.find(username) == this->sessions.end());
+    }
+
+    void UserInformation::addNewSession(string sessionID, Session session) {
+        this->sessions[sessionID] = session;
+    }
+
+    void UserInformation::removeSession(string sessionID) {
+        this->sessions.erase(sessionID);
+    }
 
     int UserInformation::addNewFollower(string follower) {
         if (find(this->followers.begin(),
@@ -86,24 +96,16 @@ namespace userInformation {
         }
         fullString += '\n';
         fullString += "NumberOfSessions: ";
-        fullString += to_string(this->numberOfSessions);
+        fullString += to_string(this->getNumberOfSessions());
         fullString += "\n\n";
         return fullString;
 
     }
 
-    void UserInformation::setNumberOfSessions(int numberOfSessions) {
-        this->numberOfSessions = numberOfSessions;
-    }
     int UserInformation::getNumberOfSessions() {
-        return this->numberOfSessions;
+        return this->sessions.size();
     }
-    void UserInformation::incrementNumberOfSessions() {
-        this->numberOfSessions += 1;
-    }
-    void UserInformation::decrementNumberOfSessions() {
-        this->numberOfSessions -= 1;
-    }
+
     void UserInformation::stopListeningForNotifications() {
         cout << "Cancelando thread de consumo de notificações" << endl;
         pthread_cancel(this->consumerTid);
@@ -168,7 +170,7 @@ namespace userInformation {
         cout << "Iniciando consumo de notificação" << endl;
         UserInformation *_this = (UserInformation *) arg;
 
-        while(_this->numberOfSessions > 0) {
+        while(_this->getNumberOfSessions()) {
             sleep(rand()%5);
             sem_wait(&(_this->hasItems));
             sem_wait(&(_this->freeCritialSession));
