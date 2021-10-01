@@ -15,7 +15,7 @@ TEST_DIR = tests
 HEADERS_DIR = $(SRC_DIR)/headers
 COMMON_OBJ_DIR = ../common/$(OBJ_DIR)
 INCLUDE_PATH = -I$(HEADERS_DIR) -I../common/include
-LIBRARIES = -lpthread -lncurses
+LIBRARIES = -lpthread -lncurses -luuid
 
 all: build-directories ClientApp.o GlobalExceptionHandler.o GlobalSignalHandler.o CommandLineParser.o ConcurrentCommandLine.o Socket.o MessageWriter.o NotificationListener.o SessionManager.o
 	g++ -std=c++11 -o $(BIN_DIR)/clientApp $(OBJ_DIR)/ClientApp.o $(COMMON_OBJ_DIR)/*.o \

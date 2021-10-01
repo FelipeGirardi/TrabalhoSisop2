@@ -18,7 +18,7 @@ all: build-directories common CommunicationManager.o FileManager.o GlobalManager
          NotificationManager.o profile_session_manager.o tcp_server.o \
 		 user_information.o utils/StringExtensions.o Session.o
 
-	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -lpthread
+	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -luuid -lpthread
 
 build_server: build-directories
 	g++ -std=c++11 -c src/tcp_server.cpp src/profile_session_manager.cpp \
@@ -80,7 +80,8 @@ laura:
 
 common:
 	@[ ! -f $(COMMON_OBJ_DIR)/Notification.o -a ! -f $(COMMON_OBJ_DIR)/Packet.o \
-	    -a ! -f $(COMMON_OBJ_DIR)/PacketType.o ] && $(MAKE) -C $(COMMON_DIR) || true
+	    -a ! -f $(COMMON_OBJ_DIR)/PacketType.o \
+	    -a ! -f $(COMMON_OBJ_DIR)/SessionAuth.o] && $(MAKE) -C $(COMMON_DIR) || true
 
 build-directories:
 	@[ ! -d $(OBJ_DIR) ] && mkdir $(OBJ_DIR) || true
