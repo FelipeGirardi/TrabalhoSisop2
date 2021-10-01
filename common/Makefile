@@ -15,7 +15,7 @@ TEST_DIR = tests
 HEADERS_DIR = include
 INCLUDE_PATH = -I$(HEADERS_DIR)
 
-all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o
+all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o SessionAuth.o
 
 ###
 # Main object files
@@ -29,6 +29,9 @@ Packet.o: $(SRC_DIR)/Packet.cpp
 
 PacketType.o: $(SRC_DIR)/PacketType.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/PacketType.o -c $(SRC_DIR)/PacketType.cpp $(INCLUDE_PATH)
+
+SessionAuth.o: $(SRC_DIR)/SessionAuth.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/SessionAuth.o -c $(SRC_DIR)/SessionAuth.cpp $(INCLUDE_PATH) -luuid
 
 StringExtensions.o: $(SRC_DIR)/StringExtensions.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/StringExtensions.cpp $(INCLUDE_PATH)
