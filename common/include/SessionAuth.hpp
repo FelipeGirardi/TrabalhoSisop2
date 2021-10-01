@@ -18,7 +18,6 @@ namespace Common
     class SessionAuth
     {
     public:
-        SessionAuth();
         SessionAuth(char profileId[21], SocketType type);
         SessionAuth(char profileId[21], SocketType type, char uuid[37]);
 
