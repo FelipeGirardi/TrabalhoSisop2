@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
                 cout << "ERRO aceitando conexão canal de comandos\n";
                 continue;
             }
+            cout << "novo socket " << client_sockfd << endl;
 
             // Creates thread for receiving username
             pthread_t auth_thread;
@@ -121,17 +122,25 @@ int main(int argc, char* argv[])
             pthread_create(&auth_thread, NULL, &auth_client_func, (void *) pointerToSocket);
 
             void *resultOfAuthentication;
+
             pthread_join(auth_thread, &resultOfAuthentication);
+            cout << "voltou da thread de auth" << endl;
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
+            cout << "profile ID " << myResult->sessionAuth->getProfileId() << endl;
+            cout << "result " << myResult->result << endl;
+            cout << "tipo " << myResult->sessionAuth->getSocketType() << endl;
 
             if (myResult->result == SUCCESS) {
+                cout << "sucesso" << endl;
                 if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
+                    cout << "tipo comando" << endl;
                     // Cria thread para receber comandos do usuario
                     pthread_t client_thread;
                     cout << "Criando thread de leitura de comandos" << endl;
                     SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
+                    cout << "outro tipo" << endl;
                     UserInformation user = GlobalManager::sessionManager.getUserByUsername(myResult->sessionAuth->getProfileId());
                     user.startListeningForNotifications();
                 }
@@ -158,6 +167,7 @@ void *auth_client_func(void *data) {
 
     int *receivedSocket = (int*) data;
     int client_socket = *receivedSocket;
+    cout << "reading from " << client_socket << endl;
     Packet *receivedPacket = new Packet;
     AuthResult *finalResult = new AuthResult;
 
@@ -168,9 +178,13 @@ void *auth_client_func(void *data) {
         finalResult->result = ERROR;
         return (void *) finalResult;
     }
+
     SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
-    finalResult->sessionAuth = sessionAuth;
+    finalResult->sessionAuth = new SessionAuth(*sessionAuth);
     cout << "Recebeu dados de autenticação corretamente" << endl;
+    cout << "tipo " << sessionAuth->getSocketType() << endl;
+    cout << "uuid " << sessionAuth->getUuid() << endl;
+    cout << "perfil " << sessionAuth->getProfileId() << endl;
 
     ErrorCodes sessionCreationResult = GlobalManager::sessionManager.createNewSession(*sessionAuth, client_socket);
     Packet *responsePacket = new Packet;

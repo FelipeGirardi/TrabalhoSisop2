@@ -52,7 +52,6 @@ namespace profileSessionManager {
             cout << "Usuário nao registrado. Criando novo." << endl;
             UserInformation newUserInfo = UserInformation(username);
             this->users[username] = newUserInfo;
-            this->users[username].startListeningForNotifications();
         } else {
             // user already registered
             cout << "Usuário já registrado." << endl;
@@ -63,40 +62,51 @@ namespace profileSessionManager {
         string username = sessionAuth.getProfileId();
         this->registerUser(username);
         if (this->users[username].hasSessionWithID(sessionAuth.getUuid())) {
-
+            cout << "user ja tem sessao com esse id" << endl;
             Session existentSession = this->users[username].getSessionWithID(sessionAuth.getUuid());
+            cout << "ex session " << existentSession.client_socket << existentSession.notif_socket << endl;
             if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
+                cout << "NOTIFICATION_SOCKET" << endl;
                 if (existentSession.hasNotifSocket()) {
+                    cout << "TEM SOCKET DE NOT" << endl;
                     return ERROR;
                 } else {
                     existentSession.notif_socket = socketID;
                 }
             } else if (sessionAuth.getSocketType() == COMMAND_SOCKET ) {
+                cout << "COMMAND_SOCKET" << endl;
                 if (existentSession.hasCommandSocket()) {
+                    cout << "TEM SOCKET DE COMMAND" << endl;
                     return ERROR;
                 } else {
-                    existentSession.notif_socket = socketID;
+                    existentSession.client_socket = socketID;
                 }
             } else {
                 return ERROR;
             }
         } else if (this->users[username].getNumberOfSessions() < 2) {
 
+            cout << "user ja NAOOO tem sessao com esse id" << endl;
             Session session;
             session.userID = sessionAuth.getProfileId();
             if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
+                cout << "NOTIFICATION_SOCKET" << endl;
                 session.notif_socket = socketID;
                 this->users[username].addNewSession(sessionAuth.getUuid(), session);
             } else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
+                cout << "COMMAND_SOCKET" << endl;
                 session.client_socket = socketID;
                 this->users[username].addNewSession(sessionAuth.getUuid(), session);
             } else {
+                cout << "eh nenhum" << endl;
                 return ERROR;
             }
 
         } else {
+            cout << "deu ruim" << endl;
             return ERROR;
         }
+        cout << "deu bom" << endl;
         return SUCCESS;
     }
 

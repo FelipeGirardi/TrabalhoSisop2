@@ -41,7 +41,7 @@ namespace userInformation {
     UserInformation::~UserInformation() { }
 
     bool UserInformation::hasSessionWithID(string sessionID) {
-        return !(this->sessions.find(username) == this->sessions.end());
+        return !(this->sessions.find(sessionID) == this->sessions.end());
     }
 
     unordered_map<string, Session> UserInformation::getSessions() {
@@ -175,7 +175,7 @@ namespace userInformation {
         cout << "Iniciando consumo de notificação" << endl;
         UserInformation* _this = (UserInformation*)arg;
 
-        while (_this->getNumberOfSessions()) {
+        while (1) {
             sleep(rand() % 5);
             sem_wait(&(_this->hasItems));
             sem_wait(&(_this->freeCritialSession));

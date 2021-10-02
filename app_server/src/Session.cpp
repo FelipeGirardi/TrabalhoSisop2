@@ -11,10 +11,10 @@ Session::Session() {
     this->client_socket = UNDEFINED_SOCKET;
 }
 bool Session::hasNotifSocket() {
-    return this->notif_socket == UNDEFINED_SOCKET;
+    return this->notif_socket != UNDEFINED_SOCKET;
 }
 
 bool Session::hasCommandSocket() {
-    return this->client_socket == UNDEFINED_SOCKET;
+    return this->client_socket != UNDEFINED_SOCKET;
 }
 
