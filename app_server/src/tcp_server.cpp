@@ -119,10 +119,10 @@ int main(int argc, char* argv[])
             pthread_create(&auth_thread, NULL, &auth_client_func, (void *) pointerToSocket);
 
             void *resultOfAuthentication;
-
             pthread_join(auth_thread, &resultOfAuthentication);
             cout << "voltou da thread de auth" << endl;
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
+
             string username = myResult->sessionAuth->getProfileId();
             cout << "profile ID " << username << endl;
             cout << "result " << myResult->result << endl;
@@ -137,9 +137,10 @@ int main(int argc, char* argv[])
                     SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
-                    GlobalManager::sessionManager
-                    .getUserByUsername(myResult->sessionAuth->getProfileId())
+                    cout << "aaa" << endl;
+                    users[username]
                     .startListeningForNotifications();
+                    cout << "bbb" << endl;
                 }
             }
 
