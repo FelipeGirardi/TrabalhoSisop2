@@ -46,7 +46,6 @@ int main(int argc, char** argv)
 
         try
         {
-
             auto outboundPacket = CommandLineParser::parseClientAppCommand(userInput);
             sockets.senderSocket.send(outboundPacket);
         }

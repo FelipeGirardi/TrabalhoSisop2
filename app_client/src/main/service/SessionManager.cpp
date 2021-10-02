@@ -10,6 +10,7 @@
 #include "exception/SocketNotCreatedException.hpp"
 #include "exception/AuthenticationFailedException.hpp"
 #include "exception/SocketConnectionDeniedException.hpp"
+#include "SessionAuth.hpp"
 #include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
@@ -26,6 +27,8 @@ using ClientApp::Exception::AuthenticationFailedException;
 using ClientApp::Exception::SocketConnectionDeniedException;
 using ClientApp::IO::Socket;
 using ClientApp::IO::CommandLineParser;
+using Common::SessionAuth;
+using Common::SocketType;
 
 // Static variables
 
@@ -116,7 +119,20 @@ void SessionManager::authenticateProfile(std::string profileId)
     try
     {
         auto standardProfileId = CommandLineParser::standardizeProfileId(profileId);
-        sockets_->senderSocket.send(standardProfileId.c_str());
+
+        auto senderSessionAuth = SessionAuth((char*)standardProfileId.c_str(), SocketType::COMMAND_SOCKET);
+        auto senderPacket = Packet{ USERNAME, sizeof(senderSessionAuth), (long)time(NULL) };
+        strcpy(senderPacket._payload, senderSessionAuth.toBytes());
+        sockets_->senderSocket.send(senderPacket);
+
+        auto listenerSessionAuth = SessionAuth(
+            (char*)standardProfileId.c_str(),
+            SocketType::NOTIFICATION_SOCKET,
+            (char*)senderSessionAuth.getUuid().c_str()
+        );
+        auto listenerPacket = Packet{ USERNAME, sizeof(listenerSessionAuth), (long)time(NULL) };
+        strcpy(listenerPacket._payload, listenerSessionAuth.toBytes());
+        sockets_->listenerSocket.send(listenerPacket);
     }
     catch (...)
     {
