@@ -81,7 +81,7 @@ laura:
 common:
 	@[ ! -f $(COMMON_OBJ_DIR)/Notification.o -a ! -f $(COMMON_OBJ_DIR)/Packet.o \
 	    -a ! -f $(COMMON_OBJ_DIR)/PacketType.o \
-	    -a ! -f $(COMMON_OBJ_DIR)/SessionAuth.o] && $(MAKE) -C $(COMMON_DIR) || true
+	    -a ! -f $(COMMON_OBJ_DIR)/SessionAuth.o ] && $(MAKE) -C $(COMMON_DIR) || true
 
 build-directories:
 	@[ ! -d $(OBJ_DIR) ] && mkdir $(OBJ_DIR) || true
