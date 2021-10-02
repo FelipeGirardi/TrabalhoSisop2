@@ -55,6 +55,7 @@ namespace profileSessionManager {
         } else {
             // user already registered
             cout << "Usuário já registrado." << endl;
+            cout << GlobalManager::sessionManager.getUsers()[username].toString() << endl;
         }
     }
 
@@ -64,14 +65,16 @@ namespace profileSessionManager {
         if (this->users[username].hasSessionWithID(sessionAuth.getUuid())) {
             cout << "user ja tem sessao com esse id" << endl;
             Session existentSession = this->users[username].getSessionWithID(sessionAuth.getUuid());
-            cout << "ex session " << existentSession.client_socket << existentSession.notif_socket << endl;
+            cout << "ex session " << existentSession.client_socket << "  " << existentSession.notif_socket << endl;
             if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
                 cout << "NOTIFICATION_SOCKET" << endl;
                 if (existentSession.hasNotifSocket()) {
                     cout << "TEM SOCKET DE NOT" << endl;
                     return ERROR;
                 } else {
-                    existentSession.notif_socket = socketID;
+                    this->users[username].updateSession(sessionAuth.getUuid(),
+                                                        NOTIFICATION_SOCKET,
+                                                        socketID);
                 }
             } else if (sessionAuth.getSocketType() == COMMAND_SOCKET ) {
                 cout << "COMMAND_SOCKET" << endl;
@@ -79,7 +82,9 @@ namespace profileSessionManager {
                     cout << "TEM SOCKET DE COMMAND" << endl;
                     return ERROR;
                 } else {
-                    existentSession.client_socket = socketID;
+                    this->users[username].updateSession(sessionAuth.getUuid(),
+                                                        COMMAND_SOCKET,
+                                                        socketID);
                 }
             } else {
                 return ERROR;

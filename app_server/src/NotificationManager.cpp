@@ -3,6 +3,7 @@
 //
 
 #include "../include/NotificationManager.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 #include "../../Common/include/Notification.hpp"
 #include <time.h>
 #include "../include/profile_session_manager.hpp"
@@ -62,12 +63,15 @@ using namespace profileSessionManager;
         }
         list<Session> sessions;
         for (auto kv : users[username].getSessions()) {
+            cout << "SESSION " << kv.first << endl;
+            cout << "notif socket " << kv.second.notif_socket << endl;
+            cout << "command socket " << kv.second.notif_socket << endl;
             sessions.push_back(kv.second);
         }
-        int sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
+        ErrorCodes sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
                                                                           this->notifications[notificationID]);
 
-        if (sent == 1) {
+        if (sent == SUCCESS) {
             this->notifications[notificationID].decrementPendingReaders();
         }
         int pendingReaders = this->notifications[notificationID].getPendingReaders();

@@ -7,9 +7,11 @@
 #include <pthread.h>
 
 #include "Session.hpp"
+#include "../../common/include/SessionAuth.hpp"
 
 using namespace std;
 using std::string;
+using namespace Common;
 
 namespace userInformation {
 
@@ -76,6 +78,7 @@ namespace userInformation {
 
             bool hasSessionWithID(string sessionID);
             Session getSessionWithID(string sessionID);
+            void updateSession(string sessionID, SocketType type, int socketValue);
             void addNewSession(string sessionID, Session session);
             void removeSession(string sessionID);
             unordered_map<string, Session> getSessions();

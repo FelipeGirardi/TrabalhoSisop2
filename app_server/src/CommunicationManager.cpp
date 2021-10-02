@@ -14,36 +14,37 @@
 #include "../include/CommunicationManager.hpp"
 #include "../include/Session.hpp"
 #include "../../Common/include/Notification.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 #define PORT 4000
 
 using namespace std;
 using namespace notification;
 
 namespace communicationManager {
-    int CommunicationManager::send_packet(int socket, Packet* package) {
-        int n;
+    ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
+        cout << "Enviando o pacote:" << endl;
         package->printItself();
 
-        n = write(socket, package, sizeof(Packet));
-        if (n < 0) {
-            printf("ERROR writing to socket\n");
-            n = -1;
+        if (write(socket, package, sizeof(Packet)) < 0) {
+            cout << "ERRO escrevendo no socket" << endl;
+            return ERROR;
         }
-        return n;
+        return SUCCESS;
     }
 
     /*
      * retorna 1 quando conseguiu enviar a pelo menos uma das sessões do usuário
      * retorna 0 caso contrário
      */
-    int CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
+    ErrorCodes CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
         cout << "inside sendPacketToSessions. Number of sessions:" << sessions.size() << endl;
-        int returnValue = 0;
+
+        ErrorCodes returnValue = ERROR;
         for (Session session : sessions) {
 
             cout << "enviando pacote para " << session.userID << " " << session.notif_socket << endl;
             if (this->send_packet(session.notif_socket, package) >= 0) {
-                returnValue = 1;
+                returnValue = SUCCESS;
             }
         }
         return returnValue;
@@ -53,7 +54,7 @@ namespace communicationManager {
      * retorna 1 quando conseguiu enviar a pelo menos uma das sessões do usuário
      * retorna 0 caso contrário
      */
-    int CommunicationManager::sendNotificationToSessions(list<Session> sessions, Notification notification) {
+    ErrorCodes CommunicationManager::sendNotificationToSessions(list<Session> sessions, Notification notification) {
 
         cout << "inside sendNotificationToSessions function" << endl;
         cout << "notification to send" << notification.toString() << endl;

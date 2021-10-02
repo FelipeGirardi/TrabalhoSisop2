@@ -44,6 +44,16 @@ namespace userInformation {
         return !(this->sessions.find(sessionID) == this->sessions.end());
     }
 
+    void UserInformation::updateSession(string sessionID, SocketType type, int socketValue) {
+
+        if (type == Common::NOTIFICATION_SOCKET) {
+            this->sessions[sessionID].notif_socket = socketValue;
+        } else if (type == Common::COMMAND_SOCKET) {
+            this->sessions[sessionID].client_socket = socketValue;
+        }
+
+    }
+
     unordered_map<string, Session> UserInformation::getSessions() {
         return this->sessions;
     }
@@ -175,6 +185,12 @@ namespace userInformation {
         cout << "Iniciando consumo de notificação" << endl;
         UserInformation* _this = (UserInformation*)arg;
 
+        if (_this == NULL) {
+            cout << "USER IS NULL" << endl;
+            return 0;
+        }
+        cout << "USER " << _this->toString() << endl;
+
         while (1) {
             sleep(rand() % 5);
             sem_wait(&(_this->hasItems));
@@ -182,6 +198,7 @@ namespace userInformation {
 
             // this if shouldn't be needed, but better safe than sorry
             if (!_this->pendingNotifications.empty()) {
+
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "Consumindo notificação de ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();

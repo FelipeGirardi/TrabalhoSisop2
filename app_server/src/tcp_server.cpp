@@ -44,14 +44,11 @@ typedef struct AuthResult {
 }AuthResult;
 
 // Declaracao funcoes auxiliares
-int send_packet(int socket, Packet *package);
 void closeAppHandler(int n_signal);
-//AuthResult authenticate(Session *session);
 
 // Declaracao de funcoes de threads
 void *auth_client_func(void *data);
 void *client_thread_func(void *data);
-//void *notification_thread(void *args);
 
 int main(int argc, char* argv[])
 {
@@ -126,23 +123,23 @@ int main(int argc, char* argv[])
             pthread_join(auth_thread, &resultOfAuthentication);
             cout << "voltou da thread de auth" << endl;
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
-            cout << "profile ID " << myResult->sessionAuth->getProfileId() << endl;
+            string username = myResult->sessionAuth->getProfileId();
+            cout << "profile ID " << username << endl;
             cout << "result " << myResult->result << endl;
             cout << "tipo " << myResult->sessionAuth->getSocketType() << endl;
 
+            cout << GlobalManager::sessionManager.getUsers()[username].toString() << endl;
+
             if (myResult->result == SUCCESS) {
-                cout << "sucesso" << endl;
                 if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
-                    cout << "tipo comando" << endl;
-                    // Cria thread para receber comandos do usuario
                     pthread_t client_thread;
                     cout << "Criando thread de leitura de comandos" << endl;
                     SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
-                    cout << "outro tipo" << endl;
-                    UserInformation user = GlobalManager::sessionManager.getUserByUsername(myResult->sessionAuth->getProfileId());
-                    user.startListeningForNotifications();
+                    GlobalManager::sessionManager
+                    .getUserByUsername(myResult->sessionAuth->getProfileId())
+                    .startListeningForNotifications();
                 }
             }
 
@@ -200,7 +197,7 @@ void *auth_client_func(void *data) {
     }
 
     cout << "Enviando pacote ACK/NACK recebimento de comando" << endl;
-    if (GlobalManager::commManager.send_packet(client_socket, responsePacket) < 0) {
+    if (GlobalManager::commManager.send_packet(client_socket, responsePacket) == ERROR) {
         cout << "Não foi possivel enviar ACK/NACK" <<endl;
     } else {
         cout << "ACK/NACK enviado com sucesso" << endl;
@@ -286,7 +283,7 @@ void *client_thread_func(void *data) {
         }
 
         cout << "Enviando pacote ACK/NACK recebimento de comando **" << endl;
-        if (GlobalManager::commManager.send_packet(commandSocket, responsePacket) < 0) {
+        if (GlobalManager::commManager.send_packet(commandSocket, responsePacket) == ERROR) {
             cout << "Não foi possivel enviar ACK/NACK" <<endl;
         } else {
             cout << "ACK/NACK enviado com sucesso" << endl;

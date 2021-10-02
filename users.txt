@@ -1,4 +1,3 @@
-|||
-@maria|||
+@maria||1,2,|
 @moritz|@joana,@maria,||
-@joana|@moritz,||
+@joana|@moritz,|1,2,|
