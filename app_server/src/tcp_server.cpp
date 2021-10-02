@@ -36,6 +36,7 @@ ProfileSessionManager sessionManager;
 GlobalManager globalManager;
 NotificationManager notificationManager;
 CommunicationManager comunicationManager;
+bool shouldEnd = false;
 
 //TODO: mudar de lugar
 typedef struct AuthResult {
@@ -113,7 +114,7 @@ int main(int argc, char* argv[])
 
             // Creates thread for receiving username
             pthread_t auth_thread;
-            cout << "Criando thread autenticação **\n";
+            cout << "Criando thread autenticação" << endl;
             int *pointerToSocket = (int*) malloc(sizeof (int));
             *pointerToSocket = client_sockfd;
             pthread_create(&auth_thread, NULL, &auth_client_func, (void *) pointerToSocket);
@@ -124,11 +125,6 @@ int main(int argc, char* argv[])
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
             string username = myResult->sessionAuth->getProfileId();
-            cout << "profile ID " << username << endl;
-            cout << "result " << myResult->result << endl;
-            cout << "tipo " << myResult->sessionAuth->getSocketType() << endl;
-
-            cout << GlobalManager::sessionManager.getUsers()[username].toString() << endl;
 
             if (myResult->result == SUCCESS) {
                 if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
@@ -137,10 +133,10 @@ int main(int argc, char* argv[])
                     SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
-                    cout << "aaa" << endl;
+
                     GlobalManager::sessionManager.users[username]
                     .startListeningForNotifications();
-                    cout << "bbb" << endl;
+
                 }
             }
 
@@ -179,7 +175,7 @@ void *auth_client_func(void *data) {
 
     SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
     finalResult->sessionAuth = new SessionAuth(*sessionAuth);
-    cout << "Recebeu dados de autenticação corretamente" << endl;
+    cout << "Recebeu dados de autenticação corretamente:" << endl;
     cout << "tipo " << sessionAuth->getSocketType() << endl;
     cout << "uuid " << sessionAuth->getUuid() << endl;
     cout << "perfil " << sessionAuth->getProfileId() << endl;
@@ -188,7 +184,7 @@ void *auth_client_func(void *data) {
     Packet *responsePacket = new Packet;
 
     if (sessionCreationResult == ERROR) {
-        cout << "Não foi possível atualizar o usuário. Talvez ele já tenha atingido limite de sessões." << endl;
+        cout << "ERRO atualizando o usuário. Talvez ele já tenha atingido limite de sessões." << endl;
         finalResult->result = ERROR;
         *responsePacket = GlobalManager::commManager.createGenericNackPacket();
     } else {
@@ -199,7 +195,7 @@ void *auth_client_func(void *data) {
 
     cout << "Enviando pacote ACK/NACK recebimento de comando" << endl;
     if (GlobalManager::commManager.send_packet(client_socket, responsePacket) == ERROR) {
-        cout << "Não foi possivel enviar ACK/NACK" <<endl;
+        cout << "ERRO enviando ACK/NACK" <<endl;
     } else {
         cout << "ACK/NACK enviado com sucesso" << endl;
     }
@@ -266,9 +262,9 @@ void *client_thread_func(void *data) {
 
         if(receivedPacket->type == FOLLOW) {
             cout << "Recebeu comando FOLLOW" << endl;
-            int followResult = GlobalManager::sessionManager.addNewFollowerToUser(userInfo.username,
+            ErrorCodes followResult = GlobalManager::sessionManager.addNewFollowerToUser(userInfo.username,
                                                                                     receivedPacket->_payload);
-            if (followResult == 1)
+            if (followResult == SUCCESS)
                 *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
             else
                 *responsePacket = GlobalManager::commManager.createGenericNackPacket();
@@ -307,5 +303,9 @@ void closeAppHandler(int n_signal) {
     fileManager.saveUsersOnFile(GlobalManager::sessionManager.getUsers());
     fileManager.saveNotificationsOnFile(GlobalManager::notifManager.getNotifications());
     cout << "Perfis e notificações salvos!\n";
+    GlobalManager::sessionManager.endAllSessions();
+    // guardar ID de threads de leitura de comando para deletar?
+    // Criar uma var global para controle de laço?
+    // Salvar o pid da thread no user?
     exit(0);
 }

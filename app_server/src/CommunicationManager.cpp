@@ -33,16 +33,15 @@ namespace communicationManager {
     }
 
     /*
-     * retorna 1 quando conseguiu enviar a pelo menos uma das sessões do usuário
-     * retorna 0 caso contrário
+     * retorna SUCCESS quando conseguiu enviar a pelo menos uma das sessões do usuário
+     * retorna ERROR caso contrário
      */
     ErrorCodes CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
-        cout << "inside sendPacketToSessions. Number of sessions:" << sessions.size() << endl;
 
         ErrorCodes returnValue = ERROR;
         for (Session session : sessions) {
 
-            cout << "enviando pacote para " << session.userID << " " << session.notif_socket << endl;
+            cout << "Enviando pacote para " << session.userID << "socket = " << session.notif_socket << endl;
             if (this->send_packet(session.notif_socket, package) >= 0) {
                 returnValue = SUCCESS;
             }
@@ -51,19 +50,17 @@ namespace communicationManager {
     }
 
     /*
-     * retorna 1 quando conseguiu enviar a pelo menos uma das sessões do usuário
-     * retorna 0 caso contrário
+     * retorna SUCCESS quando conseguiu enviar a pelo menos uma das sessões do usuário
+     * retorna ERROR caso contrário
      */
     ErrorCodes CommunicationManager::sendNotificationToSessions(list<Session> sessions, Notification notification) {
 
-        cout << "inside sendNotificationToSessions function" << endl;
-        cout << "notification to send" << notification.toString() << endl;
+        cout << "Notificação sendo enviada " << notification.toString() << endl;
 
         Packet* packet = new Packet;
         packet->timestamp = time(NULL);
         packet->type = NOTIFICATION;
 
-        cout << "created packet" << endl;
         string notString = notification.toString();
         notString.pop_back();
         const char* cstr = notString.c_str();
@@ -92,7 +89,7 @@ namespace communicationManager {
 
     Packet CommunicationManager::createAckPacketForType(PacketType type) {
 
-        cout << "Creating ACK packet" << endl;
+        cout << "Criando pacote ACK" << endl;
         string responseString = "Uhu! " + this->stringDescribingType(type) + " recebido com sucesso! :)";
 
         Packet package;
@@ -106,7 +103,7 @@ namespace communicationManager {
 
     Packet CommunicationManager::createGenericNackPacket() {
 
-        cout << "Creating NACK packet" << endl;
+        cout << "Criando pacote NACK" << endl;
         string responseString = "Erro!";
 
         Packet package;

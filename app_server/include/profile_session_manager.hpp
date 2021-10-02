@@ -58,12 +58,11 @@ namespace profileSessionManager {
          * @param follower - username of new user to be added to the list
          * @param toBeFollowed  - username the user whose list is gonna be changed
          *
-         * @Return int: a bool indicating if following was possible
-         * -1: not possible
-         * 1: possible
          */
-        int addNewFollowerToUser(string follower, string toBeFollowed);
+        ErrorCodes addNewFollowerToUser(string follower, string toBeFollowed);
         ErrorCodes createNewSession(SessionAuth sessionAuth, int socketID);
+
+        void endAllSessions();
 
 
         };

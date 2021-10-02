@@ -8,6 +8,7 @@
 
 #include "Session.hpp"
 #include "../../common/include/SessionAuth.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 
 using namespace std;
 using std::string;
@@ -64,7 +65,7 @@ namespace userInformation {
             void addNewNotification(string notificationID);
             void getNotifications();
 
-            int addNewFollower(string follower);
+            ErrorCodes addNewFollower(string follower);
             string toString();
 
             /**

@@ -66,14 +66,14 @@ namespace userInformation {
         this->sessions.erase(sessionID);
     }
 
-    int UserInformation::addNewFollower(string follower) {
+    ErrorCodes UserInformation::addNewFollower(string follower) {
         if (find(this->followers.begin(),
             this->followers.end(), follower) == this->followers.end()) {
             this->followers.push_back(follower);
-            return 1;
+            return SUCCESS;
         }
         else {
-            return -1;
+            return ERROR;
         }
     }
 
