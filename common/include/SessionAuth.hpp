@@ -26,6 +26,8 @@ namespace Common
         SocketType getSocketType();
 
         static SessionAuth* fromBytes(char* sessionAuthInBytes);
+        static long sizeInBytes();
+
         char* toBytes();
 
     private:

@@ -122,7 +122,7 @@ void SessionManager::authenticateProfile(std::string profileId)
 
         auto senderSessionAuth = SessionAuth((char*)standardProfileId.c_str(), SocketType::COMMAND_SOCKET);
         auto senderPacket = Packet{ USERNAME, sizeof(senderSessionAuth), (long)time(NULL) };
-        strcpy(senderPacket._payload, senderSessionAuth.toBytes());
+        memcpy(senderPacket._payload, senderSessionAuth.toBytes(), SessionAuth::sizeInBytes());
         sockets_->senderSocket.send(senderPacket);
 
         auto listenerSessionAuth = SessionAuth(
@@ -131,7 +131,7 @@ void SessionManager::authenticateProfile(std::string profileId)
             (char*)senderSessionAuth.getUuid().c_str()
         );
         auto listenerPacket = Packet{ USERNAME, sizeof(listenerSessionAuth), (long)time(NULL) };
-        strcpy(listenerPacket._payload, listenerSessionAuth.toBytes());
+        memcpy(listenerPacket._payload, listenerSessionAuth.toBytes(), SessionAuth::sizeInBytes());
         sockets_->listenerSocket.send(listenerPacket);
     }
     catch (...)
