@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
                     cout << "aaa" << endl;
-                    users[username]
+                    GlobalManager::sessionManager.users[username]
                     .startListeningForNotifications();
                     cout << "bbb" << endl;
                 }

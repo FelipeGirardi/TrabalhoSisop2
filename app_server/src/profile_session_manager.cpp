@@ -51,7 +51,7 @@ namespace profileSessionManager {
             // user doesn't exist
             cout << "Usuário nao registrado. Criando novo." << endl;
             UserInformation newUserInfo = UserInformation(username);
-            this->users[username] = newUserInfo;
+            GlobalManager::sessionManager.users[username] = newUserInfo;
         } else {
             // user already registered
             cout << "Usuário já registrado." << endl;
@@ -72,7 +72,7 @@ namespace profileSessionManager {
                     cout << "TEM SOCKET DE NOT" << endl;
                     return ERROR;
                 } else {
-                    this->users[username].updateSession(sessionAuth.getUuid(),
+                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
                                                         NOTIFICATION_SOCKET,
                                                         socketID);
                 }
@@ -82,7 +82,7 @@ namespace profileSessionManager {
                     cout << "TEM SOCKET DE COMMAND" << endl;
                     return ERROR;
                 } else {
-                    this->users[username].updateSession(sessionAuth.getUuid(),
+                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
                                                         COMMAND_SOCKET,
                                                         socketID);
                 }
@@ -97,11 +97,11 @@ namespace profileSessionManager {
             if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
                 cout << "NOTIFICATION_SOCKET" << endl;
                 session.notif_socket = socketID;
-                this->users[username].addNewSession(sessionAuth.getUuid(), session);
+                GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
             } else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
                 cout << "COMMAND_SOCKET" << endl;
                 session.client_socket = socketID;
-                this->users[username].addNewSession(sessionAuth.getUuid(), session);
+                GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
             } else {
                 cout << "eh nenhum" << endl;
                 return ERROR;

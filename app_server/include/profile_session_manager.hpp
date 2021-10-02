@@ -19,9 +19,10 @@ namespace profileSessionManager {
 
     class ProfileSessionManager {
     private:
-        unordered_map<string, UserInformation> users; // <username> : <user info object>
+
         void registerUser(string username);
     public:
+        unordered_map<string, UserInformation> users; // <username> : <user info object>
         /* Initializers */
         ProfileSessionManager();
         ProfileSessionManager(unordered_map<string, UserInformation> users);
