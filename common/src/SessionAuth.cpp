@@ -57,6 +57,11 @@ SessionAuth* SessionAuth::fromBytes(char* sessionAuthInBytes)
     return sessionAuthCopy;
 }
 
+long SessionAuth::sizeInBytes()
+{
+    return (sizeof(char) * 21) + sizeof(SocketType) + (sizeof(char) * 37);
+}
+
 char* SessionAuth::toBytes()
 {
     auto sessionAuthCopy = new SessionAuth(_profileId, _socketType, _uuid);
