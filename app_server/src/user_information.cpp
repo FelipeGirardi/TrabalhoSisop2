@@ -123,7 +123,11 @@ namespace userInformation {
 
     void UserInformation::stopListeningForNotifications() {
         cout << "Cancelando thread de consumo de notificações" << endl;
-        pthread_cancel(this->consumerTid);
+        if (pthread_cancel(this->consumerTid) == 0) {
+            cout << "Sucesso terminando thread de consumo de notificação" << endl;
+        } else {
+            cout << "ERRO terminando thread de consumo de notificação" << endl;
+        }
     }
 
     void UserInformation::produceNewNotification(string notificationID) {
@@ -191,7 +195,7 @@ namespace userInformation {
         }
         cout << "USER " << _this->toString() << endl;
 
-        while (1) {
+        while (_this->getNumberOfSessions() > 0) {
             sleep(rand() % 5);
             sem_wait(&(_this->hasItems));
             sem_wait(&(_this->freeCritialSession));

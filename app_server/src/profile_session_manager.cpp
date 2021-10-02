@@ -108,7 +108,7 @@ namespace profileSessionManager {
 
     void ProfileSessionManager::endSessionWithID(string sessionID, string username) {
 
-        cout << "Encerrando sessão de " << username << endl;
+        cout << "Encerrando sessão " << sessionID << " de " << username << endl;
         if (GlobalManager::sessionManager.users.find(username) == GlobalManager::sessionManager.users.end()) {
             cout << "ERRO encerrando sessão. Usuário não existe." << endl;
             return;
@@ -123,6 +123,7 @@ namespace profileSessionManager {
         int numberOfSessions = GlobalManager::sessionManager.users[username].getNumberOfSessions();
 
         if(numberOfSessions == 0) {
+
             GlobalManager::sessionManager.users[username].stopListeningForNotifications();
         }
 

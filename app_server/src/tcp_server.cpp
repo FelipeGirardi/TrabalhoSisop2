@@ -161,7 +161,7 @@ void *auth_client_func(void *data) {
 
     int *receivedSocket = (int*) data;
     int client_socket = *receivedSocket;
-    cout << "reading from " << client_socket << endl;
+    cout << "Iniciando authenticação do socket = " << client_socket << endl;
     Packet *receivedPacket = new Packet;
     AuthResult *finalResult = new AuthResult;
 
@@ -176,9 +176,9 @@ void *auth_client_func(void *data) {
     SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
     finalResult->sessionAuth = new SessionAuth(*sessionAuth);
     cout << "Recebeu dados de autenticação corretamente:" << endl;
-    cout << "tipo " << sessionAuth->getSocketType() << endl;
-    cout << "uuid " << sessionAuth->getUuid() << endl;
-    cout << "perfil " << sessionAuth->getProfileId() << endl;
+    cout << "Tipo " << sessionAuth->getSocketType() << endl;
+    cout << "UUID " << sessionAuth->getUuid() << endl;
+    cout << "Perfil " << sessionAuth->getProfileId() << endl;
 
     ErrorCodes sessionCreationResult = GlobalManager::sessionManager.createNewSession(*sessionAuth, client_socket);
     Packet *responsePacket = new Packet;
@@ -206,35 +206,11 @@ void *auth_client_func(void *data) {
 
 }
 
-//void *auth_client_func(void *data) {
-//
-//    //inicializa estrutura de retorno
-//    AuthResult *result = new AuthResult;
-//
-//    //casting de parametros
-//    Session *session = (Session*) data;
-//
-//    AuthResult authResult = authenticate(session);
-//    result->result = authResult.result;
-//    result->username.assign(authResult.username);
-//
-//    if (result->result < 0) {
-//        cout << "ERRO na autenticacao" << endl;
-//
-//    } else {
-//        cout << "Retorno com sucesso da autenticação de " << result->username << endl;
-//    }
-//
-//    return (void *) result;
-//
-//}
-
 void *client_thread_func(void *data) {
-    int bufferInt;  // sem notif_sockfd por enquanto
+    int readResult;
     char buffer[BUFFER_SIZE];
     int _exit = 0;
 
-    // Extração dos argumentos
     SessionAuth *sessionAuthData = (SessionAuth*) data;
     UserInformation userInfo = GlobalManager::sessionManager.getUserByUsername(sessionAuthData->getProfileId());
     Session session = userInfo.getSessionWithID(sessionAuthData->getUuid());
@@ -247,9 +223,9 @@ void *client_thread_func(void *data) {
         bzero(buffer, BUFFER_SIZE);
 
         Packet *receivedPacket = new Packet;
-        bufferInt = read(commandSocket, receivedPacket, sizeof(Packet));
+        readResult = read(commandSocket, receivedPacket, sizeof(Packet));
 
-        if (bufferInt < 0 || !(receivedPacket->type == SEND || receivedPacket->type == FOLLOW || receivedPacket->type == EXIT)) {
+        if (readResult < 0 || !(receivedPacket->type == SEND || receivedPacket->type == FOLLOW || receivedPacket->type == EXIT)) {
             free(receivedPacket);
             printf("ERRO lendo do socket. Desconectando.");
             break;
@@ -304,8 +280,6 @@ void closeAppHandler(int n_signal) {
     fileManager.saveNotificationsOnFile(GlobalManager::notifManager.getNotifications());
     cout << "Perfis e notificações salvos!\n";
     GlobalManager::sessionManager.endAllSessions();
-    // guardar ID de threads de leitura de comando para deletar?
-    // Criar uma var global para controle de laço?
-    // Salvar o pid da thread no user?
+
     exit(0);
 }
