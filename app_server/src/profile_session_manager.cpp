@@ -165,5 +165,15 @@ namespace profileSessionManager {
         }
     }
 
+    list<Session> ProfileSessionManager::getAllSessions() {
+        list<Session> returnValue;
+        for (auto user : GlobalManager::sessionManager.users) {
+            for (auto kv : user.second.getSessions()) {
+                returnValue.push_back(kv.second);
+            }
+        }
+        return returnValue;
+    }
+
 
 }

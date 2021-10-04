@@ -279,7 +279,20 @@ void closeAppHandler(int n_signal) {
     fileManager.saveUsersOnFile(GlobalManager::sessionManager.getUsers());
     fileManager.saveNotificationsOnFile(GlobalManager::notifManager.getNotifications());
     cout << "Perfis e notificações salvos!\n";
+
+    Packet exitPacket = GlobalManager::commManager.createExitPacket();
+    Packet *packetPointer = (Packet *) malloc(sizeof (Packet));
+    *packetPointer = exitPacket;
+
+    list<Session> allSessions = GlobalManager::sessionManager.getAllSessions();
+    if (GlobalManager::commManager.sendPacketToSessions(allSessions, packetPointer) == SUCCESS) {
+        cout << "Sucesso enviando EXIT para todas as sessões" << endl;
+    } else {
+        cout << "ERRO enviando EXIT para todas as sessões" << endl;
+    }
+
     GlobalManager::sessionManager.endAllSessions();
+    free(packetPointer);
 
     exit(0);
 }

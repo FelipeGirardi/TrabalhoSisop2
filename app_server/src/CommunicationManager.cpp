@@ -13,14 +13,19 @@
 #include "../include/Session.hpp"
 #include "../include/CommunicationManager.hpp"
 #include "../include/Session.hpp"
-#include "../../Common/include/Notification.hpp"
+#include "../../common/include/Notification.hpp"
+#include "../../common/include/PacketType.hpp"
 #include "../include/utils/ErrorCodes.hpp"
+
 #define PORT 4000
 
 using namespace std;
 using namespace notification;
 
 namespace communicationManager {
+
+
+
     ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
         cout << "Enviando o pacote:" << endl;
         package->printItself();
@@ -33,15 +38,21 @@ namespace communicationManager {
     }
 
     /*
-     * retorna SUCCESS quando conseguiu enviar a pelo menos uma das sessões do usuário
+     * retorna SUCCESS quando conseguiu enviar a pelo menos uma das sessões do usuário.
+     * Se lista de sessões está vazia, é considerado sucesso.
      * retorna ERROR caso contrário
      */
     ErrorCodes CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
 
+        cout << "Enviando o pacote de " << stringDescribingType(package->type) <<
+        " para o total de " << sessions.size() << " sessões." << endl;
+
+        if (sessions.empty()) { return SUCCESS; }
+
         ErrorCodes returnValue = ERROR;
         for (Session session : sessions) {
 
-            cout << "Enviando pacote para " << session.userID << "socket = " << session.notif_socket << endl;
+            cout << "Enviando pacote para " << session.userID << " socket = " << session.notif_socket << endl;
             if (this->send_packet(session.notif_socket, package) >= 0) {
                 returnValue = SUCCESS;
             }
@@ -72,25 +83,10 @@ namespace communicationManager {
         return sendPacketToSessions(sessions, packet);
     }
 
-    string CommunicationManager::stringDescribingType(PacketType type) {
-        switch (type) {
-        case SEND:
-            return "SEND";
-        case FOLLOW:
-            return "FOLLOW";
-        case EXIT:
-            return "EXIT";
-        case USERNAME:
-            return "USERNAME";
-        default:
-            return "";
-        }
-    }
-
     Packet CommunicationManager::createAckPacketForType(PacketType type) {
 
         cout << "Criando pacote ACK" << endl;
-        string responseString = "Uhu! " + this->stringDescribingType(type) + " recebido com sucesso! :)";
+        string responseString = "Uhu! " + stringDescribingType(type) + " recebido com sucesso! :)";
 
         Packet package;
         package.type = SERVER_ACK;
@@ -112,6 +108,22 @@ namespace communicationManager {
         bzero(package._payload, BUFFER_SIZE);
         strncpy(package._payload, responseString.c_str(), BUFFER_SIZE);
         package.length = strlen(package._payload);
+        return package;
+    }
+
+    /*
+     * Creates exit packet. Sent when server receives a control C.
+     * The payload is a buffer with BUFFER_SIZE zeros
+     */
+    Packet CommunicationManager::createExitPacket() {
+
+        cout << "Criando pacote EXIT" << endl;
+
+        Packet package;
+        package.type = EXIT;
+        package.timestamp = time(NULL);
+        bzero(package._payload, BUFFER_SIZE);
+        package.length = BUFFER_SIZE;
         return package;
     }
 

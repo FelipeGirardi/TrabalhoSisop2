@@ -5,6 +5,7 @@
 #ifndef PACKETTYPE_HPP
 #define PACKETTYPE_HPP
 
+#include <string>
 
 typedef enum PacketType {
 
@@ -14,9 +15,11 @@ typedef enum PacketType {
     FOLLOW, // client -> server
     SERVER_ACK, // server -> client
     SERVER_ERROR, // server -> client
-    EXIT // client -> server
+    EXIT // client -> server or server -> client
 
 }PacketType;
+
+std::string stringDescribingType(PacketType type);
 
 
 #endif //PACKETTYPE_HPP
