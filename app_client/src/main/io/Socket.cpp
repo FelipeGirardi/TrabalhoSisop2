@@ -9,8 +9,10 @@
 #include "exception/SocketReadFailedException.hpp"
 #include "exception/SocketWriteFailedException.hpp"
 #include "exception/ServerNotAcknowledgedException.hpp"
+#include "exception/UnexpectedPacketTypeException.hpp"
 #include "Notification.hpp"
 #include <cstring>
+#include <memory>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -24,10 +26,7 @@ using notification::Notification;
 using ClientApp::Exception::SocketReadFailedException;
 using ClientApp::Exception::SocketWriteFailedException;
 using ClientApp::Exception::ServerNotAcknowledgedException;
-
-// Static variables
-
-const int Socket::bufferSize_ = BUFFER_SIZE;  // Same as Packet
+using ClientApp::Exception::UnexpectedPacketTypeException;
 
 // Public methods
 
@@ -45,8 +44,8 @@ void Socket::send(Packet packet)
     if (response < 0)
         throw SocketWriteFailedException(socketDescriptor_);
 
-    auto ackNotification = receive();
-    if (ackNotification.getID() == to_string(SERVER_ERROR))
+    auto ackPacket = receivePacket();
+    if (ackPacket->type != SERVER_ACK)
         throw ServerNotAcknowledgedException(socketDescriptor_);
 }
 
@@ -56,21 +55,30 @@ void Socket::send(const char* bytes)
     if (response < 0)
         throw SocketWriteFailedException(socketDescriptor_);
 
-    auto ackNotification = receive();
-    if (ackNotification.getID() == to_string(SERVER_ERROR))
+    auto ackPacket = receivePacket();
+    if (ackPacket->type != SERVER_ACK)
         throw ServerNotAcknowledgedException(socketDescriptor_);
 }
 
 Notification Socket::receive()
 {
-    Packet incomingPacket;
+    auto incomingPacket = receivePacket();
 
-    auto response = read(socketDescriptor_, &incomingPacket, sizeof(Packet));
+    if (incomingPacket->type != NOTIFICATION)
+        throw UnexpectedPacketTypeException(NOTIFICATION, incomingPacket->type);
+
+    return Notification::parseCsvString(incomingPacket->_payload);
+}
+
+// Private methods
+
+std::unique_ptr<Packet> Socket::receivePacket()
+{
+    auto incomingPacket = unique_ptr<Packet>(new Packet());
+
+    auto response = read(socketDescriptor_, incomingPacket.get(), sizeof(Packet));
     if (response < 0)
         throw SocketReadFailedException(socketDescriptor_);
 
-    if (incomingPacket.type == NOTIFICATION)
-        return Notification::parseCsvString(incomingPacket._payload);
-
-    return Notification(to_string(incomingPacket.type), incomingPacket._payload, "./serverApp", 0, 0);
+    return incomingPacket;
 }

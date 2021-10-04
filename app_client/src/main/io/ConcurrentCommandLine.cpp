@@ -128,12 +128,10 @@ void ConcurrentCommandLine::setInitialized(bool isInitialized)
 
 void ConcurrentCommandLine::showInput()
 {
-    // nodelay(stdscr, FALSE);
     echo();
 }
 
 void ConcurrentCommandLine::hideInput()
 {
-    // nodelay(stdscr, TRUE);
     noecho();
 }

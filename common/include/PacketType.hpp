@@ -8,7 +8,7 @@
 
 typedef enum PacketType {
 
-    NOTIFICATION = 0, // server -> client
+    NOTIFICATION = 1, // server -> client
     USERNAME, // client -> server
     SEND, // client -> server
     FOLLOW, // client -> server

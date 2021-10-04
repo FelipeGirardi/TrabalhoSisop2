@@ -9,6 +9,7 @@
 #include "Notification.hpp"
 #include "Packet.hpp"
 #include <string>
+#include <memory>
 
 namespace ClientApp
 {
@@ -26,7 +27,8 @@ namespace ClientApp
             notification::Notification receive();
 
         private:
-            static const int bufferSize_;
+            std::unique_ptr<Packet> receivePacket();
+
             const int socketDescriptor_;
         };
 
