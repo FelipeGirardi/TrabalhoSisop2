@@ -139,18 +139,20 @@ namespace userInformation {
         args->userInformation = this;
         args->notificationID.assign(notificationID);
 
-        //        pthread_t tid = (pthread_t *) malloc(sizeof (pthread_t));
-        //        *tid = (unsigned long int) rand();
-        pthread_t tid;
+//        pthread_t tid;
+//        if (pthread_create(&tid, NULL, this->producer, (void*)args)) {
+//            cout << "ERRO criando thread de produção" << endl;
+//            //free(args);
+//        }
 
-        if (pthread_create(&tid, NULL, this->producer, (void*)args)) {
-            cout << "ERRO criando thread de produção" << endl;
-            //free(args);
-        }
+        sem_wait(&(this->freeCritialSession));
 
-        // será que é assim?
-        //pthread_join(*tid, NULL);
-        //free(tid);
+        cout << "Produzindo notificação com ID: " << notificationID << endl;
+        this->pendingNotifications.push_back(notificationID);
+
+        sem_post(&(this->freeCritialSession));
+        sem_post(&(this->hasItems));
+
 
     }
 

@@ -98,7 +98,7 @@ using namespace profileSessionManager;
                                                     currentTime,
                                                     pendingReaders);
         GlobalManager::notifManager.notifications[notificationID] = newNotification;
-        idNextNotification ++;
+        GlobalManager::notifManager.idNextNotification ++;
         sem_post(&(GlobalManager::notifManager.freeCritialSession));
 
         GlobalManager::sessionManager.newNotificationSentBy(username,

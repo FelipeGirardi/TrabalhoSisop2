@@ -187,6 +187,7 @@ void *auth_client_func(void *data) {
         cout << "ERRO atualizando o usuário. Talvez ele já tenha atingido limite de sessões." << endl;
         finalResult->result = ERROR;
         *responsePacket = GlobalManager::commManager.createGenericNackPacket();
+        //close(client_socket) ??
     } else {
         cout << "Usuário atualizado com sucesso" << endl;
         finalResult->result = SUCCESS;
