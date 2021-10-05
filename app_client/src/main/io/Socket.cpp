@@ -44,7 +44,7 @@ void Socket::send(Packet packet)
     if (response < 0)
         throw SocketWriteFailedException(socketDescriptor_);
 
-    auto ackPacket = receivePacket();
+    auto ackPacket = receive();
     if (ackPacket->type != SERVER_ACK)
         throw ServerNotAcknowledgedException(socketDescriptor_);
 }
@@ -55,24 +55,12 @@ void Socket::send(const char* bytes)
     if (response < 0)
         throw SocketWriteFailedException(socketDescriptor_);
 
-    auto ackPacket = receivePacket();
+    auto ackPacket = receive();
     if (ackPacket->type != SERVER_ACK)
         throw ServerNotAcknowledgedException(socketDescriptor_);
 }
 
-Notification Socket::receive()
-{
-    auto incomingPacket = receivePacket();
-
-    if (incomingPacket->type != NOTIFICATION)
-        throw UnexpectedPacketTypeException(NOTIFICATION, incomingPacket->type);
-
-    return Notification::parseCsvString(incomingPacket->_payload);
-}
-
-// Private methods
-
-std::unique_ptr<Packet> Socket::receivePacket()
+unique_ptr<Packet> Socket::receive()
 {
     auto incomingPacket = unique_ptr<Packet>(new Packet());
 

@@ -88,3 +88,9 @@ Temporary Items
 app_client/cmake-build-debug/
 app_server/cmake-build-debug/
 common/cmake-build-debug/
+
+# Data stores
+notifications.txt
+users.txt
+*/notifications.txt
+*/users.txt

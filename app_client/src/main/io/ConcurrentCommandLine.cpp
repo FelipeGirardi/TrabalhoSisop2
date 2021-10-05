@@ -10,6 +10,7 @@
 #include <ios>
 #include <csignal>
 #include <cstdlib>
+#include "config/GlobalConstants.hpp"
 #include "io/ConcurrentCommandLine.hpp"
 #include "io/CommandLineParser.hpp"
 #include "StringExtensions.hpp"
@@ -106,8 +107,9 @@ void ConcurrentCommandLine::writeLine(string output)
 
 void ConcurrentCommandLine::waitInput()
 {
-    int enteredKey = ERR;
-    while ((enteredKey = getch()) == ERR) {}
+    int enteredKey = getch();
+    if (enteredKey == AsciiCode::END_OF_TRANSMISSION)
+        raise(SIGINT);
 
     cliMutex_.lock();
     ungetch(enteredKey);

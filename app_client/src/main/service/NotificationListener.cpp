@@ -5,12 +5,16 @@
  * \author Renan Kummer
  */
 #include "service/NotificationListener.hpp"
+#include "service/SessionManager.hpp"
 #include "io/ConcurrentCommandLine.hpp"
+#include "exception/UnexpectedPacketTypeException.hpp"
 #include <thread>
 #include <chrono>
 #include <ctime>
+#include <csignal>
 
 using namespace ClientApp::Service;
+using namespace ClientApp::Exception;
 using namespace notification;
 using namespace std::chrono;
 using namespace std;
@@ -22,13 +26,21 @@ using ClientApp::IO::ConcurrentCommandLine;
 
 void NotificationListener::listen(Socket listenerSocket)
 {
-    while (true)
-    {
-        auto notification = listenerSocket.receive();
+    auto incomingPacket = listenerSocket.receive();
 
+    while (incomingPacket->type != EXIT)
+    {
+        if (incomingPacket->type != NOTIFICATION)
+            throw UnexpectedPacketTypeException(NOTIFICATION, incomingPacket->type);
+
+        auto notification = Notification::parseCsvString(incomingPacket->_payload);
         auto printableNotification = formatNotification(notification);
         ConcurrentCommandLine::writeLine(printableNotification);
+
+        incomingPacket = listenerSocket.receive();
     }
+
+    raise(SIGINT);
 }
 
 // Private functions

@@ -70,14 +70,18 @@ void SessionManager::disconnect()
 
     ::close(sockets_->listenerSocket.getDescriptor());
     ::close(sockets_->senderSocket.getDescriptor());
-    isConnected_ = false;
 
     delete sockets_;
     sockets_ = nullptr;
 
+    isConnected_ = false;
     managerMutex_.unlock();
 }
 
+bool SessionManager::isConnected()
+{
+    return isConnected_;
+}
 
 // Private methods
 

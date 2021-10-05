@@ -13,6 +13,7 @@
 #include "io/CommandLineParser.hpp"
 #include "io/Socket.hpp"
 #include "exception/InvalidCommandException.hpp"
+#include "exception/ServerNotAcknowledgedException.hpp"
 #include "Notification.hpp"
 #include <thread>
 #include <cstring>
@@ -52,6 +53,10 @@ int main(int argc, char** argv)
         catch (const InvalidCommandException& ex)
         {
             messageWriter.writeInvalidCommandMessage(userInput);
+        }
+        catch (const ServerNotAcknowledgedException& ex)
+        {
+            messageWriter.writeServerNackMessage();
         }
     }
 }

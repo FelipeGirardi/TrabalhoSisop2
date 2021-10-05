@@ -24,11 +24,10 @@ namespace ClientApp
 
             void send(Packet packet);
             void send(const char* bytes);
-            notification::Notification receive();
+
+            std::unique_ptr<Packet> receive();
 
         private:
-            std::unique_ptr<Packet> receivePacket();
-
             const int socketDescriptor_;
         };
 
