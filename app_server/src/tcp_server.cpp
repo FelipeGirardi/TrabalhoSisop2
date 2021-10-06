@@ -167,11 +167,16 @@ void *auth_client_func(void *data) {
     Packet *responsePacket = new Packet;
 
     int readResult = read(client_socket, receivedPacket, sizeof (Packet));
-    if (readResult < 0 || receivedPacket->type != USERNAME) {
-        cout <<"ERRO lendo do socket" << endl;
+    if (readResult < 0 || (receivedPacket->type != USERNAME  && receivedPacket->type != EXIT)) {
+        cout <<"ERRO lendo do socket. Fechando." << endl;
         finalResult->result = ERROR;
         finalResult->sessionAuth = NULL;
         *responsePacket = GlobalManager::commManager.createGenericNackPacket();
+    } else if (receivedPacket->type == EXIT) {
+        cout <<"Sucesso recebendo EXIT. Fechando." << endl;
+        finalResult->result = ERROR;
+        finalResult->sessionAuth = NULL;
+        *responsePacket = GlobalManager::commManager.createAckPacketForType(EXIT);
     } else {
         SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
         finalResult->sessionAuth = new SessionAuth(*sessionAuth);
