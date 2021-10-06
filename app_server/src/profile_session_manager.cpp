@@ -122,8 +122,12 @@ namespace profileSessionManager {
         Session session = GlobalManager::sessionManager.users[username].getSessionWithID(sessionID);
         GlobalManager::sessionManager.users[username].removeSession(sessionID);
 
-        close(session.notif_socket);
-        close(session.client_socket);
+        if (session.hasNotifSocket()) {
+            close(session.notif_socket);
+        }
+        if (session.hasCommandSocket()) {
+            close(session.client_socket);
+        }
 
         int numberOfSessions = GlobalManager::sessionManager.users[username].getNumberOfSessions();
 
