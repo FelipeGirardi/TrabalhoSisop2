@@ -124,8 +124,6 @@ int main(int argc, char* argv[])
             cout << "voltou da thread de auth" << endl;
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
-            string username = myResult->sessionAuth->getProfileId();
-
             if (myResult->result == SUCCESS) {
                 if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
                     pthread_t client_thread;
@@ -133,7 +131,7 @@ int main(int argc, char* argv[])
                     SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
                     pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
                 } else {
-
+                    string username = myResult->sessionAuth->getProfileId();
                     GlobalManager::sessionManager.users[username]
                     .startListeningForNotifications();
 
