@@ -114,6 +114,11 @@ namespace profileSessionManager {
             return;
         }
 
+        if (!GlobalManager::sessionManager.users[username].hasSessionWithID(sessionID)) {
+            cout << "ERRO encerrando sessão. Sessão não existe." << endl;
+            return;
+        }
+
         Session session = GlobalManager::sessionManager.users[username].getSessionWithID(sessionID);
         GlobalManager::sessionManager.users[username].removeSession(sessionID);
 

@@ -164,34 +164,34 @@ void *auth_client_func(void *data) {
     cout << "Iniciando authenticação do socket = " << client_socket << endl;
     Packet *receivedPacket = new Packet;
     AuthResult *finalResult = new AuthResult;
+    Packet *responsePacket = new Packet;
 
     int readResult = read(client_socket, receivedPacket, sizeof (Packet));
     if (readResult < 0 || receivedPacket->type != USERNAME) {
-        printf("ERRO lendo do socket");
-        free(receivedPacket);
+        cout <<"ERRO lendo do socket" << endl;
         finalResult->result = ERROR;
-        return (void *) finalResult;
-    }
-
-    SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
-    finalResult->sessionAuth = new SessionAuth(*sessionAuth);
-    cout << "Recebeu dados de autenticação corretamente:" << endl;
-    cout << "Tipo " << sessionAuth->getSocketType() << endl;
-    cout << "UUID " << sessionAuth->getUuid() << endl;
-    cout << "Perfil " << sessionAuth->getProfileId() << endl;
-
-    ErrorCodes sessionCreationResult = GlobalManager::sessionManager.createNewSession(*sessionAuth, client_socket);
-    Packet *responsePacket = new Packet;
-
-    if (sessionCreationResult == ERROR) {
-        cout << "ERRO atualizando o usuário. Talvez ele já tenha atingido limite de sessões." << endl;
-        finalResult->result = ERROR;
+        finalResult->sessionAuth = NULL;
         *responsePacket = GlobalManager::commManager.createGenericNackPacket();
-        //close(client_socket) ??
     } else {
-        cout << "Usuário atualizado com sucesso" << endl;
-        finalResult->result = SUCCESS;
-        *responsePacket = GlobalManager::commManager.createAckPacketForType(USERNAME);
+        SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
+        finalResult->sessionAuth = new SessionAuth(*sessionAuth);
+        cout << "Recebeu dados de autenticação corretamente:" << endl;
+        cout << "Tipo " << sessionAuth->getSocketType() << endl;
+        cout << "UUID " << sessionAuth->getUuid() << endl;
+        cout << "Perfil " << sessionAuth->getProfileId() << endl;
+
+        ErrorCodes sessionCreationResult = GlobalManager::sessionManager.createNewSession(*sessionAuth, client_socket);
+
+        if (sessionCreationResult == ERROR) {
+            cout << "ERRO atualizando o usuário. Talvez ele já tenha atingido limite de sessões." << endl;
+            finalResult->result = ERROR;
+            *responsePacket = GlobalManager::commManager.createGenericNackPacket();
+
+        } else {
+            cout << "Usuário atualizado com sucesso" << endl;
+            finalResult->result = SUCCESS;
+            *responsePacket = GlobalManager::commManager.createAckPacketForType(USERNAME);
+        }
     }
 
     cout << "Enviando pacote ACK/NACK recebimento de comando" << endl;
@@ -202,6 +202,11 @@ void *auth_client_func(void *data) {
     }
     free(receivedPacket);
     free(responsePacket);
+
+    if (finalResult->result == ERROR && finalResult->sessionAuth != NULL) {
+        GlobalManager::sessionManager.endSessionWithID(finalResult->sessionAuth->getUuid(),
+                                                       finalResult->sessionAuth->getProfileId());
+    }
 
     return (void *) finalResult;
 
