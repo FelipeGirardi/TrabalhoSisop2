@@ -10,6 +10,7 @@
 #include "exception/SocketNotCreatedException.hpp"
 #include "exception/AuthenticationFailedException.hpp"
 #include "exception/SocketConnectionDeniedException.hpp"
+#include "SessionAuth.hpp"
 #include <cstring>
 #include <unistd.h>
 #include <sys/types.h>
@@ -26,6 +27,8 @@ using ClientApp::Exception::AuthenticationFailedException;
 using ClientApp::Exception::SocketConnectionDeniedException;
 using ClientApp::IO::Socket;
 using ClientApp::IO::CommandLineParser;
+using Common::SessionAuth;
+using Common::SocketType;
 
 // Static variables
 
@@ -67,14 +70,18 @@ void SessionManager::disconnect()
 
     ::close(sockets_->listenerSocket.getDescriptor());
     ::close(sockets_->senderSocket.getDescriptor());
-    isConnected_ = false;
 
     delete sockets_;
     sockets_ = nullptr;
 
+    isConnected_ = false;
     managerMutex_.unlock();
 }
 
+bool SessionManager::isConnected()
+{
+    return isConnected_;
+}
 
 // Private methods
 
@@ -116,7 +123,20 @@ void SessionManager::authenticateProfile(std::string profileId)
     try
     {
         auto standardProfileId = CommandLineParser::standardizeProfileId(profileId);
-        sockets_->senderSocket.send(standardProfileId.c_str());
+
+        auto senderSessionAuth = SessionAuth((char*)standardProfileId.c_str(), SocketType::COMMAND_SOCKET);
+        auto senderPacket = Packet{ USERNAME, sizeof(senderSessionAuth), (long)time(NULL) };
+        memcpy(senderPacket._payload, senderSessionAuth.toBytes(), SessionAuth::sizeInBytes());
+        sockets_->senderSocket.send(senderPacket);
+
+        auto listenerSessionAuth = SessionAuth(
+            (char*)standardProfileId.c_str(),
+            SocketType::NOTIFICATION_SOCKET,
+            (char*)senderSessionAuth.getUuid().c_str()
+        );
+        auto listenerPacket = Packet{ USERNAME, sizeof(listenerSessionAuth), (long)time(NULL) };
+        memcpy(listenerPacket._payload, listenerSessionAuth.toBytes(), SessionAuth::sizeInBytes());
+        sockets_->listenerSocket.send(listenerPacket);
     }
     catch (...)
     {

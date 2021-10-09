@@ -3,11 +3,14 @@
 
 #include "user_information.hpp"
 #include "../../Common/include/Notification.hpp"
+#include "../../Common/include/SessionAuth.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 
 #include <unordered_map>
 #include <string>
 #include <iostream>
 
+using namespace Common;
 using namespace std;
 using namespace userInformation;
 using namespace notification;
@@ -16,8 +19,10 @@ namespace profileSessionManager {
 
     class ProfileSessionManager {
     private:
-        unordered_map<string, UserInformation> users; // <username> : <user info object>
+
+        void registerUser(string username);
     public:
+        unordered_map<string, UserInformation> users; // <username> : <user info object>
         /* Initializers */
         ProfileSessionManager();
         ProfileSessionManager(unordered_map<string, UserInformation> users);
@@ -29,10 +34,6 @@ namespace profileSessionManager {
         unordered_map<string, UserInformation> getUsers();
         UserInformation getUserByUsername(string username);
 
-        /* Others */
-        void incrementSessionOfUser(string username);
-        int getNumberOfSessionsOfUser(string username);
-
         /*
          * Method called by Notification Manager
          *
@@ -43,30 +44,28 @@ namespace profileSessionManager {
 
         /*
         * Method called by Communication Manager
-        * Creates consumer thread
-        *
-        * @Return int: a bool indicating if creation of session was possible
-        */
-        int createNewSession(Session session);
-
-        /*
-        * Method called by Communication Manager
         * It decrements the number of sessions of user
          * Collateral effect: if it is the only session of user, consumer thread is ended.
         *
-        * @Param session: the session or the user to be deleted
-        *
+        * @Param sessionID: the ID session or the username to be deleted
+        * @Param username: the username of the user
         */
-        void endSession(Session session);
+        void endSessionWithID(string sessionID, string username);
 
         /**
          * Adds a new username (follower) to the list of followers of an user (toBeFollowed)
          *
          * @param follower - username of new user to be added to the list
          * @param toBeFollowed  - username the user whose list is gonna be changed
+         *
          */
-        void addNewFollowerToUser(string follower, string toBeFollowed);
+        ErrorCodes addNewFollowerToUser(string follower, string toBeFollowed);
+        ErrorCodes createNewSession(SessionAuth sessionAuth, int socketID);
 
-    };
+        void endAllSessions();
+        list<Session> getAllSessions();
+
+
+        };
 }
 #endif

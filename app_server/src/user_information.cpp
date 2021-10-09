@@ -13,7 +13,7 @@
 
 //TODO: move this from here
 struct arg_struct {
-    userInformation::UserInformation *userInformation;
+    userInformation::UserInformation* userInformation;
     string notificationID;
 };
 
@@ -25,7 +25,6 @@ namespace userInformation {
     UserInformation::UserInformation(string username) {
         this->username = username;
         //this->pendingNotifications = {};
-        this->numberOfSessions = 0;
         //this->followers = {};
         sem_init(&(this->freeCritialSession), 0, 1);
         sem_init(&(this->hasItems), 0, 0);
@@ -35,25 +34,49 @@ namespace userInformation {
         this->username = username;
         this->pendingNotifications = pendingNotifications;
         this->followers = followers;
-        this->numberOfSessions = 0;
         sem_init(&(this->freeCritialSession), 0, 1);
         sem_init(&(this->hasItems), 0, pendingNotifications.size());
     }
 
     UserInformation::~UserInformation() { }
 
-    void UserInformation::addNewFollower(string follower) {
+    bool UserInformation::hasSessionWithID(string sessionID) {
+        return !(this->sessions.find(sessionID) == this->sessions.end());
+    }
+
+    void UserInformation::updateSession(string sessionID, SocketType type, int socketValue) {
+
+        if (type == Common::NOTIFICATION_SOCKET) {
+            this->sessions[sessionID].notif_socket = socketValue;
+        } else if (type == Common::COMMAND_SOCKET) {
+            this->sessions[sessionID].client_socket = socketValue;
+        }
+
+    }
+
+    unordered_map<string, Session> UserInformation::getSessions() {
+        return this->sessions;
+    }
+
+    void UserInformation::addNewSession(string sessionID, Session session) {
+        this->sessions[sessionID] = session;
+    }
+
+    void UserInformation::removeSession(string sessionID) {
+        this->sessions.erase(sessionID);
+    }
+
+    ErrorCodes UserInformation::addNewFollower(string follower) {
         if (find(this->followers.begin(),
-                 this->followers.end(), follower) == this->followers.end()) {
+            this->followers.end(), follower) == this->followers.end()) {
             this->followers.push_back(follower);
-            return;
+            return SUCCESS;
+        }
+        else {
+            return ERROR;
         }
     }
-    void UserInformation::addNewFollowers(list <string> followers) {
-        for (string follower : followers) {
-            this->addNewFollower(follower);
-        }
-    }
+
     void UserInformation::setFollowers(list <string> followers) {
         this->followers = followers;
     }
@@ -88,68 +111,66 @@ namespace userInformation {
         }
         fullString += '\n';
         fullString += "NumberOfSessions: ";
-        fullString += to_string(this->numberOfSessions);
+        fullString += to_string(this->getNumberOfSessions());
         fullString += "\n\n";
         return fullString;
 
     }
 
-    void UserInformation::setNumberOfSessions(int numberOfSessions) {
-        this->numberOfSessions = numberOfSessions;
-    }
     int UserInformation::getNumberOfSessions() {
-        return this->numberOfSessions;
+        return this->sessions.size();
     }
-    void UserInformation::incrementNumberOfSessions() {
-        this->numberOfSessions += 1;
-    }
-    void UserInformation::decrementNumberOfSessions() {
-        this->numberOfSessions -= 1;
-    }
+
     void UserInformation::stopListeningForNotifications() {
         cout << "Cancelando thread de consumo de notificações" << endl;
-        pthread_cancel(this->consumerTid);
+        if (pthread_cancel(this->consumerTid) == 0) {
+            cout << "Sucesso terminando thread de consumo de notificação" << endl;
+        } else {
+            cout << "ERRO terminando thread de consumo de notificação" << endl;
+        }
     }
 
     void UserInformation::produceNewNotification(string notificationID) {
 
         cout << "Produzindo nova notificação" << endl;
 
-        struct arg_struct *args = new struct arg_struct;
+        struct arg_struct* args = new struct arg_struct;
 
         args->userInformation = this;
         args->notificationID.assign(notificationID);
 
-//        pthread_t tid = (pthread_t *) malloc(sizeof (pthread_t));
-//        *tid = (unsigned long int) rand();
-        pthread_t tid;
+//        pthread_t tid;
+//        if (pthread_create(&tid, NULL, this->producer, (void*)args)) {
+//            cout << "ERRO criando thread de produção" << endl;
+//            //free(args);
+//        }
 
-        if (pthread_create(&tid, NULL, this->producer, (void *) args)) {
-            cout << "ERRO criando thread de produção" << endl;
-            //free(args);
-        }
+        sem_wait(&(this->freeCritialSession));
 
-        // será que é assim?
-        //pthread_join(*tid, NULL);
-        //free(tid);
+        cout << "Produzindo notificação com ID: " << notificationID << endl;
+        this->pendingNotifications.push_back(notificationID);
+
+        sem_post(&(this->freeCritialSession));
+        sem_post(&(this->hasItems));
+
 
     }
 
     void UserInformation::startListeningForNotifications() {
 
-        if (pthread_create(&(this->consumerTid), NULL, this->consumer, (void *) this)) {
+        if (pthread_create(&(this->consumerTid), NULL, this->consumer, (void*)this)) {
             cout << "ERRO criando thread de consumo" << endl;
             //free(args);
         }
     }
 
-    void * UserInformation::producer(void *arg) {
+    void* UserInformation::producer(void* arg) {
 
         cout << "Iniciando thread de produção de notificação" << endl;
 
-        struct arg_struct *my_arg_struct = (struct arg_struct *) arg;
-        UserInformation *_this = my_arg_struct->userInformation;
-        sleep(rand()%5);
+        struct arg_struct* my_arg_struct = (struct arg_struct*)arg;
+        UserInformation* _this = my_arg_struct->userInformation;
+        sleep(rand() % 5);
 
         sem_wait(&((*_this).freeCritialSession));
 
@@ -159,29 +180,37 @@ namespace userInformation {
         sem_post(&(_this->freeCritialSession));
         sem_post(&(_this->hasItems));
 
-        cout << "Finalizando thread de produção" <<endl;
+        cout << "Finalizando thread de produção" << endl;
         //free(my_arg_struct);
         return 0;
 
     }
 
-    void *UserInformation::consumer(void *arg) {
+    void* UserInformation::consumer(void* arg) {
 
         cout << "Iniciando consumo de notificação" << endl;
-        UserInformation *_this = (UserInformation *) arg;
+        UserInformation* _this = (UserInformation*)arg;
 
-        while(_this->numberOfSessions > 0) {
-            sleep(rand()%5);
+        if (_this == NULL) {
+            cout << "USER IS NULL" << endl;
+            return 0;
+        }
+        cout << "USER " << _this->toString() << endl;
+
+        while (_this->getNumberOfSessions() > 0) {
+            sleep(rand() % 5);
             sem_wait(&(_this->hasItems));
             sem_wait(&(_this->freeCritialSession));
 
             // this if shouldn't be needed, but better safe than sorry
             if (!_this->pendingNotifications.empty()) {
+
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "Consumindo notificação de ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
                 GlobalManager::notifManager.sendNotificationTo(_this->username, consumedItem);
-            } else {
+            }
+            else {
                 cout << "ERRO consumindo notificação" << endl;
             }
 
@@ -191,5 +220,10 @@ namespace userInformation {
         cout << "Finalizando thread de consumo" << endl;
         //free(_this);
         return 0;
+    }
+
+    Session UserInformation::getSessionWithID(string sessionID)
+    {
+        return this->sessions[sessionID];
     }
 }

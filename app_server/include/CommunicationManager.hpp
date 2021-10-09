@@ -1,27 +1,27 @@
-#ifndef COMMUNICATIONMANAGER_H
-#define COMMUNICATIONMANAGER_H
+#ifndef COMMUNICATIONMANAGER_HPP
+#define COMMUNICATIONMANAGER_HPP
 
 #include <list>
 #include "Session.hpp"
 #include "../../common/include/Notification.hpp"
 #include "../../common/include/Packet.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 
 using namespace notification;
 
 namespace communicationManager {
 
     class CommunicationManager {
-    private:
-        int sendPacketToSessions(list<Session> sessions, Packet *package);
     public:
-        int send_packet(int socket, Packet *package);
-        int sendNotificationToSessions(list<Session> sessions, Notification notification);
+        ErrorCodes send_packet(int socket, Packet *package);
+        ErrorCodes sendNotificationToSessions(list<Session> sessions, Notification notification);
+        ErrorCodes sendPacketToSessions(list<Session> sessions, Packet *package);
         Packet createAckPacketForType(PacketType type);
         Packet createGenericNackPacket();
-        string stringDescribingType(PacketType type);
+        Packet createExitPacket();
 
     };
 }
 
 
-#endif //COMMUNICATIONMANAGER_H
+#endif //COMMUNICATIONMANAGER_HPP

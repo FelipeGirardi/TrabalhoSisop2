@@ -7,9 +7,12 @@
 #include <pthread.h>
 
 #include "Session.hpp"
+#include "../../common/include/SessionAuth.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 
 using namespace std;
 using std::string;
+using namespace Common;
 
 namespace userInformation {
 
@@ -33,16 +36,15 @@ namespace userInformation {
              * @return
              */
             static void *consumer(void *arg);
+            unordered_map<string, Session> sessions;
 
         public:
 
             //TODO: maybe make this private and add some setters and getters
             string username;
-            int numberOfSessions;
             pthread_t consumerTid;
             list<string> pendingNotifications; //IDs of notifications the user still has to receive
             sem_t freeCritialSession, hasItems;
-            list<Session> sessions;
 
             /* Initializers */
             UserInformation();
@@ -60,16 +62,10 @@ namespace userInformation {
             void setFollowers(list<string> followers);
             void setNotifications(list<string> notificationsIDs);
 
-            /* Other methods */
-            void setNumberOfSessions(int numberOfSessions);
-            void incrementNumberOfSessions();
-            void decrementNumberOfSessions();
-
             void addNewNotification(string notificationID);
             void getNotifications();
 
-            void addNewFollower(string follower);
-            void addNewFollowers(list<string> followers);
+            ErrorCodes addNewFollower(string follower);
             string toString();
 
             /**
@@ -80,6 +76,13 @@ namespace userInformation {
             void produceNewNotification(string notificationID);
             void startListeningForNotifications();
             void stopListeningForNotifications();
+
+            bool hasSessionWithID(string sessionID);
+            Session getSessionWithID(string sessionID);
+            void updateSession(string sessionID, SocketType type, int socketValue);
+            void addNewSession(string sessionID, Session session);
+            void removeSession(string sessionID);
+            unordered_map<string, Session> getSessions();
 
     };
 }

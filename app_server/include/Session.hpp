@@ -12,13 +12,17 @@ using namespace std;
 
 class Session {
     public:
+        Session();
         int client_socket;               // Socket do cliente
         int notif_socket;                // Socket das notificações
-        string userID;                   // Id do usuário (TALVEZ O ID TENHA QUE SER INT EM VEZ DE STRING)
+        string userID;                   // Id do usuário
         bool operator == (const Session& c) const {
             return client_socket == c.client_socket && notif_socket == c.notif_socket;
         }
         bool operator != (const Session& c) const { return !operator==(c); }
+
+        bool hasNotifSocket();
+        bool hasCommandSocket();
 };
 
 #endif //SESSION_HPP

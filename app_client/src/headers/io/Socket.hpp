@@ -9,6 +9,7 @@
 #include "Notification.hpp"
 #include "Packet.hpp"
 #include <string>
+#include <memory>
 
 namespace ClientApp
 {
@@ -23,10 +24,10 @@ namespace ClientApp
 
             void send(Packet packet);
             void send(const char* bytes);
-            notification::Notification receive();
+
+            std::unique_ptr<Packet> receive();
 
         private:
-            static const int bufferSize_;
             const int socketDescriptor_;
         };
 

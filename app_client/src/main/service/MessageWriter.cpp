@@ -49,3 +49,9 @@ void MessageWriter::writeInvalidCommandMessage(std::string invalidCommand)
     auto errorMessage = appName_ + string(": '") + invalidCommand + string("' is not a valid command.\n");
     ConcurrentCommandLine::writeLine(errorMessage);
 }
+
+void MessageWriter::writeServerNackMessage()
+{
+    auto errorMessage = appName_ + string(": Could not acknowledge your latest command. Please try again.\n");
+    ConcurrentCommandLine::writeLine(errorMessage);
+}

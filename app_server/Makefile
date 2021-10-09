@@ -15,9 +15,10 @@ COMMON_DIR = ../common
 COMMON_OBJ_DIR = $(COMMON_DIR)/$(OBJ_DIR)
 
 all: build-directories common CommunicationManager.o FileManager.o GlobalManager.o \
-         NotificationManager.o  profile_session_manager.o tcp_server.o \
-		 user_information.o utils/StringExtensions.o
-	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -lpthread
+         NotificationManager.o profile_session_manager.o tcp_server.o \
+		 user_information.o utils/StringExtensions.o Session.o
+
+	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -luuid -lpthread
 
 build_server: build-directories
 	g++ -std=c++11 -c src/tcp_server.cpp src/profile_session_manager.cpp \
@@ -30,7 +31,8 @@ build_server: build-directories
 	src/GlobalManager.cpp \
 	src/CommunicationManager.cpp \
 	../common/src/Packet.cpp \
-	../common/src/PacketType.cpp
+	../common/src/PacketType.cpp \
+	src/Session.cpp
 	mv *.o $(OBJ_DIR)
 	g++ -o $(BIN_DIR)/serverApp $(OBJ_DIR)/*.o -lpthread
 
@@ -62,6 +64,9 @@ user_information.o: $(SRC_DIR)/user_information.cpp
 utils/StringExtensions.o:
 	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/utils/StringExtensions.cpp
 
+Session.o:
+	g++ -std=c++11 -o $(OBJ_DIR)/Session.o -c $(SRC_DIR)/Session.cpp
+
 ###
 # Scripts
 ###
@@ -75,7 +80,8 @@ laura:
 
 common:
 	@[ ! -f $(COMMON_OBJ_DIR)/Notification.o -a ! -f $(COMMON_OBJ_DIR)/Packet.o \
-	    -a ! -f $(COMMON_OBJ_DIR)/PacketType.o ] && $(MAKE) -C $(COMMON_DIR) || true
+	    -a ! -f $(COMMON_OBJ_DIR)/PacketType.o \
+	    -a ! -f $(COMMON_OBJ_DIR)/SessionAuth.o ] && $(MAKE) -C $(COMMON_DIR) || true
 
 build-directories:
 	@[ ! -d $(OBJ_DIR) ] && mkdir $(OBJ_DIR) || true

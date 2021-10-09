@@ -21,6 +21,7 @@ namespace ClientApp
             void writeLoginMessage(std::string profileId);
             void writeTimelineHeader();
             void writeInvalidCommandMessage(std::string invalidCommand);
+            void writeServerNackMessage();
 
         private:
             const std::string appName_;

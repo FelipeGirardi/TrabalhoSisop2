@@ -5,10 +5,13 @@
 #include <unistd.h> //close()
 #include "../include/profile_session_manager.hpp"
 #include "../include/GlobalManager.hpp"
+#include "../include/utils/ErrorCodes.hpp"
+#include "../../common/include/SessionAuth.hpp"
 
 using namespace std;
 using namespace userInformation;
 using namespace notification;
+using namespace Common;
 
 namespace profileSessionManager {
 
@@ -31,88 +34,154 @@ namespace profileSessionManager {
         return this->users[username];
     }
 
-    void ProfileSessionManager::incrementSessionOfUser(string username) {
-        UserInformation userInfo = this->users[username];
-        userInfo.incrementNumberOfSessions();
-        this->users[username] = userInfo;
-    }
-
-    int ProfileSessionManager::getNumberOfSessionsOfUser(string username) {
-        return this->users[username].getNumberOfSessions();
-    }
-
     void ProfileSessionManager::newNotificationSentBy(string username, string notificationID) {
 
         list<string> followers = this->users[username].getFollowers();
 
         for (string follower : followers) {
-            if (this->users.find(follower) == this->users.end()) {continue;}
-            this->users[follower].produceNewNotification(notificationID);
+            if (GlobalManager::sessionManager.users.find(follower) == GlobalManager::sessionManager.users.end()) {continue;}
+            GlobalManager::sessionManager.users[follower].produceNewNotification(notificationID);
+        }
+
+    }
+
+    void ProfileSessionManager::registerUser(string username) {
+        if (GlobalManager::sessionManager.getUsers().find(username) ==
+            GlobalManager::sessionManager.getUsers().end()) {
+            // user doesn't exist
+            cout << "Usuário nao registrado. Criando novo." << endl;
+            UserInformation newUserInfo = UserInformation(username);
+            GlobalManager::sessionManager.users[username] = newUserInfo;
+        } else {
+            // user already registered
+            cout << "Usuário já registrado." << endl;
+            cout << GlobalManager::sessionManager.getUsers()[username].toString() << endl;
+        }
+    }
+
+    ErrorCodes ProfileSessionManager::createNewSession(SessionAuth sessionAuth, int socketID) {
+        string username = sessionAuth.getProfileId();
+        GlobalManager::sessionManager.registerUser(username);
+        if (GlobalManager::sessionManager.users[username].hasSessionWithID(sessionAuth.getUuid())) {
+            cout << "Usuário já tem sessao com esse ID" << endl;
+            Session existentSession = GlobalManager::sessionManager.users[username]
+                    .getSessionWithID(sessionAuth.getUuid());
+            cout << "Sessão existente " << existentSession.client_socket << " " << existentSession.notif_socket << endl;
+            if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
+                if (existentSession.hasNotifSocket()) {
+                    return ERROR;
+                } else {
+                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
+                                                        NOTIFICATION_SOCKET,
+                                                        socketID);
+                }
+            } else if (sessionAuth.getSocketType() == COMMAND_SOCKET ) {
+                if (existentSession.hasCommandSocket()) {
+                    return ERROR;
+                } else {
+                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
+                                                        COMMAND_SOCKET,
+                                                        socketID);
+                }
+            } else {
+                return ERROR;
+            }
+        } else if (GlobalManager::sessionManager.users[username].getNumberOfSessions() < 2) {
+            cout << "Usuário não tem sessao com esse ID" << endl;
+            Session session;
+            session.userID = sessionAuth.getProfileId();
+            if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
+                session.notif_socket = socketID;
+                GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
+            } else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
+                session.client_socket = socketID;
+                GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
+            } else {
+                return ERROR;
+            }
+
+        } else {
+            return ERROR;
+        }
+        return SUCCESS;
+    }
+
+    void ProfileSessionManager::endSessionWithID(string sessionID, string username) {
+
+        cout << "Encerrando sessão " << sessionID << " de " << username << endl;
+        if (GlobalManager::sessionManager.users.find(username) == GlobalManager::sessionManager.users.end()) {
+            cout << "ERRO encerrando sessão. Usuário não existe." << endl;
+            return;
+        }
+
+        if (!GlobalManager::sessionManager.users[username].hasSessionWithID(sessionID)) {
+            cout << "ERRO encerrando sessão. Sessão não existe." << endl;
+            return;
+        }
+
+        Session session = GlobalManager::sessionManager.users[username].getSessionWithID(sessionID);
+        GlobalManager::sessionManager.users[username].removeSession(sessionID);
+
+        if (session.hasNotifSocket()) {
+            close(session.notif_socket);
+        }
+        if (session.hasCommandSocket()) {
+            close(session.client_socket);
+        }
+
+        int numberOfSessions = GlobalManager::sessionManager.users[username].getNumberOfSessions();
+
+        if(numberOfSessions == 0) {
+
+            GlobalManager::sessionManager.users[username].stopListeningForNotifications();
         }
 
     }
 
     /*
      * Retorno:
-     * 1 = criou sessao com sucesso
-     * -1 = nao criou
+     * 1 = deu follow com sucesso
+     * -1 = nao deu follow
     */
-    int ProfileSessionManager::createNewSession(Session session) {
-
-        // check if user exists
-        string username = session.userID;
-
-        if (GlobalManager::sessionManager.getUsers().find(username) ==
-        GlobalManager::sessionManager.getUsers().end()) {
-            // user doesn't exist
-            cout << "Usuário nao existe no banco de dados. Criando novo." << endl;
-            UserInformation newUserInfo = UserInformation(username);
-            this->users[username] = newUserInfo;
-
-        } else {
-            // user already registered
-            cout << "Usuário encontrado no banco." << endl;
-        }
-
-        int currentNumberSessions = this->users[username].getNumberOfSessions();
-        if (currentNumberSessions >= 2) { return -1; }
-
-        // Number of sessions of user is 0
-        if (currentNumberSessions == 0) {
-            this->users[username].startListeningForNotifications();
-        }
-
-        // Success on creating new session for user
-        this->users[username].sessions.push_back(session);
-        this->users[username].incrementNumberOfSessions();
-        return 1;
-
-    }
-
-    void ProfileSessionManager::endSession(Session session) {
-
-        cout << "Encerrando sessão de " << session.userID << endl;
-        if (this->users.find(session.userID) == this->users.end()) { return; }
-
-        int numberOfSessions = this->users[session.userID].getNumberOfSessions();
-
-        if ( numberOfSessions == 2) {
-            this->users[session.userID].decrementNumberOfSessions();
-        } else if(numberOfSessions == 1) {
-            this->users[session.userID].stopListeningForNotifications();
-            this->users[session.userID].decrementNumberOfSessions();
-        }
-        this->users[session.userID].sessions.remove(session);
-
-        close(session.notif_socket);
-        close(session.client_socket);
-
-    }
-
-    void ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
+    ErrorCodes ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
         cout << "Adicionando novo seguidor " << follower << "ao usuário " << toBeFollowed << " " << endl;
-        if (this->users.find(toBeFollowed) == this->users.end()) { return; }
-        this->users[toBeFollowed].addNewFollower(follower);
+
+        if (follower.compare(toBeFollowed) == 0) {
+            cout << "Não é possível seguir a si mesmo. Seu narcisista." << endl;
+            return ERROR;
+        }
+
+        if (GlobalManager::sessionManager.users.find(toBeFollowed) == GlobalManager::sessionManager.users.end()) {
+            cout << "Não foi possível seguir " << toBeFollowed << " pois ele não existe." << endl;
+            return ERROR;
+        }
+
+        return GlobalManager::sessionManager.users[toBeFollowed].addNewFollower(follower);
+
+    }
+
+    void ProfileSessionManager::endAllSessions() {
+        cout << "Encerrando todas as sessões de todos os usuários." << endl;
+        for (auto user : GlobalManager::sessionManager.users) {
+
+            cout << "Usuário = " << user.first << endl;
+            for (auto kv : user.second.getSessions()) {
+                cout << "ID da Sessão = " << kv.first << endl;
+                GlobalManager::sessionManager.endSessionWithID(kv.first,
+                                                               user.first);
+            }
+            cout << endl;
+        }
+    }
+
+    list<Session> ProfileSessionManager::getAllSessions() {
+        list<Session> returnValue;
+        for (auto user : GlobalManager::sessionManager.users) {
+            for (auto kv : user.second.getSessions()) {
+                returnValue.push_back(kv.second);
+            }
+        }
+        return returnValue;
     }
 
 

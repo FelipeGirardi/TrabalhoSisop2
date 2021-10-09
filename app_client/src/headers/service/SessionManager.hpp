@@ -26,6 +26,8 @@ namespace ClientApp
             static SessionSockets connect(std::string profileId, std::string host, int port);
             static void disconnect();
 
+            static bool isConnected();
+
         private:
             static IO::Socket createSocket(std::string host);
             static hostent* createHostEntry(std::string host);

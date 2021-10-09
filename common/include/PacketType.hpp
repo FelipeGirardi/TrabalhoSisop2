@@ -5,18 +5,21 @@
 #ifndef PACKETTYPE_HPP
 #define PACKETTYPE_HPP
 
+#include <string>
 
 typedef enum PacketType {
 
-    NOTIFICATION = 0, // server -> client
+    NOTIFICATION = 1, // server -> client
     USERNAME, // client -> server
     SEND, // client -> server
     FOLLOW, // client -> server
     SERVER_ACK, // server -> client
     SERVER_ERROR, // server -> client
-    EXIT // client -> server
+    EXIT // client -> server or server -> client
 
 }PacketType;
+
+std::string stringDescribingType(PacketType type);
 
 
 #endif //PACKETTYPE_HPP

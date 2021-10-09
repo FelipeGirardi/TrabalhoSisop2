@@ -3,6 +3,7 @@
 //
 
 #include "../include/NotificationManager.hpp"
+#include "../include/utils/ErrorCodes.hpp"
 #include "../../Common/include/Notification.hpp"
 #include <time.h>
 #include "../include/profile_session_manager.hpp"
@@ -35,11 +36,11 @@ using namespace profileSessionManager;
     }
 
     Notification NotificationManager::getNotificationByID(string notificationID) {
-        if (this->notifications.find(notificationID) == this->notifications.end()) {
+        if (GlobalManager::notifManager.notifications.find(notificationID) == this->notifications.end()) {
             return Notification();
         }
         else {
-            return this->notifications[notificationID];
+            return GlobalManager::notifManager.notifications[notificationID];
         }
     }
 
@@ -49,33 +50,34 @@ using namespace profileSessionManager;
 
     void NotificationManager::sendNotificationTo(string username, string notificationID) {
 
-        cout << "iniciando envio de notificação id " << notificationID << " às sessões de " << username << endl;
+        cout << "Iniciando envio de notificação id " << notificationID << " às sessões de " << username << endl;
 
-        if (this->notifications.find(notificationID) == this->notifications.end()) {
-            cout << "erro mandando notificação. notificação não existe." << endl;
+        if (GlobalManager::notifManager.notifications.find(notificationID) == GlobalManager::notifManager.notifications.end()) {
+            cout << "ERRO mandando notificação. Notificação não existe." << endl;
             return;
         }
         unordered_map<string, UserInformation> users = GlobalManager::sessionManager.getUsers();
         if (users.find(username) == users.end()) {
-            cout << "erro mandando notificação. usuário não existe." << endl;
+            cout << "ERRO mandando notificação. Usuário não existe." << endl;
             return;
         }
-
-        list<Session> sessions = users[username].sessions;
-        int sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
+        list<Session> sessions;
+        for (auto kv : users[username].getSessions()) {
+            sessions.push_back(kv.second);
+        }
+        ErrorCodes sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
                                                                           this->notifications[notificationID]);
 
-        if (sent == 1) {
-            this->notifications[notificationID].decrementPendingReaders();
+        if (sent == SUCCESS) {
+            GlobalManager::notifManager.notifications[notificationID].decrementPendingReaders();
         }
-        int pendingReaders = this->notifications[notificationID].getPendingReaders();
+        int pendingReaders = GlobalManager::notifManager.notifications[notificationID].getPendingReaders();
 
         if (pendingReaders == 0) {
-            //sc?
-            cout << "notificação foi mandada para todos os usuários pendentes. deletando." << endl;
-            this->notifications.erase(notificationID);
+            cout << "Notificação foi mandada para todos os usuários pendentes. deletando." << endl;
+            GlobalManager::notifManager.notifications.erase(notificationID);
         } else {
-            cout << "notificação pendente a " <<  pendingReaders << " usuários" << endl;
+            cout << "Notificação pendente a " <<  pendingReaders << " usuários" << endl;
         }
 
     }
@@ -83,21 +85,21 @@ using namespace profileSessionManager;
     void NotificationManager::newNotificationSentBy(string username, string notification) {
 
         long int currentTime = static_cast<long int> (time(NULL));
-        int pendingReaders = this->getPendingReaders(username);
+        int pendingReaders = GlobalManager::notifManager.getPendingReaders(username);
         if (pendingReaders == 0) {
             cout << "Usuário não tem nenhum seguidor. Notificação ignorada." << endl;
             return;
         }
 
-        sem_wait(&freeCritialSession);
-        string notificationID = to_string(this->idNextNotification);
+        sem_wait(&(GlobalManager::notifManager.freeCritialSession));
+        string notificationID = to_string(GlobalManager::notifManager.idNextNotification);
         Notification newNotification = Notification(notificationID,
                                                     notification, username,
                                                     currentTime,
                                                     pendingReaders);
-        this->notifications[notificationID] = newNotification;
-        idNextNotification ++;
-        sem_post(&freeCritialSession);
+        GlobalManager::notifManager.notifications[notificationID] = newNotification;
+        GlobalManager::notifManager.idNextNotification ++;
+        sem_post(&(GlobalManager::notifManager.freeCritialSession));
 
         GlobalManager::sessionManager.newNotificationSentBy(username,
                                                             notificationID);

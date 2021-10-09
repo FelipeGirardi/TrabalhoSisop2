@@ -13,3 +13,8 @@ enum GlobalConstant
     TWEET_MAX_SIZE = 128,
     INPUT_MAX_SIZE = 4 + 1 + 128   // SEND tweet with up to 128 characters
 };
+
+enum AsciiCode
+{
+    END_OF_TRANSMISSION = 4
+};
