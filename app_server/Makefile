@@ -19,23 +19,6 @@ all: build-directories common CommunicationManager.o FileManager.o GlobalManager
 		 user_information.o utils/StringExtensions.o Session.o
 
 	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -luuid -lpthread
-
-build_server: build-directories
-	g++ -std=c++11 -c src/tcp_server.cpp src/profile_session_manager.cpp \
-	src/user_information.cpp \
-	src/utils/StringExtensions.cpp \
-	src/FileManager.cpp \
-	../common/src/Notification.cpp \
-	src/NotificationManager.cpp \
-	src/utils/ListExtensions.cpp \
-	src/GlobalManager.cpp \
-	src/CommunicationManager.cpp \
-	../common/src/Packet.cpp \
-	../common/src/PacketType.cpp \
-	src/Session.cpp
-	mv *.o $(OBJ_DIR)
-	g++ -o $(BIN_DIR)/serverApp $(OBJ_DIR)/*.o -lpthread
-
 ###
 # Object files
 ###
@@ -73,10 +56,6 @@ Session.o:
 
 main: all
 	@./$(BIN_DIR)/serverApp
-
-laura:
-	make build_server
-	./$(BIN_DIR)/serverApp
 
 common:
 	@[ ! -f $(COMMON_OBJ_DIR)/Notification.o -a ! -f $(COMMON_OBJ_DIR)/Packet.o \
