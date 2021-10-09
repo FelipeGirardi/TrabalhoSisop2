@@ -9,7 +9,7 @@
 #include <list>
 #include <string>
 #include "../include/FileManager.hpp"
-#include "../include/profile_session_manager.hpp"
+#include "../include/ProfileSessionManager.hpp"
 #include "../include/utils/StringExtensions.hpp"
 
 using namespace userInformation;

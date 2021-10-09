@@ -13,7 +13,7 @@
 #include <netinet/in.h>
 #include <string>
 #include <unordered_map>
-#include "../include/profile_session_manager.hpp"
+#include "../include/ProfileSessionManager.hpp"
 #include "../include/user_information.hpp"
 #include "../include/FileManager.hpp"
 #include "../include/CommunicationManager.hpp"

@@ -7,7 +7,7 @@
 #include <list>
 #include <unistd.h>
 #include <pthread.h>
-#include "include/profile_session_manager.hpp"
+#include "include/ProfileSessionManager.hpp"
 #include "include/user_information.hpp"
 #include "include/FileManager.hpp"
 #include "../Common/include/Notification.hpp"

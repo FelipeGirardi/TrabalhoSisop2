@@ -6,7 +6,7 @@
 #include "../include/utils/ErrorCodes.hpp"
 #include "../../Common/include/Notification.hpp"
 #include <time.h>
-#include "../include/profile_session_manager.hpp"
+#include "../include/ProfileSessionManager.hpp"
 #include "../include/GlobalManager.hpp"
 #include "../include/CommunicationManager.hpp"
 #include <algorithm>

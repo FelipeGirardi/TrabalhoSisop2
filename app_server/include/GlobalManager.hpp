@@ -5,7 +5,7 @@
 #ifndef GLOBALMANAGER_HPP
 #define GLOBALMANAGER_HPP
 
-#include "profile_session_manager.hpp"
+#include "ProfileSessionManager.hpp"
 #include "NotificationManager.hpp"
 #include "CommunicationManager.hpp"
 

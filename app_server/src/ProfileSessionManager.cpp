@@ -3,7 +3,7 @@
 #include <list>
 #include <pthread.h>
 #include <unistd.h> //close()
-#include "../include/profile_session_manager.hpp"
+#include "../include/ProfileSessionManager.hpp"
 #include "../include/GlobalManager.hpp"
 #include "../include/utils/ErrorCodes.hpp"
 #include "../../common/include/SessionAuth.hpp"
