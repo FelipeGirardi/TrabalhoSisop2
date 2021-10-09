@@ -1,5 +1,5 @@
 # Overview
-University assignment for Operating Systems 2 class. This is a client/server Twitter-like application structured in `client_app` and `server_app` modules. Runs only on Unix/Linux. A video-demo can be seen on [this link](https://www.youtube.com/watch?v=kvTAINipn80)
+University assignment for Operating Systems 2 class. This is a client/server Twitter-like application structured in `client_app` and `server_app` modules. Runs only on Unix/Linux. A video-demo can be seen on [this link](https://www.youtube.com/watch?v=kvTAINipn80).
 
 | Class               | Course           | Semester | University               |
 |:-------------------:|:----------------:|:--------:|:------------------------:|
