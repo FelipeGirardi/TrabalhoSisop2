@@ -22,14 +22,6 @@ namespace userInformation {
 
             list<string> followers; // names of followers
 
-
-            /**
-             * This is the method executed by the producer thread
-             * @param arg - an arg_struct object
-             * @return
-             */
-            static void * producer(void *arg);
-
             /**
              * This is the method executed by the consumer thread
              * @param arg - an UserInformation object

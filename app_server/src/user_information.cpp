@@ -139,12 +139,6 @@ namespace userInformation {
         args->userInformation = this;
         args->notificationID.assign(notificationID);
 
-//        pthread_t tid;
-//        if (pthread_create(&tid, NULL, this->producer, (void*)args)) {
-//            cout << "ERRO criando thread de produção" << endl;
-//            //free(args);
-//        }
-
         sem_wait(&(this->freeCritialSession));
 
         cout << "Produzindo notificação com ID: " << notificationID << endl;
@@ -162,28 +156,6 @@ namespace userInformation {
             cout << "ERRO criando thread de consumo" << endl;
             //free(args);
         }
-    }
-
-    void* UserInformation::producer(void* arg) {
-
-        cout << "Iniciando thread de produção de notificação" << endl;
-
-        struct arg_struct* my_arg_struct = (struct arg_struct*)arg;
-        UserInformation* _this = my_arg_struct->userInformation;
-        sleep(rand() % 5);
-
-        sem_wait(&((*_this).freeCritialSession));
-
-        cout << "Produzindo notificação com ID: " << my_arg_struct->notificationID << endl;
-        _this->pendingNotifications.push_back(my_arg_struct->notificationID);
-
-        sem_post(&(_this->freeCritialSession));
-        sem_post(&(_this->hasItems));
-
-        cout << "Finalizando thread de produção" << endl;
-        //free(my_arg_struct);
-        return 0;
-
     }
 
     void* UserInformation::consumer(void* arg) {
