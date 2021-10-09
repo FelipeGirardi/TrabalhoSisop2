@@ -14,7 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include "../include/ProfileSessionManager.hpp"
-#include "../include/user_information.hpp"
+#include "../include/UserInformation.hpp"
 #include "../include/FileManager.hpp"
 #include "../include/CommunicationManager.hpp"
 #include "../include/Session.hpp"

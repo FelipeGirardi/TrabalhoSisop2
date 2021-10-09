@@ -1,4 +1,4 @@
-#include "../include/user_information.hpp"
+#include "../include/UserInformation.hpp"
 #include "../include/NotificationManager.hpp"
 #include <semaphore.h>
 #include <iostream>

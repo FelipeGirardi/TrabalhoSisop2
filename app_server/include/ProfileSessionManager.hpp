@@ -1,7 +1,7 @@
 #ifndef PROFILE_SESSION_MANAGER_HPP
 #define PROFILE_SESSION_MANAGER_HPP
 
-#include "user_information.hpp"
+#include "UserInformation.hpp"
 #include "../../Common/include/Notification.hpp"
 #include "../../Common/include/SessionAuth.hpp"
 #include "../include/utils/ErrorCodes.hpp"

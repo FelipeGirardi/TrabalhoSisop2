@@ -16,7 +16,7 @@ COMMON_OBJ_DIR = $(COMMON_DIR)/$(OBJ_DIR)
 
 all: build-directories common CommunicationManager.o FileManager.o GlobalManager.o \
          NotificationManager.o ProfileSessionManager.o tcp_server.o \
-		 user_information.o utils/StringExtensions.o Session.o
+		 UserInformation.o utils/StringExtensions.o Session.o
 
 	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -luuid -lpthread
 ###
@@ -41,8 +41,8 @@ ProfileSessionManager.o: $(SRC_DIR)/ProfileSessionManager.cpp
 tcp_server.o: $(SRC_DIR)/tcp_server.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/tcp_server.o -c $(SRC_DIR)/tcp_server.cpp
 
-user_information.o: $(SRC_DIR)/user_information.cpp
-	g++ -std=c++11 -o $(OBJ_DIR)/user_information.o -c $(SRC_DIR)/user_information.cpp
+UserInformation.o: $(SRC_DIR)/UserInformation.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/UserInformation.o -c $(SRC_DIR)/UserInformation.cpp
 
 utils/StringExtensions.o:
 	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/utils/StringExtensions.cpp

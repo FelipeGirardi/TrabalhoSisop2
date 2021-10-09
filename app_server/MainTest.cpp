@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include "include/ProfileSessionManager.hpp"
-#include "include/user_information.hpp"
+#include "include/UserInformation.hpp"
 #include "include/FileManager.hpp"
 #include "../Common/include/Notification.hpp"
 #include "include/NotificationManager.hpp"
