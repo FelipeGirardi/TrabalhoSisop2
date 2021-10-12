@@ -13,6 +13,7 @@ OBJ_DIR = out
 BIN_DIR = bin
 COMMON_DIR = ../common
 COMMON_OBJ_DIR = $(COMMON_DIR)/$(OBJ_DIR)
+DEBUG_MODE = -g
 
 all: build-directories common CommunicationManager.o FileManager.o GlobalManager.o \
          NotificationManager.o ProfileSessionManager.o tcp_server.o \

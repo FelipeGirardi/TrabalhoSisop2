@@ -14,6 +14,7 @@ BIN_DIR = bin
 TEST_DIR = tests
 HEADERS_DIR = include
 INCLUDE_PATH = -I$(HEADERS_DIR)
+DEBUG_MODE = -g
 
 all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o SessionAuth.o
 
