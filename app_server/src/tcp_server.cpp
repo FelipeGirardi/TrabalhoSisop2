@@ -237,7 +237,6 @@ void *send_keep_alive_thread_func(void *data) {
 
         Packet *receivedPacket = new Packet;
         int readResult = read(*socket, receivedPacket, sizeof(Packet));
-        receivedPacket->printItself();
 
         // se recebeu algo -> ok
         if (readResult < 0 || receivedPacket == NULL || receivedPacket->type == 0) {
@@ -261,7 +260,6 @@ void *receive_keep_alive_thread_func(void *data) {
     Packet *responsePacket = new Packet;
     Packet *receivedPacket = new Packet;
 
-    int i = 0;
     while (true) {
 
         responsePacket = new Packet;
@@ -275,15 +273,12 @@ void *receive_keep_alive_thread_func(void *data) {
             cout << "Recebeu KEEP ALIVE com sucesso." << endl;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(KEEP_ALIVE);
         }
-
-        if (i > 3) {continue;}
         cout << "Enviando pacote ACK/NACK recebimento de KEEP ALIVE" << endl;
         if (GlobalManager::commManager.send_packet(*receivedSocket, responsePacket) == ERROR) {
             cout << "ERRO enviando ACK/NACK" << endl;
         } else {
             cout << "ACK/NACK enviado com sucesso" << endl;
         }
-        i += 1;
 
     }
     free(receivedPacket);
