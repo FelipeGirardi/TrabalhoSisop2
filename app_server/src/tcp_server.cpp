@@ -11,6 +11,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netdb.h>
 #include <string>
 #include <unordered_map>
 #include "../include/ProfileSessionManager.hpp"
@@ -22,7 +23,6 @@
 #include "../include/utils/ErrorCodes.hpp"
 #include "../../common/include/Packet.hpp"
 #include "../../common/include/SessionAuth.hpp"
-#define PORT 4000
 
 using namespace userInformation;
 using namespace profileSessionManager;
@@ -46,13 +46,27 @@ typedef struct AuthResult {
 
 // Declaracao funcoes auxiliares
 void closeAppHandler(int n_signal);
+void connectToPrimaryServer(int primaryPort, string primaryIP);
 
 // Declaracao de funcoes de threads
 void *auth_client_func(void *data);
 void *client_thread_func(void *data);
+void *send_keep_alive_thread_func(void *data);
+void *receive_keep_alive_thread_func(void *data);
 
 int main(int argc, char* argv[])
 {
+
+    if (argc < 5) {
+        cout << "" << endl;
+        cout << "usage: ./app_server [server-IP] [server-port] [primary-IP] [primary-port]" << endl;
+        return 0;
+    }
+    string serverIP = argv[1];
+    int serverPort = stoi(argv[2]);
+
+    string primaryIP = argv[3];
+    int primaryPort = stoi(argv[4]);
 
     //instanciação dos managers
     GlobalManager::sessionManager = sessionManager;
@@ -83,8 +97,8 @@ int main(int argc, char* argv[])
 
     // seta dados do servidor
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-    serv_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    serv_addr.sin_port = htons(serverPort);
+    serv_addr.sin_addr.s_addr = inet_addr(serverIP.c_str());
     bzero(&(serv_addr.sin_zero), 8);
 
     // faz o bind
@@ -96,6 +110,10 @@ int main(int argc, char* argv[])
 
     // seta signal de fechar app do servidor
     signal(SIGINT, closeAppHandler);
+    if (primaryPort != serverPort) {
+        connectToPrimaryServer(primaryPort, primaryIP);
+    }
+
 
     // loop do listen de conexões
     if (listen(sockfd, 5) == 0) {
@@ -124,7 +142,8 @@ int main(int argc, char* argv[])
             cout << "voltou da thread de auth" << endl;
             AuthResult *myResult = (AuthResult *)resultOfAuthentication;
 
-            if (myResult->result == SUCCESS) {
+            if (myResult->result != SUCCESS) { continue; }
+            if (myResult->sessionAuth != NULL) {
                 if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
                     pthread_t client_thread;
                     cout << "Criando thread de leitura de comandos" << endl;
@@ -136,6 +155,10 @@ int main(int argc, char* argv[])
                     .startListeningForNotifications();
 
                 }
+            } else {
+                cout << "Criando thread de recebimento de mensagens keep alive" << endl;
+                pthread_t keep_alive_thread;
+                pthread_create(&keep_alive_thread, NULL, &receive_keep_alive_thread_func, (void *) pointerToSocket);
             }
 
         }
@@ -148,6 +171,124 @@ int main(int argc, char* argv[])
     }
 
     return 0;
+}
+
+void connectToPrimaryServer(int primaryPort, string primaryIP) {
+
+    // cria conexao com primario para keep alive
+    cout << "Connecting to primary server" << endl;
+    struct sockaddr_in serv_addr;
+    struct hostent *server;
+    int sockfd;
+
+    server = gethostbyname(primaryIP.c_str());
+    if (server == NULL) {
+        cout << "ERROR connecting to primary server" << endl;
+        return;
+    }
+
+    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+        cout << "ERROR opening socket" << endl;
+        return;
+    }
+
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(primaryPort);
+    serv_addr.sin_addr = *((struct in_addr *)server->h_addr);
+    bzero(&(serv_addr.sin_zero), 8);
+
+    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
+        cout << "ERROR connecting" << endl;
+        return;
+    }
+    pthread_t keep_alive_thread;
+    // Cria thread de envio de mensagens keep alive
+    int *pointerToSocket = (int*) malloc(sizeof (int));
+    *pointerToSocket = sockfd;
+    pthread_create(&keep_alive_thread, NULL, &send_keep_alive_thread_func, (void *) pointerToSocket);
+
+}
+
+void *send_keep_alive_thread_func(void *data) {
+
+    cout << "Iniciando envio de pacotes KEEP ALIVE." << endl;
+
+    int *socket = (int*) data;
+    int timeBetweenMessages = 10;
+    int timeout = 2;
+
+    while (true) {
+        // espera tempo entre mensagens keep alive
+        sleep(timeBetweenMessages);
+
+        // cria pacote KEEP ALIVE
+        Packet *packet = new Packet;
+        *packet = GlobalManager::commManager.createKeepAlivePacket();
+
+        // envia
+        cout << "Enviando pacote KEEP ALIVE" << endl;
+        if (GlobalManager::commManager.send_packet(*socket, packet) == ERROR) {
+            cout << "Não foi possivel enviar KEEP ALIVE" <<endl;
+        } else {
+            cout << "KEEP ALIVE enviado com sucesso" << endl;
+        }
+        // espera tempo timeout
+        sleep(timeout);
+
+        Packet *receivedPacket = new Packet;
+        int readResult = read(*socket, receivedPacket, sizeof(Packet));
+        receivedPacket->printItself();
+
+        // se recebeu algo -> ok
+        if (readResult < 0 || receivedPacket == NULL || receivedPacket->type == 0) {
+            cout << "Primário caiu" << endl;
+            return 0;
+        }
+        // se estorou o tempo -> primario caiu
+        else {
+            cout << "Primário tá vivo" << endl;
+        }
+
+    }
+
+}
+
+void *receive_keep_alive_thread_func(void *data) {
+
+    cout << "Iniciando leitura de pacotes KEEP ALIVE." << endl;
+
+    int *receivedSocket = (int*) data;
+    Packet *responsePacket = new Packet;
+    Packet *receivedPacket = new Packet;
+
+    int i = 0;
+    while (true) {
+
+        responsePacket = new Packet;
+        receivedPacket = new Packet;
+
+        int readResult = read(*receivedSocket, receivedPacket, sizeof(Packet));
+        if (readResult < 0 || (receivedPacket->type != KEEP_ALIVE)) {
+            cout << "ERRO lendo do socket recebimento KEEP ALIVE. Fechando." << endl;
+            *responsePacket = GlobalManager::commManager.createGenericNackPacket();
+        } else {
+            cout << "Recebeu KEEP ALIVE com sucesso." << endl;
+            *responsePacket = GlobalManager::commManager.createAckPacketForType(KEEP_ALIVE);
+        }
+
+        if (i > 3) {continue;}
+        cout << "Enviando pacote ACK/NACK recebimento de KEEP ALIVE" << endl;
+        if (GlobalManager::commManager.send_packet(*receivedSocket, responsePacket) == ERROR) {
+            cout << "ERRO enviando ACK/NACK" << endl;
+        } else {
+            cout << "ACK/NACK enviado com sucesso" << endl;
+        }
+        i += 1;
+
+    }
+    free(receivedPacket);
+    free(responsePacket);
+
 }
 
 /*
@@ -165,7 +306,7 @@ void *auth_client_func(void *data) {
     Packet *responsePacket = new Packet;
 
     int readResult = read(client_socket, receivedPacket, sizeof (Packet));
-    if (readResult < 0 || (receivedPacket->type != USERNAME  && receivedPacket->type != EXIT)) {
+    if (readResult < 0 || (receivedPacket->type != USERNAME  && receivedPacket->type != EXIT && receivedPacket->type != KEEP_ALIVE)) {
         cout <<"ERRO lendo do socket. Fechando." << endl;
         finalResult->result = ERROR;
         finalResult->sessionAuth = NULL;
@@ -175,7 +316,7 @@ void *auth_client_func(void *data) {
         finalResult->result = ERROR;
         finalResult->sessionAuth = NULL;
         *responsePacket = GlobalManager::commManager.createAckPacketForType(EXIT);
-    } else {
+    } else if (receivedPacket->type == USERNAME) {
         SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
         finalResult->sessionAuth = new SessionAuth(*sessionAuth);
         cout << "Recebeu dados de autenticação corretamente:" << endl;
@@ -195,6 +336,11 @@ void *auth_client_func(void *data) {
             finalResult->result = SUCCESS;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(USERNAME);
         }
+    } else {
+        cout << "Keep Alive recebido com sucesso" << endl;
+        finalResult->result = SUCCESS;
+        finalResult->sessionAuth = NULL;
+        *responsePacket = GlobalManager::commManager.createAckPacketForType(KEEP_ALIVE);
     }
 
     cout << "Enviando pacote ACK/NACK recebimento de comando" << endl;

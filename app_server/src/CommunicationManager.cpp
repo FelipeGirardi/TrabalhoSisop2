@@ -17,20 +17,20 @@
 #include "../../common/include/PacketType.hpp"
 #include "../include/utils/ErrorCodes.hpp"
 
-#define PORT 4000
-
 using namespace std;
 using namespace notification;
 
 namespace communicationManager {
 
 
-
     ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
         cout << "Enviando o pacote:" << endl;
         package->printItself();
 
-        if (write(socket, package, sizeof(Packet)) < 0) {
+        int aa = write(socket, package, sizeof(Packet));
+        cout << "valor de retorno do write = " << aa << endl;
+
+        if ( aa < 0) {
             cout << "ERRO escrevendo no socket" << endl;
             return ERROR;
         }
@@ -107,6 +107,17 @@ namespace communicationManager {
         package.timestamp = time(NULL);
         bzero(package._payload, BUFFER_SIZE);
         strncpy(package._payload, responseString.c_str(), BUFFER_SIZE);
+        package.length = strlen(package._payload);
+        return package;
+    }
+    Packet CommunicationManager::createKeepAlivePacket() {
+
+        cout << "Criando pacote KEEP ALIVE" << endl;
+
+        Packet package;
+        package.type = KEEP_ALIVE;
+        package.timestamp = time(NULL);
+        bzero(package._payload, BUFFER_SIZE);
         package.length = strlen(package._payload);
         return package;
     }
