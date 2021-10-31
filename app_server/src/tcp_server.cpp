@@ -215,7 +215,13 @@ void *send_keep_alive_thread_func(void *data) {
 
     int *socket = (int*) data;
     int timeBetweenMessages = 10;
-    int timeout = 2;
+    int timeout_in_seconds = 2;
+
+    // seta timeout
+    struct timeval tv;
+    tv.tv_sec = timeout_in_seconds;
+    tv.tv_usec = 0;
+    setsockopt(*socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 
     while (true) {
         // espera tempo entre mensagens keep alive
@@ -232,8 +238,6 @@ void *send_keep_alive_thread_func(void *data) {
         } else {
             cout << "KEEP ALIVE enviado com sucesso" << endl;
         }
-        // espera tempo timeout
-        sleep(timeout);
 
         Packet *receivedPacket = new Packet;
         int readResult = read(*socket, receivedPacket, sizeof(Packet));
@@ -273,6 +277,7 @@ void *receive_keep_alive_thread_func(void *data) {
             cout << "Recebeu KEEP ALIVE com sucesso." << endl;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(KEEP_ALIVE);
         }
+        
         cout << "Enviando pacote ACK/NACK recebimento de KEEP ALIVE" << endl;
         if (GlobalManager::commManager.send_packet(*receivedSocket, responsePacket) == ERROR) {
             cout << "ERRO enviando ACK/NACK" << endl;
