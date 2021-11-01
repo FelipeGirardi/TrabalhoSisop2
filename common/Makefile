@@ -16,7 +16,7 @@ HEADERS_DIR = include
 INCLUDE_PATH = -I$(HEADERS_DIR)
 DEBUG_MODE = -g
 
-all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o SessionAuth.o
+all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o SessionAuth.o Socket.o
 
 ###
 # Main object files
@@ -33,6 +33,9 @@ PacketType.o: $(SRC_DIR)/PacketType.cpp
 
 SessionAuth.o: $(SRC_DIR)/SessionAuth.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/SessionAuth.o -c $(SRC_DIR)/SessionAuth.cpp $(INCLUDE_PATH) -luuid
+
+Socket.o: $(SRC_DIR)/Socket.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/Socket.o -c $(SRC_DIR)/Socket.cpp $(INCLUDE_PATH)
 
 StringExtensions.o: $(SRC_DIR)/StringExtensions.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/StringExtensions.cpp $(INCLUDE_PATH)
