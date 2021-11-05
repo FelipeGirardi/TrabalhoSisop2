@@ -16,7 +16,11 @@ typedef enum PacketType {
     SERVER_ACK, // server -> client
     SERVER_ERROR, // server -> client
     EXIT, // client -> server or server -> client
-    KEEP_ALIVE // secondary server -> primary server
+    KEEP_ALIVE, // secondary server -> primary server
+    ELECTION,
+    ANSWER,
+    COORDINATOR
+    //TALVEZ MAIS UM PARA ABRIR O SOCKET
 
 }PacketType;
 

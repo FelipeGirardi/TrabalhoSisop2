@@ -8,6 +8,7 @@
 #include "ProfileSessionManager.hpp"
 #include "NotificationManager.hpp"
 #include "CommunicationManager.hpp"
+#include "ElectionManager.hpp"
 
 using namespace profileSessionManager;
 using namespace communicationManager;
@@ -17,6 +18,7 @@ public:
     static ProfileSessionManager sessionManager;
     static NotificationManager notifManager;
     static CommunicationManager commManager;
+    static ElectionManager electionManager;
     static void printItself();
     GlobalManager();
 

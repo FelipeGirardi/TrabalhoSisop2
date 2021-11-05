@@ -17,12 +17,15 @@ DEBUG_MODE = -g
 
 all: build-directories common CommunicationManager.o FileManager.o GlobalManager.o \
          NotificationManager.o ProfileSessionManager.o tcp_server.o \
-		 UserInformation.o utils/StringExtensions.o Session.o
+		 UserInformation.o ElectionManager.o utils/StringExtensions.o Session.o
 
 	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -luuid -lpthread
 ###
 # Object files
 ###
+
+ElectionManager.o: $(SRC_DIR)/ElectionManager.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/ElectionManager.o -c $(SRC_DIR)/ElectionManager.cpp
 
 CommunicationManager.o: $(SRC_DIR)/CommunicationManager.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/CommunicationManager.o -c $(SRC_DIR)/CommunicationManager.cpp

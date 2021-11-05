@@ -13,6 +13,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string>
+#include <vector>
 #include <unordered_map>
 #include "../include/ProfileSessionManager.hpp"
 #include "../include/UserInformation.hpp"
@@ -36,6 +37,7 @@ ProfileSessionManager sessionManager;
 GlobalManager globalManager;
 NotificationManager notificationManager;
 CommunicationManager comunicationManager;
+ElectionManager electionManager;
 bool shouldEnd = false;
 
 //TODO: mudar de lugar
@@ -72,6 +74,14 @@ int main(int argc, char* argv[])
     GlobalManager::sessionManager = sessionManager;
     GlobalManager::notifManager = notificationManager;
     GlobalManager::commManager = comunicationManager;
+    GlobalManager::electionManager = electionManager;
+
+    //pega de um arquivo instancias do servidor (só com ID)
+    vector<ServerInfo> servers = [serv1, serv2, serv3];
+
+    //seta servidores no election manager
+
+    //
 
     // carrega estruturas de dados do arquivo (usuários + notificações)
     users = fileManager.getUsersFromFile();
@@ -229,7 +239,7 @@ void *send_keep_alive_thread_func(void *data) {
 
         // cria pacote KEEP ALIVE
         Packet *packet = new Packet;
-        *packet = GlobalManager::commManager.createKeepAlivePacket();
+        *packet = GlobalManager::commManager.createEmptyPacket(KEEP_ALIVE);
 
         // envia
         cout << "Enviando pacote KEEP ALIVE" << endl;
@@ -277,7 +287,7 @@ void *receive_keep_alive_thread_func(void *data) {
             cout << "Recebeu KEEP ALIVE com sucesso." << endl;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(KEEP_ALIVE);
         }
-        
+
         cout << "Enviando pacote ACK/NACK recebimento de KEEP ALIVE" << endl;
         if (GlobalManager::commManager.send_packet(*receivedSocket, responsePacket) == ERROR) {
             cout << "ERRO enviando ACK/NACK" << endl;

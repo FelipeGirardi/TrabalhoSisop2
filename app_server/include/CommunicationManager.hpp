@@ -18,7 +18,7 @@ namespace communicationManager {
         ErrorCodes sendPacketToSessions(list<Session> sessions, Packet *package);
         Packet createAckPacketForType(PacketType type);
         Packet createGenericNackPacket();
-        Packet createKeepAlivePacket();
+        Packet createEmptyPacket(PacketType type);
         Packet createExitPacket();
 
     };

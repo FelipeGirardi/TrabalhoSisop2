@@ -110,12 +110,12 @@ namespace communicationManager {
         package.length = strlen(package._payload);
         return package;
     }
-    Packet CommunicationManager::createKeepAlivePacket() {
+    Packet CommunicationManager::createEmptyPacket(PacketType type) {
 
         cout << "Criando pacote KEEP ALIVE" << endl;
 
         Packet package;
-        package.type = KEEP_ALIVE;
+        package.type = type;
         package.timestamp = time(NULL);
         bzero(package._payload, BUFFER_SIZE);
         package.length = strlen(package._payload);
