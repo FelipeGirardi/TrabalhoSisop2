@@ -122,6 +122,30 @@ namespace communicationManager {
         return package;
     }
 
+    Packet CommunicationManager::createPacketWithID(int _id, PacketType type) {
+        cout << "Criando pacote contendo id = " << _id << endl;
+
+        Packet package;
+        package.type = type;
+        package.timestamp = time(NULL);
+        bzero(package._payload, BUFFER_SIZE);
+        strncpy(package._payload, to_string(_id).c_str(), BUFFER_SIZE);
+        package.length = strlen(package._payload);
+        return package;
+    }
+
+    Packet CommunicationManager::createCoordinatorPacket(int idCurrentProcess) {
+
+        cout << "Criando pacote COORDINATOR " << endl;
+        return createPacketWithID(idCurrentProcess, COORDINATOR);
+    }
+
+    Packet CommunicationManager::createHelloPacket(int idCurrentProcess) {
+
+        cout << "Criando pacote HELLO " << endl;
+        return createPacketWithID(idCurrentProcess, HELLO_SERVER);
+    }
+
     /*
      * Creates exit packet. Sent when server receives a control C.
      * The payload is a buffer with BUFFER_SIZE zeros

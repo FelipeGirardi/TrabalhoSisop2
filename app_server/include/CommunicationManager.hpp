@@ -12,6 +12,8 @@ using namespace notification;
 namespace communicationManager {
 
     class CommunicationManager {
+    private:
+        Packet createPacketWithID(int _id, PacketType type);
     public:
         ErrorCodes send_packet(int socket, Packet *package);
         ErrorCodes sendNotificationToSessions(list<Session> sessions, Notification notification);
@@ -19,7 +21,9 @@ namespace communicationManager {
         Packet createAckPacketForType(PacketType type);
         Packet createGenericNackPacket();
         Packet createEmptyPacket(PacketType type);
+        Packet createCoordinatorPacket(int idCurrentProcess);
         Packet createExitPacket();
+        Packet createHelloPacket(int idCurrentProcess);
 
     };
 }

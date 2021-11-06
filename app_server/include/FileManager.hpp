@@ -7,8 +7,10 @@
 
 #include <unordered_map>
 #include <string>
+#include <vector>
 #include "UserInformation.hpp"
 #include "../../Common/include/Notification.hpp"
+#include "ElectionManager.hpp"
 
 using namespace userInformation;
 using namespace notification;
@@ -20,6 +22,7 @@ private:
     const char arrayDelimiter = ',';
     const string filename = "users.txt";
     const string notificationsFilename = "notifications.txt";
+    const string serversFilename = "servers.txt";
 
 public:
     /*
@@ -46,6 +49,11 @@ public:
      * Retrieve the property `notifications` to from .txt file
      */
     unordered_map<string, Notification> getNotificationsFromFile();
+
+    /*
+     * Retrieve the property `server` to from .txt file
+     */
+    vector<ServerInfo> getServersFromFile();
 
 };
 

@@ -19,8 +19,8 @@ typedef enum PacketType {
     KEEP_ALIVE, // secondary server -> primary server
     ELECTION,
     ANSWER,
-    COORDINATOR
-    //TALVEZ MAIS UM PARA ABRIR O SOCKET
+    COORDINATOR,
+    HELLO_SERVER // server -> server
 
 }PacketType;
 

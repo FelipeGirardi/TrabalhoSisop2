@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <vector>
 
 ElectionManager::ElectionManager() {
 
@@ -41,62 +42,44 @@ void ElectionManager::startElection() {
         pthread_join(threadIDs[i], &threadReturnValue);
 
         ErrorCodes *returnResult = (ErrorCodes *) threadReturnValue;
-        hasReceivedSuccess = returnResult == SUCCESS;
+        hasReceivedSuccess = (*returnResult == SUCCESS);
 
     }
 
     if (hasReceivedSuccess) {
         cout << "ESPERA O COORDINATOR" << endl;
     } else {
-        cout << "SE ASSUME LIDER" << endl;
+        GlobalManager::electionManager.assumeCoordination();
     }
 
 }
 
-void* ElectionManager::receive_messages(void *data) {
+void ElectionManager::sendCoordinatorPacket(int sendSocket) {
 
-    cout << "Iniciando leitura de pacotes ELECTION" << endl;
+    Packet *packet = new Packet;
+    *packet = GlobalManager::commManager.createCoordinatorPacket(this->currentServerID);
 
-    ReceiveThreadArguments *receivedArguments = (ReceiveThreadArguments *)data;
-    int socket = receivedArguments->socket;
-
-    bool shouldStartElection = false
-    Packet *responsePacket = new Packet;
-    Packet *receivedPacket = new Packet;
-
-    while (true) {
-
-        responsePacket = new Packet;
-        receivedPacket = new Packet;
-        shouldStartElection = false
-
-        int readResult = read(socket, receivedPacket, sizeof(Packet));
-        if (readResult < 0 || (receivedPacket->type != ELECTION)) {
-            cout << "ERRO lendo do socket recebimento ELECTION. Fechando." << endl;
-            *responsePacket = GlobalManager::commManager.createGenericNackPacket();
-        } else {
-            cout << "Recebeu ELECTION com sucesso." << endl;
-            *responsePacket = GlobalManager::commManager.createEmptyPacket(ANSWER);
-            shouldStartElection = true;
-        }
-
-        cout << "Enviando pacote ANSWER/NACK recebimento" << endl;
-        if (GlobalManager::commManager.send_packet(socket, responsePacket) == ERROR) {
-            cout << "ERRO enviando ANSWER/NACK" << endl;
-            shouldStartElection = false;
-        } else {
-            cout << "ANSWER/NACK enviado com sucesso" << endl;
-        }
-
-        if (shouldStartElection) {
-            cout << "Starting new election" << endl;
-            GlobalManager::electionManager.startElection();
-        }
-
+    if (GlobalManager::commManager.send_packet(sendSocket, packet) == ERROR) {
+        cout << "ERRO enviando COORDINATOR" << endl;
+    } else {
+        cout << "COORDINATOR enviado com sucesso" << endl;
     }
-    free(receivedPacket);
-    free(responsePacket);
+    free(packet);
 
+}
+
+// envia mensagem de coordinator para todos os processos
+void ElectionManager::assumeCoordination() {
+
+    setNewCoordinatorIDToItself();
+    int numberOfServers = this->servers.size();
+
+    for (int i= 0; i < numberOfServers; i++) {
+        if (currentServerID == i) { continue; }
+        int sendSocket = this->servers[i].sendSocket;
+        cout << "Enviando pacote COORDINATOR para id = " << i << endl;
+        sendCoordinatorPacket(sendSocket);
+    }
 }
 
 void* ElectionManager::send_election_message(void *data) {
@@ -125,12 +108,12 @@ void* ElectionManager::send_election_message(void *data) {
     Packet *receivedPacket = new Packet;
     int readResult = read(*socket, receivedPacket, sizeof(Packet));
 
-    // se recebeu algo -> ok
+    // se estorou o tempo -> primario caiu
     if (readResult < 0 || receivedPacket == NULL || receivedPacket->type != ANSWER) {
+        cout << "ERROR recebendo answer" << endl;
         returnValue = ERROR;
     }
-
-    // se estorou o tempo -> primario caiu
+    // se recebeu algo -> ok
     else {
         cout << "Recebeu answer com sucesso" << endl;
         returnValue = SUCCESS;
@@ -138,6 +121,53 @@ void* ElectionManager::send_election_message(void *data) {
 
     delete receivedPacket;
     delete sendPacket;
-    return returnValue;
 
+    return (void *) returnValue;
+
+}
+
+void ElectionManager::setNewCoordinatorIDToItself() {
+    this->setNewCoordinatorID(this->currentServerID);
+}
+
+void ElectionManager::setNewCoordinatorID(int newCoordinatorID) {
+    this->currentCoordinatorID = newCoordinatorID;
+}
+
+int ElectionManager::getCoordinatorID() {
+    return this->currentCoordinatorID;
+}
+
+int ElectionManager::getProcessID() {
+    return this->currentServerID;
+}
+
+int ElectionManager::getCurrentCoordinatorSendSocket() {
+    return this->servers[this->currentCoordinatorID].sendSocket;
+}
+
+void ElectionManager::setSendSocket(int sendSocket, int serverID) {
+    this->servers[serverID].sendSocket = sendSocket;
+}
+
+void ElectionManager::setReceiveSocket(int receiveSocket, int serverID) {
+    this->servers[serverID].receiveSocket = receiveSocket;
+}
+string ElectionManager::getIPfromID(int serverID) {
+    return this->servers[serverID].ip;
+}
+bool ElectionManager::isCurrentProcessCoordinator() {
+    return this->currentServerID == this->currentCoordinatorID;
+}
+bool ElectionManager::hasValidSendSocketForServer(int serverID) {
+    return this->servers[serverID].sendSocket != INVALID_SOCKET;
+}
+void ElectionManager::setCurrentServerID(int serverID) {
+    this->currentServerID = serverID;
+}
+void ElectionManager::setServers(vector<ServerInfo> servers) {
+    this->servers = servers;
+}
+int ElectionManager::getNumberOfServers() {
+    return this->servers.size();
 }

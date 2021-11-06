@@ -132,3 +132,37 @@ unordered_map<string, Notification> FileManager::getNotificationsFromFile() {
     return notifications;
 
 }
+
+vector<ServerInfo> FileManager::getServersFromFile() {
+    StringExtensions stringParser;
+    vector<ServerInfo> serversInfo;
+
+    string line;
+    ifstream myfile (this->serversFilename);
+    if (myfile.is_open()) {
+
+        // line format = server ID | server IP |
+        while ( getline (myfile,line) )
+        {
+            vector<string> splitedString = stringParser.split(line, this->delimiter);
+            if (splitedString.size() < 2) {
+                cout << "Invalid file line";
+                break;
+            }
+            int serverID = stoi(splitedString[0]);
+            string serverIP = splitedString[1];
+
+            ServerInfo newServerInfo = {
+                                        ._id=serverID,
+                                        .sendSocket=INVALID_SOCKET,
+                                        .receiveSocket=INVALID_SOCKET,
+                                        .ip=serverIP
+            };
+            serversInfo.push_back(newServerInfo);
+        }
+
+        myfile.close();
+    }
+    else cout << "Unable to open servers file";
+    return serversInfo;
+}
