@@ -21,26 +21,26 @@ ElectionManager::ElectionManager() {
 
 void ElectionManager::startElection() {
 
+    cout << "Starting a new election" << endl;
+
     int numberOfServers = this->servers.size();
-    pthread_t threadIDs[numberOfServers];
+
     bool hasReceivedSuccess = false;
 
     // para cada servidor com ID maior
     for (int i= this->currentServerID+1; i < numberOfServers; i++) {
+
+        cout << "enviando ELECTION para id = " << i << endl;
+
         int sendSocket = this->servers[i].sendSocket;
         ReceiveThreadArguments *_arguments = new ReceiveThreadArguments;
         _arguments->socket = sendSocket;
 
         pthread_t send_thread;
         pthread_create(&send_thread, NULL, &send_election_message, (void *) _arguments);
-        threadIDs[i] = send_thread;
-    }
-
-    for (int i= this->currentServerID+1; i < numberOfServers; i++) {
 
         void *threadReturnValue;
-        pthread_join(threadIDs[i], &threadReturnValue);
-
+        pthread_join(send_thread, &threadReturnValue);
         ErrorCodes *returnResult = (ErrorCodes *) threadReturnValue;
         hasReceivedSuccess = (*returnResult == SUCCESS);
 

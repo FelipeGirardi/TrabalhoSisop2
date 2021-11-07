@@ -27,10 +27,16 @@ namespace communicationManager {
         cout << "Enviando o pacote:" << endl;
         package->printItself();
 
+//        int error = 0;
+//        socklen_t len = sizeof (error);
+//        int retval = getsockopt (socket, SOL_SOCKET, SO_ERROR, &error, &len);
+//
+//        if (retval != 0 || error != 0) { return ERROR; }
+
         int aa = write(socket, package, sizeof(Packet));
         cout << "valor de retorno do write = " << aa << endl;
 
-        if ( aa < 0) {
+        if (aa < 0) {
             cout << "ERRO escrevendo no socket" << endl;
             return ERROR;
         }

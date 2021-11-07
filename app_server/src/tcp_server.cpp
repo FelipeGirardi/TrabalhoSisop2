@@ -95,9 +95,8 @@ int main(int argc, char* argv[])
 
     // Pega IP servidor
     string serverIP = GlobalManager::electionManager.getIPfromID(serverID);
-
-    // manda HELLO para todos os servidores
-    sendHelloToServers(servers);
+    cout << "ip deste servidor = " << serverIP;
+    cout << "size = " << serverIP.size();
 
     // carrega estruturas de dados do arquivo (usuários + notificações)
     users = fileManager.getUsersFromFile();
@@ -137,9 +136,15 @@ int main(int argc, char* argv[])
     // seta signal de fechar app do servidor
     signal(SIGINT, closeAppHandler);
 
+    // ignora o signal do write em socket fechado
+    signal (SIGPIPE, SIG_IGN);
+
     // loop do listen de conexões
     if (listen(sockfd, 5) == 0) {
         int client_sockfd, notif_sockfd; // usar notif_sockfd se precisar
+
+        // manda HELLO para todos os servidores
+        sendHelloToServers(servers);
 
         while(true) {
             // aceita conexão do cliente
@@ -186,6 +191,7 @@ int main(int argc, char* argv[])
                 pthread_t keep_alive_thread;
                 pthread_create(&keep_alive_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
             }
+
 
         }
     }
@@ -565,6 +571,8 @@ void *auth_client_func(void *data) {
         cout << "HELLO recebido com sucesso" << endl;
         int newProcessID = atoi(receivedPacket->_payload);
         GlobalManager::electionManager.setReceiveSocket(client_socket, newProcessID);
+        *responsePacket = GlobalManager::commManager.createAckPacketForType(HELLO_SERVER);
+        GlobalManager::commManager.send_packet(client_socket, responsePacket);
 
         //cria conexão de envio para novo processo se for o caso
         if (!GlobalManager::electionManager.hasValidSendSocketForServer(newProcessID)) {
