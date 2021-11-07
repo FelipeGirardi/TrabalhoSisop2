@@ -441,7 +441,7 @@ void *send_keep_alive_thread_func(void *data) {
 
 }
 
-// recebe mensagens COORDINATOR, ELECTION e KEEP ALIVE
+// recebe mensagens EXIT, COORDINATOR, ELECTION e KEEP ALIVE
 void *receive_server_events_thread_func(void *data) {
 
     cout << "Iniciando leitura de pacotes de outros servidores." << endl;
@@ -461,7 +461,8 @@ void *receive_server_events_thread_func(void *data) {
         if (readResult < 0 ||
         ((receivedPacket->type != KEEP_ALIVE) &&
         (receivedPacket->type != COORDINATOR) &&
-        (receivedPacket->type != ELECTION)
+        (receivedPacket->type != ELECTION) &&
+        (receivedPacket->type != EXIT)
         )) {
             cout << "ERRO lendo do socket recebimento mensagens de outros RM. Fechando." << endl;
             *responsePacket = GlobalManager::commManager.createGenericNackPacket();
@@ -492,6 +493,17 @@ void *receive_server_events_thread_func(void *data) {
             cout << "Recebeu ELECTION com sucesso." << endl;
             *responsePacket = GlobalManager::commManager.createEmptyPacket(ANSWER);
             shouldStartElection = true;
+        } else if (receivedPacket->type == EXIT) {
+            cout << "Recebeu EXIT com sucesso." << endl;
+            int _id = atoi(receivedPacket->_payload);
+            cout << "id do processo remetente = " << _id << endl;
+            GlobalManager::electionManager.setSendSocket(INVALID_SOCKET, _id);
+
+            // nao há ack/answer para mensagens EXIT
+            free(receivedPacket);
+            free(responsePacket);
+            return 0;
+
         }
 
         cout << "Enviando pacote ACK/NACK para outro RM" << endl;
@@ -697,7 +709,11 @@ void closeAppHandler(int n_signal) {
         cout << "ERRO enviando EXIT para todas as sessões" << endl;
     }
 
+    GlobalManager::electionManager.sendExitToAllOtherServers();
+
     GlobalManager::sessionManager.endAllSessions();
+    GlobalManager::electionManager.printItself();
+
     free(packetPointer);
 
     exit(0);

@@ -3,8 +3,12 @@
 //
 
 #include "../include/Packet.hpp"
+#include "../include/PacketType.hpp"
 #include <cstdio>
 #include <cstring>
+#include <iostream>
+
+using namespace std;
 
 Packet* Packet::fromBytes(const char* bytes)
 {
@@ -24,7 +28,7 @@ char* Packet::toBytes()
 }
 
 void Packet::printItself() {
-    printf("type: %d\n", this->type);
+    cout << "type: " << stringDescribingType(this->type) << endl;
     printf("length: %d\n", this->length);
     printf("timestamp: %ld\n", this->timestamp);
     printf("payload: %s\n", this->_payload);

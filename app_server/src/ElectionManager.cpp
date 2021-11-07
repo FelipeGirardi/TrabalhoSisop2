@@ -41,14 +41,17 @@ void ElectionManager::startElection() {
 
         void *threadReturnValue;
         pthread_join(send_thread, &threadReturnValue);
+        cout << "voltou da thread" << endl;
         ErrorCodes *returnResult = (ErrorCodes *) threadReturnValue;
         hasReceivedSuccess = (*returnResult == SUCCESS);
+        cout << "valor de retorno da thread = " << *returnResult << endl;
 
     }
 
     if (hasReceivedSuccess) {
         cout << "ESPERA O COORDINATOR" << endl;
     } else {
+        cout << "Ganhou eleição" << endl;
         GlobalManager::electionManager.assumeCoordination();
     }
 
@@ -71,6 +74,7 @@ void ElectionManager::sendCoordinatorPacket(int sendSocket) {
 // envia mensagem de coordinator para todos os processos
 void ElectionManager::assumeCoordination() {
 
+    cout << "Elegendo-se líder" << endl;
     setNewCoordinatorIDToItself();
     int numberOfServers = this->servers.size();
 
@@ -84,7 +88,7 @@ void ElectionManager::assumeCoordination() {
 
 void* ElectionManager::send_election_message(void *data) {
 
-    ErrorCodes returnValue;
+    ErrorCodes *returnValue = new ErrorCodes;
     int *socket = (int*) data;
     Packet *sendPacket = new Packet;
     *sendPacket = GlobalManager::commManager.createEmptyPacket(ELECTION);
@@ -100,6 +104,8 @@ void* ElectionManager::send_election_message(void *data) {
     cout << "Enviando pacote ELECTION" << endl;
     if (GlobalManager::commManager.send_packet(*socket, sendPacket) == ERROR) {
         cout << "Não foi possivel enviar ELECTION" <<endl;
+        *returnValue = ERROR;
+        return (void *) returnValue;
     } else {
         cout << "ELECTION enviado com sucesso" << endl;
     }
@@ -111,16 +117,19 @@ void* ElectionManager::send_election_message(void *data) {
     // se estorou o tempo -> primario caiu
     if (readResult < 0 || receivedPacket == NULL || receivedPacket->type != ANSWER) {
         cout << "ERROR recebendo answer" << endl;
-        returnValue = ERROR;
+        *returnValue = ERROR;
+        return (void *) returnValue;
     }
     // se recebeu algo -> ok
     else {
         cout << "Recebeu answer com sucesso" << endl;
-        returnValue = SUCCESS;
+        *returnValue = SUCCESS;
     }
 
+    cout << "vai fazer delete" << endl;
     delete receivedPacket;
     delete sendPacket;
+    cout << "fez delete. saindo da thread." << endl;
 
     return (void *) returnValue;
 
@@ -170,4 +179,34 @@ void ElectionManager::setServers(vector<ServerInfo> servers) {
 }
 int ElectionManager::getNumberOfServers() {
     return this->servers.size();
+}
+void ElectionManager::sendExitToAllOtherServers() {
+    Packet *exitPacket = new Packet;
+    *exitPacket = GlobalManager::commManager.createExitPacket(this->currentServerID);
+
+    list<int> sockets;
+    for (int i=0; i < this->servers.size(); i++) {
+        if (i == this->currentServerID) { continue; }
+        ServerInfo info = this->servers[i];
+        sockets.push_back(info.sendSocket);
+    }
+
+    if (GlobalManager::commManager.sendPacketToSockets(sockets, exitPacket) == SUCCESS) {
+        cout << "Sucesso enviando EXIT para todos os servidores" << endl;
+    } else {
+        cout << "ERRO enviando EXIT para todos os servidores" << endl;
+    }
+
+}
+void ElectionManager::printItself() {
+    cout << endl << endl;
+    cout << " ---- SERVERS ---- " << endl << endl;
+
+    for (ServerInfo serverInfo : this->servers) {
+        cout << "ID = " << serverInfo._id << endl;
+        cout << "IP = " << serverInfo.ip << endl;
+        cout << "Send Socket = " << serverInfo.sendSocket << endl;
+        cout << "Receive Socket = " << serverInfo.receiveSocket << endl;
+    }
+
 }

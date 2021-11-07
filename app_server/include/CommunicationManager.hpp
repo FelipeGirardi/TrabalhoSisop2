@@ -24,8 +24,11 @@ namespace communicationManager {
         Packet createCoordinatorPacket(int idCurrentProcess);
         Packet createExitPacket();
         Packet createHelloPacket(int idCurrentProcess);
+        ErrorCodes sendPacketToSockets(list<int> sockets, Packet* package);
+        Packet createExitPacket(int idCurrentProcess);
 
-    };
+
+        };
 }
 
 

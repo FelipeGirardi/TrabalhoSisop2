@@ -50,6 +50,8 @@ public:
     void setServers(vector<ServerInfo> servers);
     void setNewCoordinatorIDToItself();
     int getNumberOfServers();
+    void sendExitToAllOtherServers();
+    void printItself();
 };
 
 typedef struct {

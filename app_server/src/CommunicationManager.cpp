@@ -25,7 +25,7 @@ namespace communicationManager {
 
     ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
         cout << "Enviando o pacote:" << endl;
-        package->printItself();
+        //package->printItself();
 
 //        int error = 0;
 //        socklen_t len = sizeof (error);
@@ -65,6 +65,27 @@ namespace communicationManager {
         }
         return returnValue;
     }
+
+    ErrorCodes CommunicationManager::sendPacketToSockets(list<int> sockets, Packet* package) {
+
+        cout << "Enviando o pacote de " << stringDescribingType(package->type) <<
+             " para o total de " << sockets.size() << " sockets." << endl;
+
+        if (sockets.empty()) { return SUCCESS; }
+
+        ErrorCodes returnValue = ERROR;
+        for (int socket : sockets) {
+
+            cout << "Enviando pacote para socket" << socket << endl;
+            if (this->send_packet(socket, package) >= 0) {
+                returnValue = SUCCESS;
+            }
+        }
+        return returnValue;
+    }
+
+
+
 
     /*
      * retorna SUCCESS quando conseguiu enviar a pelo menos uma das sessões do usuário
@@ -118,7 +139,7 @@ namespace communicationManager {
     }
     Packet CommunicationManager::createEmptyPacket(PacketType type) {
 
-        cout << "Criando pacote KEEP ALIVE" << endl;
+        cout << "Criando pacote vazio de " << stringDescribingType(type) << endl;
 
         Packet package;
         package.type = type;
@@ -138,6 +159,12 @@ namespace communicationManager {
         strncpy(package._payload, to_string(_id).c_str(), BUFFER_SIZE);
         package.length = strlen(package._payload);
         return package;
+    }
+
+    Packet CommunicationManager::createExitPacket(int idCurrentProcess) {
+
+        cout << "Criando pacote EXIT " << endl;
+        return createPacketWithID(idCurrentProcess, EXIT);
     }
 
     Packet CommunicationManager::createCoordinatorPacket(int idCurrentProcess) {
