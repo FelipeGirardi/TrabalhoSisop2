@@ -20,7 +20,8 @@ typedef enum PacketType {
     ELECTION,
     ANSWER,
     COORDINATOR,
-    HELLO_SERVER // server -> server
+    HELLO_SEND, // server -> server
+    HELLO_RECEIVE
 
 }PacketType;
 

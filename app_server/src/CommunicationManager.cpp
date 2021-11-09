@@ -173,10 +173,10 @@ namespace communicationManager {
         return createPacketWithID(idCurrentProcess, COORDINATOR);
     }
 
-    Packet CommunicationManager::createHelloPacket(int idCurrentProcess) {
+    Packet CommunicationManager::createHelloPacket(int idCurrentProcess, PacketType typeOfHello) {
 
-        cout << "Criando pacote HELLO " << endl;
-        return createPacketWithID(idCurrentProcess, HELLO_SERVER);
+        cout << "Criando pacote " << stringDescribingType(typeOfHello) << endl;
+        return createPacketWithID(idCurrentProcess, typeOfHello);
     }
 
     /*

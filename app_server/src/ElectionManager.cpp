@@ -15,6 +15,8 @@
 #include <pthread.h>
 #include <vector>
 
+using namespace std;
+
 ElectionManager::ElectionManager() {
 
 }
@@ -156,10 +158,12 @@ int ElectionManager::getCurrentCoordinatorSendSocket() {
 }
 
 void ElectionManager::setSendSocket(int sendSocket, int serverID) {
+    cout << "atualizando send socket do id = " << serverID << "para socket = " << sendSocket;
     this->servers[serverID].sendSocket = sendSocket;
 }
 
 void ElectionManager::setReceiveSocket(int receiveSocket, int serverID) {
+    cout << "atualizando receive socket do id = " << serverID << "para socket = " << receiveSocket;
     this->servers[serverID].receiveSocket = receiveSocket;
 }
 string ElectionManager::getIPfromID(int serverID) {

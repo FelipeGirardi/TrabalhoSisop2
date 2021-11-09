@@ -44,17 +44,18 @@ bool shouldEnd = false;
 typedef struct AuthResult {
     ErrorCodes result;
     SessionAuth *sessionAuth;
+    bool shouldCreateListenThread;
 }AuthResult;
 
 typedef struct {
     string ip;
     int port;
-} ServerIpAndPort;
+    PacketType typeOfPacket; //SEND ou RECEIVE
+} ServerArguments;
 
 // Declaracao funcoes auxiliares
 void closeAppHandler(int n_signal);
 void *connectToServer(void *data);
-int connectToServer(ServerIpAndPort _arguments);
 
 // Declaracao de funcoes de threads
 void *auth_client_func(void *data);
@@ -62,6 +63,7 @@ void *client_thread_func(void *data);
 void *send_keep_alive_thread_func(void *data);
 void *receive_server_events_thread_func(void *data);
 void sendHelloToServers(vector<ServerInfo> servers);
+ErrorCodes sendHelloToServer(ServerArguments _arguments, int _id);
 
 pthread_t keep_alive_thread;
 int port;
@@ -186,7 +188,7 @@ int main(int argc, char* argv[])
                 }
             }
             // conexão de um outro RM
-            else {
+            else if (myResult->shouldCreateListenThread){
                 cout << "Criando thread de recebimento de mensagens de servidores" << endl;
                 pthread_t keep_alive_thread;
                 pthread_create(&keep_alive_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
@@ -205,6 +207,42 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+ErrorCodes sendHelloToServer(ServerArguments _arguments, int _id) {
+
+    cout << "Sending a hello to server with id = " << _id;
+    ServerArguments *_argumentsPointer = new ServerArguments;
+    *_argumentsPointer = _arguments;
+
+    pthread_t connect_thread;
+    void *threadReturnValue;
+    pthread_create(&connect_thread, NULL, &connectToServer, (void *) _argumentsPointer);
+    pthread_join(connect_thread, &threadReturnValue);
+    int *returnResult = (int *) threadReturnValue;
+
+    if (*returnResult != INVALID_SOCKET) {
+        cout << "resultado valido" << endl;
+        if (_arguments.typeOfPacket == HELLO_SEND) {
+
+            GlobalManager::electionManager.setSendSocket(*returnResult, _id);
+        } else if (_arguments.typeOfPacket == HELLO_RECEIVE) {
+            GlobalManager::electionManager.setReceiveSocket(*returnResult, _id);
+
+            // cria thread recebimento
+            cout << "Criando thread recebimento de msg outros servidores" << endl;
+            int *pointerToSocket = (int*) malloc(sizeof (int));
+            *pointerToSocket = *returnResult;
+            pthread_t receiving_thread;
+            pthread_create(&receiving_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
+
+        }
+        return SUCCESS;
+    } else {
+        cout << "resultado invalido" << endl;
+    }
+    return ERROR;
+
+}
+
 void sendHelloToServers(vector<ServerInfo> servers) {
     cout << "Iniciando o envio de HELLO" << endl;
 
@@ -214,29 +252,26 @@ void sendHelloToServers(vector<ServerInfo> servers) {
     for (int i = 0; i < servers.size(); i++) {
         if (i == GlobalManager::electionManager.getProcessID()) { continue; }
 
-        ServerIpAndPort *_arguments = new ServerIpAndPort;
-        _arguments->ip = servers[i].ip;
-        _arguments->port = port;
+        string _ip = GlobalManager::electionManager.getIPfromID(i);
 
-        pthread_t connect_thread;
-        void *threadReturnValue;
-        pthread_create(&connect_thread, NULL, &connectToServer, (void *) _arguments);
-        pthread_join(connect_thread, &threadReturnValue);
-        int *returnResult = (int *) threadReturnValue;
-
-        if (*returnResult != INVALID_SOCKET) {
-            cout << "resultado valido" << endl;
-            GlobalManager::electionManager.setSendSocket(*returnResult, i);
-            validResponseCounter += 1;
-        } else {
-            cout << "resultado invalido" << endl;
+        ServerArguments _arguments = { .ip=_ip, .port=port, .typeOfPacket= HELLO_SEND,};
+        cout << "Enviando HELLO SEND" << endl;
+        ErrorCodes successSend = sendHelloToServer(_arguments, i);
+        if (successSend) {
+            cout << "Sucesso enviando HELLO SEND" << endl;
+            ServerArguments _arguments2 = { .ip=_ip, .port=port, .typeOfPacket= HELLO_RECEIVE,};
+            cout << "Enviando HELLO RECEIVE" << endl;
+            ErrorCodes successReceive = sendHelloToServer(_arguments2, i);
+            if (successReceive) {
+                cout << "Sucesso enviando HELLO RECEIVE" << endl;
+                validResponseCounter += 1;
+            }
         }
 
     }
-
     //se assume lider
     if (validResponseCounter == 0) {
-        cout << "Assumindo liderança" << endl;
+        cout << "Assumindo liderança - Primeiro Primário" << endl;
         GlobalManager::electionManager.setNewCoordinatorIDToItself();
     } else  {
         cout << "Já há um líder." << endl;
@@ -253,9 +288,10 @@ void *connectToServer(void *data) {
     int sockfd;
     int timeout_in_seconds = 2;
     int *returnValue = (int *) malloc(sizeof (int));
-    ServerIpAndPort *_arguments = (ServerIpAndPort *) data;
+    ServerArguments *_arguments = (ServerArguments *) data;
     string serverIP = _arguments->ip;
     int port = _arguments->port;
+    PacketType packetType = _arguments->typeOfPacket;
 
     cout << "Connecting to server of ip = " << serverIP << endl;
 
@@ -291,13 +327,13 @@ void *connectToServer(void *data) {
 
     Packet *packet = new Packet;
     int idCurrentProcess = GlobalManager::electionManager.getProcessID();
-    *packet = GlobalManager::commManager.createHelloPacket(idCurrentProcess);
+    *packet = GlobalManager::commManager.createHelloPacket(idCurrentProcess, packetType);
     if (GlobalManager::commManager.send_packet(sockfd, packet) == ERROR) {
-        cout << "ERROR enviando HELLO SERVER" << endl;
+        cout << "ERROR enviando HELLO number = " << packetType << endl;
         *returnValue = INVALID_SOCKET;
         return (void *) returnValue;
     } else {
-        cout << "Sucesso enviando HELLO SERVER" << endl;
+        cout << "Sucesso enviando HELLO number = " << packetType << endl;
     };
 
     //espera ACK
@@ -319,77 +355,6 @@ void *connectToServer(void *data) {
     free(receivedPacket);
 
     return (void *) returnValue;
-
-}
-
-int connectToServer(ServerIpAndPort _arguments) {
-
-    // cria conexao com outro servidor
-    struct sockaddr_in serv_addr;
-    struct hostent *server;
-    int sockfd;
-    int timeout_in_seconds = 2;
-    int returnValue;
-    string serverIP = _arguments.ip;
-    int port = _arguments.port;
-
-    cout << "Connecting to server of ip = " << serverIP << endl;
-
-    // seta timeout
-    struct timeval tv;
-    tv.tv_sec = timeout_in_seconds;
-    tv.tv_usec = 0;
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
-
-    server = gethostbyname(serverIP.c_str());
-    if (server == NULL) {
-        cout << "ERROR connecting to server" << endl;
-        return INVALID_SOCKET;
-    }
-
-    if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-        cout << "ERROR opening socket" << endl;
-        return INVALID_SOCKET;
-    }
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(port);
-    serv_addr.sin_addr = *((struct in_addr *)server->h_addr);
-    bzero(&(serv_addr.sin_zero), 8);
-
-    if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) {
-        cout << "ERROR connecting" << endl;
-        return INVALID_SOCKET;
-    }
-
-    Packet *packet = new Packet;
-    int idCurrentProcess = GlobalManager::electionManager.getProcessID();
-    *packet = GlobalManager::commManager.createHelloPacket(idCurrentProcess);
-    if (GlobalManager::commManager.send_packet(sockfd, packet) == ERROR) {
-        cout << "ERROR enviando HELLO SERVER" << endl;
-        return INVALID_SOCKET;
-    } else {
-        cout << "Sucesso enviando HELLO SERVER" << endl;
-    };
-
-    //espera ACK
-    Packet *receivedPacket = new Packet;
-    int readResult = read(sockfd, receivedPacket, sizeof(Packet));
-
-    // se estorou o tempo -> servidor nao esta ativo
-    if (readResult < 0 || receivedPacket == NULL || receivedPacket->type == 0) {
-        cout << "Servidor não respondeu no tempo" << endl;
-        return INVALID_SOCKET;
-    }
-        // se recebeu algo -> ok
-    else {
-        cout << "Servidor respondeu no tempo" << endl;
-        returnValue = sockfd;
-    }
-
-    free(receivedPacket);
-
-    return returnValue;
 
 }
 
@@ -534,6 +499,7 @@ void *auth_client_func(void *data) {
 
     int *receivedSocket = (int*) data;
     int client_socket = *receivedSocket;
+    int shouldSendCoordinator = false;
     cout << "Iniciando authenticação do socket = " << client_socket << endl;
     Packet *receivedPacket = new Packet;
     AuthResult *finalResult = new AuthResult;
@@ -543,15 +509,18 @@ void *auth_client_func(void *data) {
     if (readResult < 0 || (receivedPacket->type != USERNAME
     && receivedPacket->type != EXIT
     && receivedPacket->type != KEEP_ALIVE
-    && receivedPacket->type != HELLO_SERVER)) {
+    && receivedPacket->type != HELLO_SEND
+    && receivedPacket->type != HELLO_RECEIVE)) {
         cout <<"ERRO lendo do socket. Fechando." << endl;
         finalResult->result = ERROR;
         finalResult->sessionAuth = NULL;
+        finalResult->shouldCreateListenThread = false;
         *responsePacket = GlobalManager::commManager.createGenericNackPacket();
     } else if (receivedPacket->type == EXIT) {
         cout <<"Sucesso recebendo EXIT. Fechando." << endl;
         finalResult->result = ERROR;
         finalResult->sessionAuth = NULL;
+        finalResult->shouldCreateListenThread = false;
         *responsePacket = GlobalManager::commManager.createAckPacketForType(EXIT);
     } else if (receivedPacket->type == USERNAME) {
         SessionAuth *sessionAuth = SessionAuth::fromBytes(receivedPacket->_payload);
@@ -573,36 +542,33 @@ void *auth_client_func(void *data) {
             finalResult->result = SUCCESS;
             *responsePacket = GlobalManager::commManager.createAckPacketForType(USERNAME);
         }
+        finalResult->shouldCreateListenThread = false;
     } else if (receivedPacket->type == KEEP_ALIVE) {
         cout << "Keep Alive recebido com sucesso" << endl;
         finalResult->result = SUCCESS;
         finalResult->sessionAuth = NULL;
+        finalResult->shouldCreateListenThread = false;
         *responsePacket = GlobalManager::commManager.createAckPacketForType(KEEP_ALIVE);
     }
-    else if (receivedPacket->type == HELLO_SERVER) {
-        cout << "HELLO recebido com sucesso" << endl;
+    else if (receivedPacket->type == HELLO_SEND) {
+        *responsePacket = GlobalManager::commManager.createAckPacketForType(HELLO_SEND);
         int newProcessID = atoi(receivedPacket->_payload);
         GlobalManager::electionManager.setReceiveSocket(client_socket, newProcessID);
-        *responsePacket = GlobalManager::commManager.createAckPacketForType(HELLO_SERVER);
-        GlobalManager::commManager.send_packet(client_socket, responsePacket);
-
-        //cria conexão de envio para novo processo se for o caso
-        if (!GlobalManager::electionManager.hasValidSendSocketForServer(newProcessID)) {
-            cout << "Send Socket invalido. Criando nova conexão" << endl;
-            string ip = GlobalManager::electionManager.getIPfromID(newProcessID);
-            int sendSocket = connectToServer({.ip= ip, .port=port});
-            GlobalManager::electionManager.setSendSocket(sendSocket, newProcessID);
-
-            //manda coordinator se for o caso
-            if (GlobalManager::electionManager.isCurrentProcessCoordinator()) {
-                GlobalManager::electionManager.sendCoordinatorPacket(sendSocket);
-            }
-        }
+        finalResult->result = SUCCESS;
+        finalResult->sessionAuth = NULL;
+        finalResult->shouldCreateListenThread = true;
+    }
+    else if (receivedPacket->type == HELLO_RECEIVE) {
+        cout << "HELLO RECEIVE recebido com sucesso" << endl;
+        int newProcessID = atoi(receivedPacket->_payload);
+        GlobalManager::electionManager.setSendSocket(client_socket, newProcessID);
 
         finalResult->result = SUCCESS;
         finalResult->sessionAuth = NULL;
+        finalResult->shouldCreateListenThread = false;
+        shouldSendCoordinator = GlobalManager::electionManager.isCurrentProcessCoordinator();
 
-        *responsePacket = GlobalManager::commManager.createAckPacketForType(HELLO_SERVER);
+        *responsePacket = GlobalManager::commManager.createAckPacketForType(HELLO_RECEIVE);
 
     }
 
@@ -612,6 +578,18 @@ void *auth_client_func(void *data) {
     } else {
         cout << "ACK/NACK enviado com sucesso" << endl;
     }
+
+    if (shouldSendCoordinator) {
+        cout << "Enviando pacote coordinator para nova conexão" << endl;
+        int _id = GlobalManager::electionManager.getProcessID();
+        *responsePacket =  GlobalManager::commManager.createCoordinatorPacket(_id);
+        if (GlobalManager::commManager.send_packet(client_socket, responsePacket) == ERROR) {
+            cout << "ERRO enviando COORDINATOR" <<endl;
+        } else {
+            cout << "COORDINATOR enviado com sucesso" << endl;
+        }
+    }
+
     free(receivedPacket);
     free(responsePacket);
 
