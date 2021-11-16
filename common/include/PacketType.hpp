@@ -15,11 +15,14 @@ typedef enum PacketType {
     FOLLOW, // client -> server
     SERVER_ACK, // server -> client
     SERVER_ERROR, // server -> client
+    LOGIN,
     EXIT, // client -> server or server -> client
+
     KEEP_ALIVE, // secondary server -> primary server
     ELECTION,
     ANSWER,
     COORDINATOR,
+
     HELLO_SEND, // server -> server
     HELLO_RECEIVE
 

@@ -24,6 +24,7 @@
 #include "../include/utils/ErrorCodes.hpp"
 #include "../../common/include/Packet.hpp"
 #include "../../common/include/SessionAuth.hpp"
+#include "../include/ServerAndFrontEndInfo.h"
 
 using namespace userInformation;
 using namespace profileSessionManager;
@@ -47,19 +48,12 @@ typedef struct AuthResult {
     bool shouldCreateListenThread;
 }AuthResult;
 
-typedef struct {
-    string ip;
-    int port;
-    PacketType typeOfPacket; //SEND ou RECEIVE
-} ServerArguments;
-
 // Declaracao funcoes auxiliares
 void closeAppHandler(int n_signal);
 void *connectToServer(void *data);
 
 // Declaracao de funcoes de threads
 void *auth_client_func(void *data);
-void *client_thread_func(void *data);
 void *send_keep_alive_thread_func(void *data);
 void *receive_server_events_thread_func(void *data);
 void sendHelloToServers(vector<ServerInfo> servers);
@@ -86,7 +80,7 @@ int main(int argc, char* argv[])
     GlobalManager::commManager = comunicationManager;
     GlobalManager::electionManager = electionManager;
 
-    // pega de um arquivo instancias do servidor (só com ID)
+    // pega do arquivo instancias do servidor (só com ID)
     vector<ServerInfo> servers = fileManager.getServersFromFile();
 
     //seta servidores no election manager
@@ -100,13 +94,9 @@ int main(int argc, char* argv[])
     cout << "ip deste servidor = " << serverIP;
     cout << "size = " << serverIP.size();
 
-    // carrega estruturas de dados do arquivo (usuários + notificações)
-    users = fileManager.getUsersFromFile();
-    notifications = fileManager.getNotificationsFromFile();
-    GlobalManager::sessionManager.setUsers(users);
-    GlobalManager::notifManager.setNotifications(notifications);
-
-    GlobalManager::printItself();
+    // pega do arquivo instancias do front end
+    vector<FrontEndInfo> frontEnds = fileManager.getFrontEndsFromFile();
+    GlobalManager::frontEndManager.setFrontEnds(frontEnds);
 
 	int sockfd, option = 1;
 	struct sockaddr_in serv_addr;
@@ -173,27 +163,12 @@ int main(int argc, char* argv[])
 
             if (myResult->result != SUCCESS) { continue; }
 
-            // conexão de um usuário
-            if (myResult->sessionAuth != NULL) {
-                if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
-                    pthread_t client_thread;
-                    cout << "Criando thread de leitura de comandos de usuarios" << endl;
-                    SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
-                    pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
-                } else {
-                    string username = myResult->sessionAuth->getProfileId();
-                    GlobalManager::sessionManager.users[username]
-                    .startListeningForNotifications();
-
-                }
-            }
             // conexão de um outro RM
-            else if (myResult->shouldCreateListenThread){
+            if (myResult->shouldCreateListenThread){
                 cout << "Criando thread de recebimento de mensagens de servidores" << endl;
                 pthread_t keep_alive_thread;
                 pthread_create(&keep_alive_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
             }
-
 
         }
     }
@@ -602,79 +577,8 @@ void *auth_client_func(void *data) {
 
 }
 
-void *client_thread_func(void *data) {
-    int readResult;
-    char buffer[BUFFER_SIZE];
-    int _exit = 0;
-
-    SessionAuth *sessionAuthData = (SessionAuth*) data;
-    UserInformation userInfo = GlobalManager::sessionManager.getUserByUsername(sessionAuthData->getProfileId());
-    Session session = userInfo.getSessionWithID(sessionAuthData->getUuid());
-
-    int commandSocket = session.client_socket;
-
-    // inicia leitura de comandos do cliente
-    cout << "Iniciando leitura de comandos do socket " << commandSocket << " do user" << userInfo.username;
-    while(!_exit) {
-        bzero(buffer, BUFFER_SIZE);
-
-        Packet *receivedPacket = new Packet;
-        readResult = read(commandSocket, receivedPacket, sizeof(Packet));
-
-        if (readResult < 0 || !(receivedPacket->type == SEND || receivedPacket->type == FOLLOW || receivedPacket->type == EXIT)) {
-            free(receivedPacket);
-            printf("ERRO lendo do socket. Desconectando.");
-            break;
-        }
-        cout << "Pacote recebido:" << endl;
-        receivedPacket->printItself();
-        strcpy(buffer, receivedPacket->_payload);
-
-        Packet *responsePacket = new Packet;
-
-        if(receivedPacket->type == FOLLOW) {
-            cout << "Recebeu comando FOLLOW" << endl;
-            ErrorCodes followResult = GlobalManager::sessionManager.addNewFollowerToUser(userInfo.username,
-                                                                                    receivedPacket->_payload);
-            if (followResult == SUCCESS)
-                *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
-            else
-                *responsePacket = GlobalManager::commManager.createGenericNackPacket();
-
-        } else if(receivedPacket->type == SEND) {
-            GlobalManager::notifManager.newNotificationSentBy(userInfo.username, receivedPacket->_payload);
-            cout << "Recebeu comando SEND" << endl;
-            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
-        } else if(receivedPacket->type == EXIT) {
-            cout << "Recebeu comando EXIT" << endl;
-            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
-            _exit = 1;
-        }
-
-        cout << "Enviando pacote ACK/NACK recebimento de comando **" << endl;
-        if (GlobalManager::commManager.send_packet(commandSocket, responsePacket) == ERROR) {
-            cout << "Não foi possivel enviar ACK/NACK" <<endl;
-        } else {
-            cout << "ACK/NACK enviado com sucesso" << endl;
-        }
-        free(receivedPacket);
-        free(responsePacket);
-
-    }
-
-    cout << "Termina sessão com usuário" << endl;
-    GlobalManager::sessionManager.endSessionWithID(sessionAuthData->getUuid(), sessionAuthData->getProfileId());
-    cout << sessionAuthData->getProfileId() << " desconectado" << endl;
-    return 0;
-}
-
 void closeAppHandler(int n_signal) {
     signal(n_signal, SIG_IGN);
-    // salva status dos perfis no arquivo
-    cout << "Salvando perfis e notificações...\n";
-    fileManager.saveUsersOnFile(GlobalManager::sessionManager.getUsers());
-    fileManager.saveNotificationsOnFile(GlobalManager::notifManager.getNotifications());
-    cout << "Perfis e notificações salvos!\n";
 
     Packet exitPacket = GlobalManager::commManager.createExitPacket();
     Packet *packetPointer = (Packet *) malloc(sizeof (Packet));

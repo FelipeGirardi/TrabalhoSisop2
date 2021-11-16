@@ -17,7 +17,8 @@ DEBUG_MODE = -g
 
 all: build-directories common CommunicationManager.o FileManager.o GlobalManager.o \
          NotificationManager.o ProfileSessionManager.o tcp_server.o \
-		 UserInformation.o ElectionManager.o utils/StringExtensions.o Session.o
+		 UserInformation.o ElectionManager.o utils/StringExtensions.o Session.o \
+		 FrontEndCommunicationManager.o
 
 	g++ -o $(BIN_DIR)/serverApp $(COMMON_OBJ_DIR)/*.o $(OBJ_DIR)/*.o -luuid -lpthread
 ###
@@ -53,6 +54,9 @@ utils/StringExtensions.o:
 
 Session.o:
 	g++ -std=c++11 -o $(OBJ_DIR)/Session.o -c $(SRC_DIR)/Session.cpp
+
+FrontEndCommunicationManager.o: $(SRC_DIR)/FrontEndCommunicationManager.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/FrontEndCommunicationManager.o -c $(SRC_DIR)/FrontEndCommunicationManager.cpp $(INCLUDE_PATH)
 
 ###
 # Scripts

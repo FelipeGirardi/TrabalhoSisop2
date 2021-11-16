@@ -12,6 +12,8 @@ std::string stringDescribingType(PacketType type) {
             return "FOLLOW";
         case EXIT:
             return "EXIT";
+        case LOGIN:
+            return "LOGIN";
         case USERNAME:
             return "USERNAME";
         case KEEP_ALIVE:
@@ -22,8 +24,10 @@ std::string stringDescribingType(PacketType type) {
             return "COORDINATOR";
         case ANSWER:
             return "ANSWER";
-        case HELLO_SERVER:
-            return "HELLO_SERVER";
+        case HELLO_SEND:
+            return "HELLO_SEND";
+        case HELLO_RECEIVE:
+            return "HELLO_RECEIVE";
         default:
             return "";
     }

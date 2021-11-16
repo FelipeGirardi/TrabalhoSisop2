@@ -8,6 +8,7 @@ ProfileSessionManager GlobalManager::sessionManager;
 NotificationManager GlobalManager::notifManager;
 CommunicationManager GlobalManager::commManager;
 ElectionManager GlobalManager::electionManager;
+FrontEndCommunicationManager GlobalManager::frontEndManager;
 
 using namespace notification;
 

@@ -17,6 +17,8 @@ namespace communicationManager {
     public:
         ErrorCodes send_packet(int socket, Packet *package);
         ErrorCodes sendNotificationToSessions(list<Session> sessions, Notification notification);
+        ErrorCodes sendNotificationToFrontEnds(string username, Notification notification);
+        ErrorCodes sendPacketToFrontEnds(Packet *packet);
         ErrorCodes sendPacketToSessions(list<Session> sessions, Packet *package);
         Packet createAckPacketForType(PacketType type);
         Packet createGenericNackPacket();

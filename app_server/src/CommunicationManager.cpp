@@ -15,7 +15,11 @@
 #include "../include/Session.hpp"
 #include "../../common/include/Notification.hpp"
 #include "../../common/include/PacketType.hpp"
+#include "../../common/include/FrontEndPayload.hpp"
 #include "../include/utils/ErrorCodes.hpp"
+#include "../include/ServerAndFrontEndInfo.h"
+#include "../include/FrontEndCommunicationManager.hpp"
+#include "../include/GlobalManager.hpp"
 
 using namespace std;
 using namespace notification;
@@ -85,8 +89,6 @@ namespace communicationManager {
     }
 
 
-
-
     /*
      * retorna SUCCESS quando conseguiu enviar a pelo menos uma das sessões do usuário
      * retorna ERROR caso contrário
@@ -108,6 +110,40 @@ namespace communicationManager {
         packet->length = sizeof(packet->_payload);
 
         return sendPacketToSessions(sessions, packet);
+    }
+
+    ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
+                                                                 Notification notification) {
+        cout << "Notificação sendo enviada " << notification.toString() << endl;
+
+        Packet* packet = new Packet;
+        packet->timestamp = time(NULL);
+        packet->type = NOTIFICATION;
+
+        FrontEndPayload *frontEndPayload = new FrontEndPayload;
+        frontEndPayload->commandContent = notification.toString();
+        frontEndPayload->senderUsername = username;
+
+        memcpy(packet->_payload, frontEndPayload->toBytes(), BUFFER_SIZE);
+
+        return sendPacketToFrontEnds(packet);
+
+    }
+
+    ErrorCodes CommunicationManager::sendPacketToFrontEnds(Packet *packet) {
+
+        vector<FrontEndInfo> frontEnds = GlobalManager::frontEndManager.getFrontEnds();
+
+        for (auto frontEnd : frontEnds) {
+            if (send_packet(frontEnd.sendSocket, packet) == SUCCESS) {
+                cout << "SUCESSO enviando pacote para front end" << endl;
+           } else {
+                cout << "ERRO enviando pacote para front end" << endl;
+            }
+        }
+
+        // assumimos garantia de entrega para front end
+        return SUCCESS;
     }
 
     Packet CommunicationManager::createAckPacketForType(PacketType type) {

@@ -16,11 +16,14 @@ HEADERS_DIR = include
 INCLUDE_PATH = -I$(HEADERS_DIR)
 DEBUG_MODE = -g
 
-all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o SessionAuth.o
+all: build-directories Notification.o Packet.o PacketType.o StringExtensions.o SessionAuth.o FrontEndPayload.o
 
 ###
 # Main object files
 ###
+
+FrontEndPayload.o: $(SRC_DIR)/FrontEndPayload.cpp
+	g++ -std=c++11 -o $(OBJ_DIR)/FrontEndPayload.o -c $(SRC_DIR)/FrontEndPayload.cpp $(INCLUDE_PATH)
 
 Notification.o: $(SRC_DIR)/Notification.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/Notification.o -c $(SRC_DIR)/Notification.cpp $(INCLUDE_PATH)
@@ -36,6 +39,8 @@ SessionAuth.o: $(SRC_DIR)/SessionAuth.cpp
 
 StringExtensions.o: $(SRC_DIR)/StringExtensions.cpp
 	g++ -std=c++11 -o $(OBJ_DIR)/StringExtensions.o -c $(SRC_DIR)/StringExtensions.cpp $(INCLUDE_PATH)
+
+
 
 ###
 # Test object files

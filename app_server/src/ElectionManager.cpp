@@ -8,6 +8,7 @@
 #include "../include/GlobalManager.hpp"
 #include "../../common/include/Packet.hpp"
 #include "../../common/include/PacketType.hpp"
+#include "../include/ServerAndFrontEndInfo.h"
 #include <sys/socket.h>
 #include <iostream>
 #include <stdlib.h>

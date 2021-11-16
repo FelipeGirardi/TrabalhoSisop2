@@ -7,18 +7,10 @@
 
 #include <vector>
 #include <string>
+#include "ServerAndFrontEndInfo.h"
 #define INVALID_SOCKET -1
 
 using namespace std;
-
-typedef struct {
-
-    int _id;
-    int sendSocket;
-    int receiveSocket;
-    string ip;
-
-} ServerInfo;
 
 class ElectionManager {
 
