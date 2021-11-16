@@ -121,8 +121,9 @@ namespace communicationManager {
         packet->type = NOTIFICATION;
 
         FrontEndPayload *frontEndPayload = new FrontEndPayload;
-        frontEndPayload->commandContent = notification.toString();
-        frontEndPayload->senderUsername = username;
+
+        strncpy(frontEndPayload->commandContent, notification.toString().c_str(), 100);
+        strncpy(frontEndPayload->senderUsername, username.c_str(), 100);
 
         memcpy(packet->_payload, frontEndPayload->toBytes(), BUFFER_SIZE);
 

@@ -87,6 +87,10 @@ void ElectionManager::assumeCoordination() {
         cout << "Enviando pacote COORDINATOR para id = " << i << endl;
         sendCoordinatorPacket(sendSocket);
     }
+
+    cout << "Se apresenta para front ends" << endl;
+    GlobalManager::frontEndManager.sendHelloToFrontEnds();
+
 }
 
 void* ElectionManager::send_election_message(void *data) {

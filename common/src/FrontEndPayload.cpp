@@ -8,17 +8,16 @@ FrontEndPayload* FrontEndPayload::fromBytes(char* sessionAuthInBytes)
 {
     FrontEndPayload *parsedFrontEndPayload = (FrontEndPayload*)sessionAuthInBytes;
 
-//    auto sessionAuthCopy = new FrontEndPayload(
-//            parsedFrontEndPayload->commandContent,
-//            parsedSessionAuth->getSocketType(),
-//            (char*)parsedSessionAuth->getUuid().c_str()
-//    );
-
+//    FrontEndPayload *sessionAuthCopy;
+//    sessionAuthCopy->commandContent = parsedFrontEndPayload->commandContent;
+//    sessionAuthCopy->senderUsername = parsedFrontEndPayload->senderUsername;
     return parsedFrontEndPayload;
 }
 
 char* FrontEndPayload::toBytes()
 {
-    //auto sessionAuthCopy = new SessionAuth(_profileId, _socketType, _uuid);
-    return (char*)this;
+    FrontEndPayload *sessionAuthCopy = new FrontEndPayload;
+//    sessionAuthCopy->commandContent = this->commandContent;
+//    sessionAuthCopy->senderUsername = this->senderUsername;
+    return (char*)sessionAuthCopy;
 }

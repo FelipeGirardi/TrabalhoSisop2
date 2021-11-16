@@ -12,8 +12,8 @@ using namespace std;
 class FrontEndPayload {
 
 public:
-    string senderUsername;
-    string commandContent;
+    char *commandContent;
+    char *senderUsername;
     static FrontEndPayload* fromBytes(char* sessionAuthInBytes);
     char* toBytes();
 

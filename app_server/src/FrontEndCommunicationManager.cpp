@@ -21,10 +21,11 @@ void FrontEndCommunicationManager::setFrontEnds(vector<FrontEndInfo> frontEnds) 
 void FrontEndCommunicationManager::sendHelloToFrontEnds() {
     cout << "Iniciando o envio de HELLO para front ends" << endl;
 
-    int numberOfServers = GlobalManager::electionManager.getNumberOfServers();
+    int numberOfFrontEnds = this->frontEnds.size();
+    cout << "number of servers = " << numberOfFrontEnds << endl;
 
-    for (int i = 0; i < this->frontEnds.size(); i++) {
-        cout << "Enviando HELLO SEND" << endl;
+    for (int i = 0; i < numberOfFrontEnds; i++) {
+        cout << "Enviando HELLO SEND i = "  << i << endl;
         ErrorCodes successSend = sendHelloToFrontEnd(frontEnds[i], HELLO_SEND, i);
         if (successSend) {
             cout << "Sucesso enviando HELLO SEND" << endl;
@@ -60,22 +61,6 @@ ErrorCodes FrontEndCommunicationManager::sendHelloToFrontEnd(FrontEndInfo frontE
             GlobalManager::frontEndManager.setSendSocket(*returnResult, idFrontEnd);
         } else if (_arguments->typeOfPacket == HELLO_RECEIVE) {
             GlobalManager::frontEndManager.setReceiveSocket(*returnResult, idFrontEnd);
-
-
-//            // conexão de um usuário
-//            if (myResult->sessionAuth != NULL) {
-//                if (myResult->sessionAuth->getSocketType() == COMMAND_SOCKET) {
-//                    pthread_t client_thread;
-//
-//                    SessionAuth *pointerToSessionAuth = myResult->sessionAuth;
-//                    pthread_create(&client_thread, NULL, &client_thread_func, (void *) pointerToSessionAuth);
-//                } else {
-//                    string username = myResult->sessionAuth->getProfileId();
-//                    GlobalManager::sessionManager.users[username]
-//                            .startListeningForNotifications();
-//
-//                }
-//            }
 
             cout << "Criando thread de leitura de comandos de front ends" << endl;
             int *pointerToSocket = (int*) malloc(sizeof (int));
@@ -181,20 +166,22 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
     int commandSocket = *socket;
 
     // inicia leitura de comandos do cliente
-    cout << "Iniciando leitura de comandos do socket " << commandSocket;
+    cout << "Iniciando leitura de comandos do socket = " << commandSocket << endl;
 
     while(!_exit) {
         bzero(buffer, BUFFER_SIZE);
 
         Packet *receivedPacket = new Packet;
-        readResult = read(commandSocket, receivedPacket, sizeof(Packet));
+        readResult = read(commandSocket, receivedPacket, 256);
+        cout << "numero do tipo do pacote recebido = " << receivedPacket->type << endl;
+        cout << "desc = " << stringDescribingType(receivedPacket->type) << endl;
 
         if (readResult < 0 || !(receivedPacket->type == SEND ||
         receivedPacket->type == FOLLOW ||
         receivedPacket->type == EXIT ||
         receivedPacket->type == LOGIN)) {
             free(receivedPacket);
-            printf("ERRO lendo do socket. Desconectando.");
+            printf("ERRO lendo do socket. Desconectando.\n");
             break;
         }
         cout << "Pacote recebido:" << endl;

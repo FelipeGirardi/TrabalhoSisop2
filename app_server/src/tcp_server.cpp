@@ -96,6 +96,7 @@ int main(int argc, char* argv[])
 
     // pega do arquivo instancias do front end
     vector<FrontEndInfo> frontEnds = fileManager.getFrontEndsFromFile();
+    cout << "main front ends = " << frontEnds.size() << endl;
     GlobalManager::frontEndManager.setFrontEnds(frontEnds);
 
 	int sockfd, option = 1;
@@ -248,6 +249,8 @@ void sendHelloToServers(vector<ServerInfo> servers) {
     if (validResponseCounter == 0) {
         cout << "Assumindo liderança - Primeiro Primário" << endl;
         GlobalManager::electionManager.setNewCoordinatorIDToItself();
+        cout << "Send Hello Front ends" << endl;
+        GlobalManager::frontEndManager.sendHelloToFrontEnds();
     } else  {
         cout << "Já há um líder." << endl;
     }
