@@ -16,92 +16,15 @@ using namespace userInformation;
 using namespace notification;
 using namespace std;
 
-unordered_map <string, UserInformation> FileManager::getUsersFromFile() {
-
-    unordered_map <string, UserInformation> users;
+vector<FrontEndInfo> FileManager::getFrontEndsFromFile() {
     StringExtensions stringParser;
+    vector<FrontEndInfo> frontEndsInfo;
 
     string line;
-    ifstream myfile (this->filename);
-    if (myfile.is_open())
-    {
-        while ( getline (myfile,line) )
-        {
-            vector<string> splitedString = stringParser.split(line, this->delimiter);
+    ifstream myfile (this->frontEndsFilename);
+    if (myfile.is_open()) {
 
-            if (splitedString.size() == 3) {
-
-                string username = splitedString[0];
-                vector<string> followers = stringParser.split(splitedString[1],
-                                                              this->arrayDelimiter);
-                list<string> followersList(followers.begin(), followers.end());
-                vector<string> notifications = stringParser.split(splitedString[2],
-                                                                  this->arrayDelimiter);
-                list<string> notificationsList(notifications.begin(), notifications.end());
-
-                users[username] = UserInformation(username,
-                                                  notificationsList,
-                                                  followersList);
-            } else {
-                cout << "Invalid file line";
-            }
-        }
-        myfile.close();
-    }
-
-    else cout << "Unable to open users file";
-
-    return users;
-
-}
-
-void FileManager::saveUsersOnFile(unordered_map<string, UserInformation>users) {
-
-    ofstream file;
-    file.open (this->filename);
-    if (file.is_open()) {
-
-        for (auto user_pair: users) {
-            file << user_pair.first << this->delimiter;
-            UserInformation userInfo = user_pair.second;
-            for (string follower : userInfo.getFollowers()) {
-                file << follower << this->arrayDelimiter;
-            }
-            file << this->delimiter;
-            for (string notification : userInfo.getPendingNotifications()) {
-                file << notification << this->arrayDelimiter;
-            }
-            file << this->delimiter << endl;
-        }
-        file.close();
-    } else {
-        cout << "Unable to open users file";
-    }
-}
-void FileManager::saveNotificationsOnFile(unordered_map<string, Notification> notifications) {
-    ofstream file;
-    file.open (this->notificationsFilename);
-    if (file.is_open()) {
-        for (auto notif_pair: notifications) {
-            file << notif_pair.first << this->delimiter;
-            Notification notif = notif_pair.second;
-            file << notif.toString();
-            file << this->delimiter << endl;
-        }
-        file.close();
-    } else {
-        cout << "Unable to open notification file";
-    }
-
-}
-unordered_map<string, Notification> FileManager::getNotificationsFromFile() {
-    unordered_map <string, Notification> notifications;
-    StringExtensions stringParser;
-
-    string line;
-    ifstream myfile (this->notificationsFilename);
-    if (myfile.is_open())
-    {
+        // line format = front end IP | front end port |
         while ( getline (myfile,line) )
         {
             vector<string> splitedString = stringParser.split(line, this->delimiter);
@@ -109,26 +32,55 @@ unordered_map<string, Notification> FileManager::getNotificationsFromFile() {
                 cout << "Invalid file line";
                 break;
             }
-            vector<string> splitedStringArgs = stringParser.split(splitedString[1], this->arrayDelimiter);
 
-            //TODO: dar um jeito nesse 5
-            if (splitedStringArgs.size() == 5) {
-                string id = splitedStringArgs[0];
-                string text = splitedStringArgs[1];
-                string username = splitedStringArgs[2];
-                long int time = stoi(splitedStringArgs[3]);
-                int pendingReaders = stoi(splitedStringArgs[4]);
+            string ip = splitedString[0];
+            int port = stoi(splitedString[1]);
 
-                Notification newNotif = Notification(id, text, username,
-                                                     time, pendingReaders);
-                notifications[id] = newNotif;
-            } else {
-                cout << "Invalid file line";
-            }
+            FrontEndInfo newFrontEndInfo = {
+                    .ip=ip,
+                    .port=port,
+                    .sendSocket = INVALID_SOCKET,
+                    .receiveSocket = INVALID_SOCKET
+            };
+            frontEndsInfo.push_back(newFrontEndInfo);
         }
+
         myfile.close();
     }
-    else cout << "Unable to open notification file";
-    return notifications;
+    else cout << "Unable to open front ends file";
+    return frontEndsInfo;
+}
 
+vector<ServerInfo> FileManager::getServersFromFile() {
+    StringExtensions stringParser;
+    vector<ServerInfo> serversInfo;
+
+    string line;
+    ifstream myfile (this->serversFilename);
+    if (myfile.is_open()) {
+
+        // line format = server ID | server IP |
+        while ( getline (myfile,line) )
+        {
+            vector<string> splitedString = stringParser.split(line, this->delimiter);
+            if (splitedString.size() < 2) {
+                cout << "Invalid file line";
+                break;
+            }
+            int serverID = stoi(splitedString[0]);
+            string serverIP = splitedString[1];
+
+            ServerInfo newServerInfo = {
+                                        ._id=serverID,
+                                        .sendSocket=INVALID_SOCKET,
+                                        .receiveSocket=INVALID_SOCKET,
+                                        .ip=serverIP
+            };
+            serversInfo.push_back(newServerInfo);
+        }
+
+        myfile.close();
+    }
+    else cout << "Unable to open servers file";
+    return serversInfo;
 }

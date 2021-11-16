@@ -59,6 +59,25 @@ namespace profileSessionManager {
         }
     }
 
+    ErrorCodes ProfileSessionManager::createNewSession(string username, string sessionID) {
+        GlobalManager::sessionManager.registerUser(username);
+
+        if (GlobalManager::sessionManager.users[username].getNumberOfSessions() < 2) {
+
+            Session session;
+            session.userID = username;
+            GlobalManager::sessionManager.users[username].addNewSession(sessionID,
+                                                                        session);
+
+            return SUCCESS;
+
+        } else {
+            return ERROR;
+        }
+
+    }
+
+
     ErrorCodes ProfileSessionManager::createNewSession(SessionAuth sessionAuth, int socketID) {
         string username = sessionAuth.getProfileId();
         GlobalManager::sessionManager.registerUser(username);

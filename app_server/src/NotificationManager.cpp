@@ -61,11 +61,12 @@ using namespace profileSessionManager;
             cout << "ERRO mandando notificação. Usuário não existe." << endl;
             return;
         }
-        list<Session> sessions;
-        for (auto kv : users[username].getSessions()) {
-            sessions.push_back(kv.second);
-        }
-        ErrorCodes sent = GlobalManager::commManager.sendNotificationToSessions(sessions,
+//        list<Session> sessions;
+//        for (auto kv : users[username].getSessions()) {
+//            sessions.push_back(kv.second);
+//        }
+
+        ErrorCodes sent = GlobalManager::commManager.sendNotificationToFrontEnds(username,
                                                                           this->notifications[notificationID]);
 
         if (sent == SUCCESS) {
