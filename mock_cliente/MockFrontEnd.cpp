@@ -103,21 +103,20 @@ void sendSomething() {
     Packet *pkt = new Packet;
 
     FrontEndPayload *pktPayload = new FrontEndPayload;
-   // bzero(pktPayload->senderUsername, 100);
-   // bzero(pktPayload->commandContent, 100);
-
-    memcpy(pktPayload->commandContent, "@marioooooo", 11);
-    memcpy(pktPayload->senderUsername, "@mariaaaaaa", 11);
+    strncpy(pktPayload->commandContent, "@marioooooo", 100);
+    strncpy(pktPayload->senderUsername, "@mariaaaaaa", 100);
 
     cout << "username = " << pktPayload->senderUsername << endl;
     cout << "command = " << pktPayload->commandContent << endl;
 
-    char * paylooad = (char*)(pktPayload);
-    cout << "len payloaaad = " << strlen(paylooad) << endl;
-    cout << "payloooad = " << paylooad << endl;
+    char * paylooad = pktPayload->toBytes();
+    FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
+
+    cout << "username = " << bufferReversed->senderUsername << endl;
+    cout << "command = " << bufferReversed->commandContent << endl;
 
     bzero(pkt->_payload, 256);
-    strncpy(pkt->_payload, paylooad, 200);
+    memcpy(pkt->_payload, paylooad, 256);
     pkt->type = FOLLOW;
     pkt->length = strlen(paylooad);
     pkt->timestamp = 0;
