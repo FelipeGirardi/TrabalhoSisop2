@@ -109,8 +109,8 @@ void sendSomething() {
     cout << "username = " << pktPayload->senderUsername << endl;
     cout << "command = " << pktPayload->commandContent << endl;
 
-    char * paylooad = pktPayload->toBytes();
-    FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
+    char * paylooad = (char*) pktPayload;
+    FrontEndPayload *bufferReversed = (FrontEndPayload *) paylooad;
 
     cout << "username = " << bufferReversed->senderUsername << endl;
     cout << "command = " << bufferReversed->commandContent << endl;
@@ -126,14 +126,15 @@ void sendSomething() {
     cout << "new payload content " << newPayload->commandContent << endl;
 
     /* write in the socket */
-    cout << "vai mandar\n" << endl;
-    int n = write(socketToSend, &pkt, sizeof(pkt));
+    cout << "vai mandar = " << sizeof(*pkt) << endl;
+    cout << "SOCKET = " << socketToSend << endl;
+    int n = write(socketToSend, pkt, sizeof(Packet));
     if (n < 0)
         printf("ERROR writing to socket\n");
     else
-        cout << "deu bom enviando";
+        cout << "deu bom enviando" << endl;
 
-    bzero(buffer,256);
+    //bzero(buffer,256);
 }
 
 Packet createAckPacketForType(PacketType type) {

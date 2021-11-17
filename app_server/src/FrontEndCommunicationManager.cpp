@@ -112,6 +112,7 @@ void * FrontEndCommunicationManager::connectToFrontEnd(void *data) {
         *returnValue = INVALID_SOCKET;
         return (void *) returnValue;
     }
+    cout << "SOCKET = " << sockfd << endl;
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
@@ -172,7 +173,7 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
         bzero(buffer, BUFFER_SIZE);
 
         Packet *receivedPacket = new Packet;
-        readResult = read(commandSocket, receivedPacket, 256);
+        readResult = read(commandSocket, receivedPacket, sizeof(Packet));
         cout << "numero do tipo do pacote recebido = " << receivedPacket->type << endl;
         cout << "desc = " << stringDescribingType(receivedPacket->type) << endl;
 
