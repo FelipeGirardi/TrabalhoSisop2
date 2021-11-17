@@ -6,18 +6,10 @@
 
 FrontEndPayload* FrontEndPayload::fromBytes(char* sessionAuthInBytes)
 {
-    FrontEndPayload *parsedFrontEndPayload = (FrontEndPayload*)sessionAuthInBytes;
-
-//    FrontEndPayload *sessionAuthCopy;
-//    sessionAuthCopy->commandContent = parsedFrontEndPayload->commandContent;
-//    sessionAuthCopy->senderUsername = parsedFrontEndPayload->senderUsername;
-    return parsedFrontEndPayload;
+    return (FrontEndPayload*)sessionAuthInBytes;
 }
 
 char* FrontEndPayload::toBytes()
 {
-    FrontEndPayload *sessionAuthCopy = new FrontEndPayload;
-//    sessionAuthCopy->commandContent = this->commandContent;
-//    sessionAuthCopy->senderUsername = this->senderUsername;
-    return (char*)sessionAuthCopy;
+    return (char*)this;
 }

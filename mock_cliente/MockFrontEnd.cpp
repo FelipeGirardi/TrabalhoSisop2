@@ -109,8 +109,8 @@ void sendSomething() {
     cout << "username = " << pktPayload->senderUsername << endl;
     cout << "command = " << pktPayload->commandContent << endl;
 
-    char * paylooad = (char*) pktPayload;
-    FrontEndPayload *bufferReversed = (FrontEndPayload *) paylooad;
+    char * paylooad = pktPayload->toBytes();
+    FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
 
     cout << "username = " << bufferReversed->senderUsername << endl;
     cout << "command = " << bufferReversed->commandContent << endl;
@@ -121,7 +121,7 @@ void sendSomething() {
     pkt->length = strlen(paylooad);
     pkt->timestamp = 0;
 
-    FrontEndPayload *newPayload = (FrontEndPayload *) pkt->_payload;
+    FrontEndPayload *newPayload = FrontEndPayload::fromBytes(pkt->_payload);
     cout << "new payload username " << newPayload->senderUsername << endl;
     cout << "new payload content " << newPayload->commandContent << endl;
 
