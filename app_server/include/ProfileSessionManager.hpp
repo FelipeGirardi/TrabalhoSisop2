@@ -63,6 +63,9 @@ namespace profileSessionManager {
         ErrorCodes createNewSession(SessionAuth sessionAuth, int socketID);
         ErrorCodes createNewSession(string username, string sessionID);
 
+        void additionalSessionClosingProcedure(string username);
+        void additionalSessionOpeningProcedure(string username);
+
         void endAllSessions();
         list<Session> getAllSessions();
 

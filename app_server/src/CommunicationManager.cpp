@@ -29,13 +29,7 @@ namespace communicationManager {
 
     ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
         cout << "Enviando o pacote:" << endl;
-        //package->printItself();
-
-//        int error = 0;
-//        socklen_t len = sizeof (error);
-//        int retval = getsockopt (socket, SOL_SOCKET, SO_ERROR, &error, &len);
-//
-//        if (retval != 0 || error != 0) { return ERROR; }
+        package->printItself();
 
         int aa = write(socket, package, sizeof(Packet));
         cout << "valor de retorno do write = " << aa << endl;
@@ -110,6 +104,31 @@ namespace communicationManager {
         packet->length = sizeof(packet->_payload);
 
         return sendPacketToSessions(sessions, packet);
+    }
+
+    ErrorCodes CommunicationManager::sendPacketToRMS(Packet *packet) {
+
+        cout << "Replicando pacote para RMS" << endl;
+
+        vector<ServerInfo> rms = GlobalManager::electionManager.getServers();
+        ErrorCodes successCode;
+        int currentServerID = GlobalManager::electionManager.getProcessID();
+
+        for (auto rm : rms) {
+            if (rm._id == currentServerID) { continue; }
+            cout << "Enviando pacote para rm de id = " << rm._id << " ";
+            cout << "IP = "<< rm.ip << " ";
+            cout << "send socket = " <<  rm.sendSocket << endl;
+            successCode = send_packet(rm.sendSocket, packet);
+            if (successCode == SUCCESS) {
+                cout << "SUCESSO enviando!" << endl;
+            } else {
+                cout << "ERRO enviando!" << endl;
+            }
+        }
+
+        return SUCCESS;
+
     }
 
     ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
@@ -201,7 +220,7 @@ namespace communicationManager {
     Packet CommunicationManager::createExitPacket(int idCurrentProcess) {
 
         cout << "Criando pacote EXIT " << endl;
-        return createPacketWithID(idCurrentProcess, EXIT);
+        return createPacketWithID(idCurrentProcess, EXIT_SERVER);
     }
 
     Packet CommunicationManager::createCoordinatorPacket(int idCurrentProcess) {
@@ -225,7 +244,7 @@ namespace communicationManager {
         cout << "Criando pacote EXIT" << endl;
 
         Packet package;
-        package.type = EXIT;
+        package.type = EXIT_SERVER;
         package.timestamp = time(NULL);
         bzero(package._payload, BUFFER_SIZE);
         package.length = BUFFER_SIZE;

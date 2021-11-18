@@ -28,6 +28,7 @@ namespace communicationManager {
         Packet createHelloPacket(int idCurrentProcess, PacketType typeOfHello);
         ErrorCodes sendPacketToSockets(list<int> sockets, Packet* package);
         Packet createExitPacket(int idCurrentProcess);
+        ErrorCodes sendPacketToRMS(Packet *packet);
 
     };
 }

@@ -186,6 +186,9 @@ void ElectionManager::setCurrentServerID(int serverID) {
 void ElectionManager::setServers(vector<ServerInfo> servers) {
     this->servers = servers;
 }
+vector<ServerInfo> ElectionManager::getServers() {
+    return this->servers;
+}
 int ElectionManager::getNumberOfServers() {
     return this->servers.size();
 }

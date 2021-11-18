@@ -40,6 +40,7 @@ public:
     bool hasValidSendSocketForServer(int serverID);
     void setCurrentServerID(int serverID);
     void setServers(vector<ServerInfo> servers);
+    vector<ServerInfo> getServers();
     void setNewCoordinatorIDToItself();
     int getNumberOfServers();
     void sendExitToAllOtherServers();

@@ -82,6 +82,7 @@ int main(int argc, char *argv[])
             cout << "voltou da thread de auth" << endl;
 
             if (socketToSend != -1) {
+
                 sendSomething();
             }
 
@@ -99,12 +100,16 @@ int main(int argc, char *argv[])
 
 void sendSomething() {
 
-    char buffer[256];
     Packet *pkt = new Packet;
+    string name;
+
+    printf("Enter the message: ");
+    getline(cin, name);
+    cout << "user to be followed =  " << name << endl;
 
     FrontEndPayload *pktPayload = new FrontEndPayload;
-    strncpy(pktPayload->commandContent, "@marioooooo", 100);
-    strncpy(pktPayload->senderUsername, "@mariaaaaaa", 100);
+    strncpy(pktPayload->commandContent, name.c_str(), 100);
+    strncpy(pktPayload->senderUsername, "@maria", 100);
 
     cout << "username = " << pktPayload->senderUsername << endl;
     cout << "command = " << pktPayload->commandContent << endl;

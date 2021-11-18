@@ -28,6 +28,8 @@ std::string stringDescribingType(PacketType type) {
             return "HELLO_SEND";
         case HELLO_RECEIVE:
             return "HELLO_RECEIVE";
+        case EXIT_SERVER:
+            return "EXIT_SERVER";
         default:
             return "";
     }
