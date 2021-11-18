@@ -139,16 +139,16 @@ int main(int argc, char* argv[])
 
         // manda HELLO para todos os servidores
         sendHelloToServers(servers);
-        cout << "Vai criar as threads de recebimento" << endl;
-        for(ServerInfo rm : GlobalManager::electionManager.getServers()) {
-            int currentID = GlobalManager::electionManager.getProcessID();
-            if (rm._id == currentID || rm.receiveSocket == -1) { continue; }
-            cout << "Criando thread de recebimento de mensagens do servidor de id = " << rm._id << endl;
-            pthread_t receiving_thread;
-            int *pointerToSocket = (int*) malloc(sizeof (int));
-            *pointerToSocket = rm.receiveSocket;
-            pthread_create(&receiving_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
-        }
+//        cout << "Vai criar as threads de recebimento" << endl;
+//        for(ServerInfo rm : GlobalManager::electionManager.getServers()) {
+//            int currentID = GlobalManager::electionManager.getProcessID();
+//            if (rm._id == currentID || rm.receiveSocket == -1) { continue; }
+//            cout << "Criando thread de recebimento de mensagens do servidor de id = " << rm._id << endl;
+//            pthread_t receiving_thread;
+//            int *pointerToSocket = (int*) malloc(sizeof (int));
+//            *pointerToSocket = rm.receiveSocket;
+//            pthread_create(&receiving_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
+//        }
 
         while(true) {
             // aceita conexão do cliente
@@ -217,13 +217,13 @@ ErrorCodes sendHelloToServer(ServerArguments _arguments, int _id) {
         } else if (_arguments.typeOfPacket == HELLO_RECEIVE) {
             GlobalManager::electionManager.setReceiveSocket(*returnResult, _id);
 
-//            // cria thread recebimento
-//            cout << "Criando thread recebimento de msg outros servidores" << endl;
-//            cout << "Socket de recebimento = " << *returnResult;
-//            int *pointerToSocket = (int*) malloc(sizeof (int));
-//            *pointerToSocket = *returnResult;
-//            pthread_t receiving_thread;
-//            pthread_create(&receiving_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
+            // cria thread recebimento
+            cout << "Criando thread recebimento de msg outros servidores" << endl;
+            cout << "Socket de recebimento = " << *returnResult;
+            int *pointerToSocket = (int*) malloc(sizeof (int));
+            *pointerToSocket = *returnResult;
+            pthread_t receiving_thread;
+            pthread_create(&receiving_thread, NULL, &receive_server_events_thread_func, (void *) pointerToSocket);
 
         }
         return SUCCESS;
