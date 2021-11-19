@@ -21,7 +21,9 @@
 using namespace std;
 int socketToSend = -1;
 int socketToReceive = -1;
-void sendSomething();
+void *sendSomething(void *data);
+pthread_t send_thread;
+int stop = 0;
 void *auth_client_func(void *data);
 
 int main(int argc, char *argv[])
@@ -85,7 +87,17 @@ int main(int argc, char *argv[])
 
             if (socketToSend != -1) {
 
-                sendSomething();
+                cout << "Cancela thread antigo primario" << endl;
+                stop = 1;
+                sleep(2);
+                //pthread_cancel(send_thread);
+                cout << "Inicia nova thread" << endl;
+                sleep(2);
+                stop = 0;
+                pthread_t newSendThread;
+                send_thread = newSendThread;
+                pthread_create(&send_thread, NULL, &sendSomething, NULL);
+
             }
 
         }
@@ -102,15 +114,15 @@ int main(int argc, char *argv[])
 
 
 
-void sendSomething() {
+void * sendSomething(void *data) {
 
     Packet *pkt = new Packet;
     string name;
+    string garbage;
 
-    while(true) {
+    while(!stop) {
         printf("Enter the message: ");
         getline(cin, name);
-        cout << "user to be followed =  " << name << endl;
         StringExtensions stringParser;
         vector <string> splitedString = stringParser.split(name, ' ');
         PacketType command = (PacketType) stoi(splitedString[0]);
@@ -150,6 +162,9 @@ void sendSomething() {
         else
             cout << "deu bom enviando" << endl;
     }
+    cout << "retornando da thread" << endl;
+    return 0;
+
 
     //bzero(buffer,256);
 }

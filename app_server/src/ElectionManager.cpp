@@ -91,6 +91,7 @@ void ElectionManager::assumeCoordination() {
     cout << "Se apresenta para front ends" << endl;
     GlobalManager::frontEndManager.sendHelloToFrontEnds();
 
+    cout << "Inicia consumo de notificações pendentes pros usuários com uma ou mais sessões" << endl;
     for (auto user : GlobalManager::sessionManager.getUsers()) {
         string username = user.first;
         GlobalManager::sessionManager.additionalSessionOpeningProcedure(username);

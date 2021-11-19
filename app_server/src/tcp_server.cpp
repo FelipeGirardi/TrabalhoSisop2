@@ -450,8 +450,7 @@ void *receive_server_events_thread_func(void *data) {
             int *pointerToSocket = (int*) malloc(sizeof (int));
             *pointerToSocket = GlobalManager::electionManager.getCurrentCoordinatorSendSocket();
 
-            //TODO: REMOVER COMENTARIO
-            //pthread_create(&keep_alive_thread, NULL, &send_keep_alive_thread_func, (void *) pointerToSocket);
+            pthread_create(&keep_alive_thread, NULL, &send_keep_alive_thread_func, (void *) pointerToSocket);
 
             // nao há ack/answer para mensagens coordinator
             continue;

@@ -160,15 +160,14 @@ namespace profileSessionManager {
 
         int numberOfSessions = GlobalManager::sessionManager
                 .getUserByUsername(username).getNumberOfSessions();
-        cout << "Número de sessões desse usuário = " << numberOfSessions;
+        cout << "Número de sessões do usuário = " << username << " = " << numberOfSessions;
 
-        if (numberOfSessions == 1) {
-            cout << "Iniciando thread de escuta de notificações" << endl;
+        if (numberOfSessions >= 1) {
+            cout << "Iniciando thread de escuta de notificações do usuario " << username << endl;
             GlobalManager::sessionManager.users[username]
                     .startListeningForNotifications();
         }
     }
-
 
     /*
      * Retorno:
