@@ -428,7 +428,8 @@ void *receive_server_events_thread_func(void *data) {
         (receivedPacket->type != LOGIN) &&
         (receivedPacket->type != FOLLOW) &&
         (receivedPacket->type != SEND) &&
-        (receivedPacket->type != EXIT_SERVER)
+        (receivedPacket->type != EXIT_SERVER) &&
+        (receivedPacket->type != NOTIFICATION)
         )) {
             cout << "ERRO lendo do socket recebimento mensagens de outros RM. Fechando." << endl;
             *responsePacket = GlobalManager::commManager.createGenericNackPacket();
@@ -513,6 +514,12 @@ void *receive_server_events_thread_func(void *data) {
             GlobalManager::sessionManager.endSessionWithID(frontEndPayload->commandContent,
                                                           frontEndPayload->senderUsername);
 
+        } else if (receivedPacket->type == NOTIFICATION) {
+            cout << "Recebeu pedido de deleção de notificação" << endl;
+            FrontEndPayload *frontEndPayload = FrontEndPayload::fromBytes(receivedPacket->_payload);
+            GlobalManager::sessionManager.deleteNotificationFromUser(frontEndPayload->senderUsername,
+                                                                     frontEndPayload->commandContent);
+            *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
         }
 
         cout << "Enviando pacote ACK/NACK para outro RM" << endl;

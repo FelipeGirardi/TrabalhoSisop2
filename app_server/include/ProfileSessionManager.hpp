@@ -68,6 +68,7 @@ namespace profileSessionManager {
 
         void endAllSessions();
         list<Session> getAllSessions();
+        void deleteNotificationFromUser(string username, string notificationID);
 
 
         };

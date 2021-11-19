@@ -91,8 +91,8 @@ void ElectionManager::assumeCoordination() {
     cout << "Se apresenta para front ends" << endl;
     GlobalManager::frontEndManager.sendHelloToFrontEnds();
 
-    for (UserInformation user : GlobalManager::sessionManager.getUsers()) {
-        string username = user.username;
+    for (auto user : GlobalManager::sessionManager.getUsers()) {
+        string username = user.first;
         GlobalManager::sessionManager.additionalSessionOpeningProcedure(username);
     }
 

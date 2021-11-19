@@ -216,5 +216,8 @@ namespace profileSessionManager {
         return returnValue;
     }
 
+    void ProfileSessionManager::deleteNotificationFromUser(string username, string notificationID) {
+        this->users[username].deletePendingNotification(notificationID);
+    }
 
 }

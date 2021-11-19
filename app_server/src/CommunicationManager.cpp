@@ -115,7 +115,7 @@ namespace communicationManager {
         int currentServerID = GlobalManager::electionManager.getProcessID();
 
         for (auto rm : rms) {
-            if (rm._id == currentServerID) { continue; }
+            if (rm._id == currentServerID ||  rm.sendSocket == INVALID_SOCKET) { continue; }
             cout << "Enviando pacote para rm de id = " << rm._id << " ";
             cout << "IP = "<< rm.ip << " ";
             cout << "send socket = " <<  rm.sendSocket << endl;
@@ -131,13 +131,11 @@ namespace communicationManager {
 
     }
 
-    ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
-                                                                 Notification notification) {
-        cout << "Notificação sendo enviada " << notification.toString() << endl;
-
+    Packet *CommunicationManager::createNotificationPacket(string username, Notification notification) {
         Packet* packet = new Packet;
         packet->timestamp = time(NULL);
         packet->type = NOTIFICATION;
+        packet->length = sizeof (FrontEndPayload);
 
         FrontEndPayload *frontEndPayload = new FrontEndPayload;
 
@@ -145,9 +143,38 @@ namespace communicationManager {
         strncpy(frontEndPayload->senderUsername, username.c_str(), 100);
 
         memcpy(packet->_payload, frontEndPayload->toBytes(), BUFFER_SIZE);
+        return packet;
+    }
 
+    // Cria pacote contendo no payload um username e o id da notificacao
+    Packet *CommunicationManager::createNotificationIDPacket(string username, string notificationID) {
+        Packet* packet = new Packet;
+        packet->timestamp = time(NULL);
+        packet->type = NOTIFICATION;
+        packet->length = sizeof (FrontEndPayload);
+
+        FrontEndPayload *frontEndPayload = new FrontEndPayload;
+        strncpy(frontEndPayload->senderUsername, username.c_str(), 100);
+        strncpy(frontEndPayload->commandContent, notificationID.c_str(), 100);
+        memcpy(packet->_payload, frontEndPayload->toBytes(), BUFFER_SIZE);
+
+        return packet;
+    }
+
+
+    ErrorCodes CommunicationManager::sendNotificationToRMs(string username, string notificationID) {
+        cout << "Notificação sendo enviada para RMS " << endl;
+        cout << "ID = " << notificationID << endl;
+        Packet *packet = this->createNotificationIDPacket(username, notificationID);
+        return sendPacketToRMS(packet);
+    }
+
+    ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
+                                                                 Notification notification) {
+
+        cout << "Notificação sendo enviada para Front Ends " << notification.toString() << endl;
+        Packet *packet = this->createNotificationPacket(username, notification);
         return sendPacketToFrontEnds(packet);
-
     }
 
     ErrorCodes CommunicationManager::sendPacketToFrontEnds(Packet *packet) {

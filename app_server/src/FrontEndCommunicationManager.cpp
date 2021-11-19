@@ -217,6 +217,7 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
 
             GlobalManager::notifManager.newNotificationSentBy(frontEndPayload->senderUsername,
                                                               frontEndPayload->commandContent);
+            cout << "notificacao criada" << endl;
 
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
 

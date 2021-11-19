@@ -32,5 +32,4 @@ typedef enum PacketType {
 
 std::string stringDescribingType(PacketType type);
 
-
 #endif //PACKETTYPE_HPP

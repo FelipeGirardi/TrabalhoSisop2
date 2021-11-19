@@ -29,6 +29,9 @@ namespace communicationManager {
         ErrorCodes sendPacketToSockets(list<int> sockets, Packet* package);
         Packet createExitPacket(int idCurrentProcess);
         ErrorCodes sendPacketToRMS(Packet *packet);
+        Packet *createNotificationPacket(string username, Notification notification);
+        Packet *createNotificationIDPacket(string username, string notificationID);
+        ErrorCodes sendNotificationToRMs(string username, string notificationID);
 
     };
 }

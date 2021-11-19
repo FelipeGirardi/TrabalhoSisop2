@@ -11,8 +11,10 @@
 #include "../common/include/Packet.hpp"
 #include "../common/include/PacketType.hpp"
 #include "../common/include/FrontEndPayload.hpp"
+#include "../app_server/include/utils/StringExtensions.hpp"
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <vector>
 
 #define PORT 4000
 
@@ -98,46 +100,56 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+
+
 void sendSomething() {
 
     Packet *pkt = new Packet;
     string name;
 
-    printf("Enter the message: ");
-    getline(cin, name);
-    cout << "user to be followed =  " << name << endl;
+    while(true) {
+        printf("Enter the message: ");
+        getline(cin, name);
+        cout << "user to be followed =  " << name << endl;
+        StringExtensions stringParser;
+        vector <string> splitedString = stringParser.split(name, ' ');
+        PacketType command = (PacketType) stoi(splitedString[0]);
+        string senderUsername = splitedString[1];
+        string commandContent = splitedString[2];
 
-    FrontEndPayload *pktPayload = new FrontEndPayload;
-    strncpy(pktPayload->commandContent, name.c_str(), 100);
-    strncpy(pktPayload->senderUsername, "@maria", 100);
+        FrontEndPayload *pktPayload = new FrontEndPayload;
+        strncpy(pktPayload->commandContent, commandContent.c_str(), 100);
+        strncpy(pktPayload->senderUsername, senderUsername.c_str(), 100);
 
-    cout << "username = " << pktPayload->senderUsername << endl;
-    cout << "command = " << pktPayload->commandContent << endl;
+        cout << "comando = " << stringDescribingType(command) << endl;
+        cout << "username = " << pktPayload->senderUsername << endl;
+        cout << "command = " << pktPayload->commandContent << endl;
 
-    char * paylooad = pktPayload->toBytes();
-    FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
+        char *paylooad = pktPayload->toBytes();
+        FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
 
-    cout << "username = " << bufferReversed->senderUsername << endl;
-    cout << "command = " << bufferReversed->commandContent << endl;
+        cout << "username = " << bufferReversed->senderUsername << endl;
+        cout << "command = " << bufferReversed->commandContent << endl;
 
-    bzero(pkt->_payload, 256);
-    memcpy(pkt->_payload, paylooad, 256);
-    pkt->type = FOLLOW;
-    pkt->length = strlen(paylooad);
-    pkt->timestamp = 0;
+        bzero(pkt->_payload, 256);
+        memcpy(pkt->_payload, paylooad, 256);
+        pkt->type = command;
+        pkt->length = strlen(paylooad);
+        pkt->timestamp = 0;
 
-    FrontEndPayload *newPayload = FrontEndPayload::fromBytes(pkt->_payload);
-    cout << "new payload username " << newPayload->senderUsername << endl;
-    cout << "new payload content " << newPayload->commandContent << endl;
+        FrontEndPayload *newPayload = FrontEndPayload::fromBytes(pkt->_payload);
+        cout << "new payload username " << newPayload->senderUsername << endl;
+        cout << "new payload content " << newPayload->commandContent << endl;
 
-    /* write in the socket */
-    cout << "vai mandar = " << sizeof(*pkt) << endl;
-    cout << "SOCKET = " << socketToSend << endl;
-    int n = write(socketToSend, pkt, sizeof(Packet));
-    if (n < 0)
-        printf("ERROR writing to socket\n");
-    else
-        cout << "deu bom enviando" << endl;
+        /* write in the socket */
+        cout << "vai mandar = " << sizeof(*pkt) << endl;
+        cout << "SOCKET = " << socketToSend << endl;
+        int n = write(socketToSend, pkt, sizeof(Packet));
+        if (n < 0)
+            printf("ERROR writing to socket\n");
+        else
+            cout << "deu bom enviando" << endl;
+    }
 
     //bzero(buffer,256);
 }
