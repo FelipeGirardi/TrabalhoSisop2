@@ -4,6 +4,8 @@
  * \author Marlize Ramos
  * \author Renan Kummer
  */
+#include "Notification.hpp"
+#include "FrontEndPayload.hpp"
 #include "services/SocketManager.hpp"
 #include "exceptions/SocketNotCreatedException.hpp"
 #include "exceptions/SocketBindFailedException.hpp"
@@ -25,6 +27,7 @@
 
 using namespace std;
 using namespace Common;
+using namespace notification;
 using namespace FrontendApp::IO;
 using namespace FrontendApp::Service;
 using namespace FrontendApp::Exception;
@@ -32,13 +35,13 @@ using namespace FrontendApp::Exception;
 // Static variables
 
 mutex SocketManager::serverMutex_;
-ServerSession serverSession_ = { nullptr, nullptr };
-std::unordered_map<std::string, std::list<ClientSession>> clientSessions_;
+ServerSession SocketManager::serverSession_ = { nullptr, nullptr };
+std::unordered_map<std::string, std::list<ClientSession>> SocketManager::clientSessions_;
 
 
 // Public methods
 
-void SocketManager::listenToServerChanges(std::string host, int port)
+void SocketManager::listenToServerChanges(string host, int port)
 {
     auto listenerSocketDescriptor = createSocketDescriptor();
     initializeListenerSocket(listenerSocketDescriptor, host, port);
@@ -54,26 +57,28 @@ void SocketManager::listenToServerChanges(std::string host, int port)
 
         serverMutex_.lock();
 
+        delete serverSession_.commandSocket;
+        delete serverSession_.notificationSocket;
         serverSession_.commandSocket = nullptr;
         serverSession_.notificationSocket = nullptr;
 
-        auto firstServerSocket = make_shared<Socket>(new Socket(firstServerSocketDescriptor));
+        auto firstServerSocket = new Socket(firstServerSocketDescriptor);
         identifyServerSocketType(firstServerSocket);
 
         auto secondServerSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&serverAddress, &serverLength);
         if (firstServerSocketDescriptor < 0)
             throw SocketAcceptFailedException(listenerSocketDescriptor, false);
 
-        auto secondServerSocket = make_shared<Socket>(new Socket(secondServerSocketDescriptor));
+        auto secondServerSocket = new Socket(secondServerSocketDescriptor);
         identifyServerSocketType(secondServerSocket);
 
-        // TODO: Abrir thread para escutar notificações do server
+        thread(listenForServerNotifications).detach();
 
         serverMutex_.unlock();
     }
 }
 
-void SocketManager::listenForClientConnections(std::string host, int port)
+void SocketManager::listenForClientConnections(string host, int port)
 {
     auto listenerSocketDescriptor = createSocketDescriptor();
     initializeListenerSocket(listenerSocketDescriptor, host, port);
@@ -87,15 +92,141 @@ void SocketManager::listenForClientConnections(std::string host, int port)
         if (clientSocketDescriptor < 0)
             throw SocketAcceptFailedException(listenerSocketDescriptor);
 
-        auto clientSocket = make_shared<Socket>(new Socket(clientSocketDescriptor));
+        auto clientSocket = new Socket(clientSocketDescriptor);
         thread(SocketManager::identifyClientSocketType, clientSocket).detach();
     }
 }
 
-void SocketManager::disconnect()
+void SocketManager::listenForServerNotifications()
 {
+    auto incomingPacket = serverSession_.notificationSocket->receive();
 
+    while (incomingPacket->type != EXIT)
+    {
+        if (incomingPacket->type != NOTIFICATION)
+        {
+            cerr << "SocketManager: lost connection to server socket..." << endl;
+            throw UnexpectedPacketTypeException();
+        }
+
+        try
+        {
+            auto frontendPayload = FrontEndPayload::fromBytes(incomingPacket->_payload);
+            if (clientSessions_.count(frontendPayload->senderUsername) > 0)
+            {
+                auto activeSessions = clientSessions_[frontendPayload->senderUsername];
+                for (auto& session : activeSessions)
+                    session.notificationSocket->sendIgnoreAck(*incomingPacket);
+            }
+
+            Packet ackPacket = { PacketType::SERVER_ACK };
+            serverSession_.notificationSocket->sendIgnoreAck(ackPacket);
+        }
+        catch (...)
+        {
+            Packet nackPacket = { PacketType::SERVER_ERROR };
+            serverSession_.notificationSocket->sendIgnoreAck(nackPacket);
+        }
+
+        incomingPacket = serverSession_.notificationSocket->receive();
+    }
+
+    disconnectAllClients();
+
+    serverMutex_.lock();
+    delete serverSession_.commandSocket;
+    delete serverSession_.notificationSocket;
+    serverSession_.commandSocket = nullptr;
+    serverSession_.notificationSocket = nullptr;
 }
+
+void SocketManager::listenForClientCommands(ClientSession clientSession)
+{
+    auto incomingPacket = clientSession.notificationSocket->receive();
+
+    while (incomingPacket->type != EXIT)
+    {
+        FrontEndPayload frontendPayload;
+        strcpy(frontendPayload.senderUsername, clientSession.profileId.c_str());
+        strcpy(frontendPayload.commandContent, incomingPacket->_payload);
+
+        memcpy(incomingPacket->_payload, frontendPayload.toBytes(), sizeof(FrontEndPayload));
+
+        serverMutex_.lock();
+
+        try
+        {
+            serverSession_.commandSocket->send(*incomingPacket);
+
+            Packet ackPacket = { PacketType::SERVER_ACK };
+            clientSession.commandSocket->sendIgnoreAck(ackPacket);
+        }
+        catch (...)
+        {
+            Packet nackPacket = { PacketType::SERVER_ERROR };
+            clientSession.commandSocket->sendIgnoreAck(nackPacket);
+        }
+
+        serverMutex_.unlock();
+    }
+
+    FrontEndPayload exitPayload;
+    strcpy(exitPayload.senderUsername, clientSession.profileId.c_str());
+    strcpy(exitPayload.commandContent, clientSession.uuid.c_str());
+
+    memcpy(incomingPacket->_payload, exitPayload.toBytes(), sizeof(FrontEndPayload));
+
+    serverMutex_.lock();
+
+    try
+    {
+        serverSession_.commandSocket->send(*incomingPacket);
+
+        Packet ackPacket = { PacketType::SERVER_ACK };
+        clientSession.commandSocket->sendIgnoreAck(ackPacket);
+    }
+    catch (...)
+    {
+        Packet nackPacket = { PacketType::SERVER_ERROR };
+        clientSession.commandSocket->sendIgnoreAck(nackPacket);
+    }
+
+    serverMutex_.unlock();
+
+    auto& activeSessions = clientSessions_[clientSession.profileId];
+    auto deleteIterator = activeSessions.begin();
+    for (auto iterator = activeSessions.begin(); iterator != activeSessions.end(); iterator++)
+    {
+        if (iterator->uuid == clientSession.uuid)
+        {
+            deleteIterator = iterator;
+            delete iterator->commandSocket;
+            delete iterator->notificationSocket;
+            break;
+        }
+    }
+
+    activeSessions.erase(deleteIterator);
+}
+
+void SocketManager::disconnectAllClients()
+{
+    Packet exitPacket = { PacketType::EXIT };
+
+    for (auto& client : clientSessions_)
+    {
+        auto activeSessions = client.second;
+        for (auto& session : activeSessions)
+        {
+            session.notificationSocket->sendIgnoreAck(exitPacket);
+            delete session.notificationSocket;
+            delete session.commandSocket;
+        }
+    }
+
+    clientSessions_.clear();
+}
+
 
 // Private functions
 
@@ -128,19 +259,19 @@ void SocketManager::initializeListenerSocket(int socketDescriptor, std::string h
         throw SocketListenFailedException(socketDescriptor);
 }
 
-void SocketManager::identifyServerSocketType(shared_ptr<Socket> serverSocket)
+void SocketManager::identifyServerSocketType(Socket* serverSocket)
 {
     auto incomingPacket = serverSocket->receive();
 
     if (incomingPacket->type == PacketType::HELLO_SEND &&
         serverSession_.notificationSocket == nullptr)
     {
-        serverSession_.notificationSocket = make_unique<Socket>(serverSocket);
+        serverSession_.notificationSocket = serverSocket;
     }
     else if (incomingPacket->type == PacketType::HELLO_RECEIVE &&
         serverSession_.commandSocket == nullptr)
     {
-        serverSession_.commandSocket = make_unique<Socket>(serverSocket);
+        serverSession_.commandSocket = serverSocket;
     }
     else
     {
@@ -148,7 +279,7 @@ void SocketManager::identifyServerSocketType(shared_ptr<Socket> serverSocket)
     }
 }
 
-void SocketManager::identifyClientSocketType(shared_ptr<Socket> clientSocket)
+void SocketManager::identifyClientSocketType(Socket* clientSocket)
 {
     auto incomingPacket = clientSocket->receive();
     if (incomingPacket->type != PacketType::USERNAME)
@@ -156,28 +287,67 @@ void SocketManager::identifyClientSocketType(shared_ptr<Socket> clientSocket)
 
     serverMutex_.lock();
 
-    if (serverSession_.commandSocket != nullptr)
+    try
     {
-        try
-        {
-            serverSession_.commandSocket->send(*incomingPacket);
+        serverSession_.commandSocket->send(*incomingPacket);
 
-            auto sessionAuth = SessionAuth::fromBytes(incomingPacket->_payload);
-            addSocketToClientSession(clientSocket, make_unique<SessionAuth>(sessionAuth));
-        }
-        catch (const exception& e)
-        {
-            cerr << e.what() << endl;
-        }
+        auto sessionAuth = SessionAuth::fromBytes(incomingPacket->_payload);
+        addSocketToClientSession(clientSocket, sessionAuth);
+        delete sessionAuth;
+
+        Packet ackPacket = { PacketType::SERVER_ACK };
+        clientSocket->sendIgnoreAck(ackPacket);
+    }
+    catch (const exception& e)
+    {
+        cerr << e.what() << endl;
+
+        Packet nackPacket = { PacketType::SERVER_ERROR };
+        clientSocket->sendIgnoreAck(nackPacket);
+        delete clientSocket;
     }
 
     serverMutex_.unlock();
-
-    Packet ackPacket = { PacketType::SERVER_ACK };
-    clientSocket->sendIgnoreAck(ackPacket);
 }
 
-void SocketManager::addSocketToClientSession(shared_ptr<Socket> clientSocket, unique_ptr<SessionAuth> sessionAuth)
+void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* sessionAuth)
 {
-    // TODO: Abrir thread para escutar comands se sessão ficar completa
+    if (clientSessions_.count(sessionAuth->getProfileId()) == 0)
+    {
+        list<ClientSession> sessions;
+        clientSessions_.insert(pair(sessionAuth->getProfileId(), sessions));
+    }
+
+    auto hasSession = false;
+    auto& activeSessions = clientSessions_[sessionAuth->getProfileId()];
+    for (auto& session : activeSessions)
+    {
+        if (session.uuid == sessionAuth->getUuid())
+        {
+            hasSession = true;
+            if (sessionAuth->getSocketType() == SocketType::COMMAND_SOCKET)
+                session.commandSocket = clientSocket;
+            else if (sessionAuth->getSocketType() == SocketType::NOTIFICATION_SOCKET)
+                session.notificationSocket = clientSocket;
+
+            if (session.commandSocket != nullptr && session.notificationSocket != nullptr)
+                thread(listenForClientCommands, session).detach();
+
+            break;
+        }
+    }
+
+    if (!hasSession)
+    {
+        if (sessionAuth->getSocketType() == SocketType::COMMAND_SOCKET)
+        {
+            ClientSession newSession = { clientSocket, nullptr, sessionAuth->getUuid(), sessionAuth->getProfileId() };
+            activeSessions.push_front(newSession);
+        }
+        else
+        {
+            ClientSession newSession = { nullptr, clientSocket, sessionAuth->getUuid(), sessionAuth->getProfileId() };
+            activeSessions.push_front(newSession);
+        }
+    }
 }
