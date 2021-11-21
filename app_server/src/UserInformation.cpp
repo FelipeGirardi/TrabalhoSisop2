@@ -48,7 +48,8 @@ namespace userInformation {
 
         if (type == Common::NOTIFICATION_SOCKET) {
             this->sessions[sessionID].notif_socket = socketValue;
-        } else if (type == Common::COMMAND_SOCKET) {
+        }
+        else if (type == Common::COMMAND_SOCKET) {
             this->sessions[sessionID].client_socket = socketValue;
         }
 
@@ -123,16 +124,12 @@ namespace userInformation {
 
     void UserInformation::stopListeningForNotifications() {
         cout << "Cancelando thread de consumo de notificações" << endl;
-        if (pthread_cancel(this->consumerTid) == 0) {
-            cout << "Sucesso terminando thread de consumo de notificação" << endl;
-        } else {
+        if (pthread_cancel(this->consumerTid) != 0) {
             cout << "ERRO terminando thread de consumo de notificação" << endl;
         }
     }
 
     void UserInformation::produceNewNotification(string notificationID) {
-
-        cout << "Produzindo nova notificação" << endl;
 
         struct arg_struct* args = new struct arg_struct;
 
@@ -147,7 +144,17 @@ namespace userInformation {
         sem_post(&(this->freeCritialSession));
         sem_post(&(this->hasItems));
 
+    }
 
+    void UserInformation::deletePendingNotification(string notificationID) {
+
+        cout << "Deletando notificação de ID: " << notificationID << endl;
+        sem_wait(&(this->hasItems));
+        sem_wait(&(this->freeCritialSession));
+
+        this->pendingNotifications.remove(notificationID);
+
+        sem_post(&(this->freeCritialSession));
     }
 
     void UserInformation::startListeningForNotifications() {
@@ -167,20 +174,22 @@ namespace userInformation {
             cout << "USER IS NULL" << endl;
             return 0;
         }
-        cout << "USER " << _this->toString() << endl;
 
         while (_this->getNumberOfSessions() > 0) {
-            sleep(rand() % 5);
             sem_wait(&(_this->hasItems));
             sem_wait(&(_this->freeCritialSession));
 
             // this if shouldn't be needed, but better safe than sorry
-            if (!_this->pendingNotifications.empty()) {
+            if (!_this->pendingNotifications.empty() && _this->getNumberOfSessions() > 0) {
 
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "Consumindo notificação de ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
                 GlobalManager::notifManager.sendNotificationTo(_this->username, consumedItem);
+            }
+            else if (_this->getNumberOfSessions() == 0) {
+                cout << "Não há sessões ativas para " << _this->username << endl;
+                sem_post(&(_this->hasItems));
             }
             else {
                 cout << "ERRO consumindo notificação" << endl;
@@ -189,7 +198,7 @@ namespace userInformation {
             sem_post(&(_this->freeCritialSession));
 
         }
-        cout << "Finalizando thread de consumo" << endl;
+        //cout << "Finalizando thread de consumo" << endl;
         //free(_this);
         return 0;
     }

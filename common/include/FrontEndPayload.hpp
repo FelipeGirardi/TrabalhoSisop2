@@ -12,7 +12,7 @@ using namespace std;
 class FrontEndPayload {
 
 public:
-    char commandContent[100];
+    char commandContent[128];
     char senderUsername[100];
     static FrontEndPayload* fromBytes(char* sessionAuthInBytes);
     char* toBytes();

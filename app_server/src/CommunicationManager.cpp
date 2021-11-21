@@ -28,19 +28,12 @@ namespace communicationManager {
 
 
     ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
-        cout << "Enviando o pacote:" << endl;
+        //cout << "Enviando o pacote:" << endl;
         //package->printItself();
 
-//        int error = 0;
-//        socklen_t len = sizeof (error);
-//        int retval = getsockopt (socket, SOL_SOCKET, SO_ERROR, &error, &len);
-//
-//        if (retval != 0 || error != 0) { return ERROR; }
+        int result = write(socket, package, sizeof(Packet));
 
-        int aa = write(socket, package, sizeof(Packet));
-        cout << "valor de retorno do write = " << aa << endl;
-
-        if (aa < 0) {
+        if (result < 0) {
             cout << "ERRO escrevendo no socket" << endl;
             return ERROR;
         }
@@ -54,15 +47,12 @@ namespace communicationManager {
      */
     ErrorCodes CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
 
-        cout << "Enviando o pacote de " << stringDescribingType(package->type) <<
-        " para o total de " << sessions.size() << " sessões." << endl;
-
         if (sessions.empty()) { return SUCCESS; }
 
         ErrorCodes returnValue = ERROR;
         for (Session session : sessions) {
 
-            cout << "Enviando pacote para " << session.userID << " socket = " << session.notif_socket << endl;
+            cout << "Enviando pacote para " << session.userID << endl;
             if (this->send_packet(session.notif_socket, package) >= 0) {
                 returnValue = SUCCESS;
             }
@@ -72,15 +62,11 @@ namespace communicationManager {
 
     ErrorCodes CommunicationManager::sendPacketToSockets(list<int> sockets, Packet* package) {
 
-        cout << "Enviando o pacote de " << stringDescribingType(package->type) <<
-             " para o total de " << sockets.size() << " sockets." << endl;
-
         if (sockets.empty()) { return SUCCESS; }
 
         ErrorCodes returnValue = ERROR;
         for (int socket : sockets) {
 
-            cout << "Enviando pacote para socket" << socket << endl;
             if (this->send_packet(socket, package) >= 0) {
                 returnValue = SUCCESS;
             }
@@ -112,13 +98,33 @@ namespace communicationManager {
         return sendPacketToSessions(sessions, packet);
     }
 
-    ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
-                                                                 Notification notification) {
-        cout << "Notificação sendo enviada " << notification.toString() << endl;
+    ErrorCodes CommunicationManager::sendPacketToRMS(Packet *packet) {
 
+        vector<ServerInfo> rms = GlobalManager::electionManager.getServers();
+        ErrorCodes successCode;
+        int currentServerID = GlobalManager::electionManager.getProcessID();
+
+        for (auto rm : rms) {
+            if (rm._id == currentServerID ||  rm.sendSocket == INVALID_SOCKET) { continue; }
+            cout << "Enviando pacote para rm de id = " << rm._id << " ";
+            cout << "IP = "<< rm.ip << " ";
+            successCode = send_packet(rm.sendSocket, packet);
+            if (successCode == SUCCESS) {
+                cout << "SUCESSO enviando!" << endl;
+            } else {
+                cout << "ERRO enviando!" << endl;
+            }
+        }
+
+        return SUCCESS;
+
+    }
+
+    Packet *CommunicationManager::createNotificationPacket(string username, Notification notification) {
         Packet* packet = new Packet;
         packet->timestamp = time(NULL);
         packet->type = NOTIFICATION;
+        packet->length = sizeof (FrontEndPayload);
 
         FrontEndPayload *frontEndPayload = new FrontEndPayload;
 
@@ -126,9 +132,35 @@ namespace communicationManager {
         strncpy(frontEndPayload->senderUsername, username.c_str(), 100);
 
         memcpy(packet->_payload, frontEndPayload->toBytes(), BUFFER_SIZE);
+        return packet;
+    }
 
+    // Cria pacote contendo no payload um username e o id da notificacao
+    Packet *CommunicationManager::createNotificationIDPacket(string username, string notificationID) {
+        Packet* packet = new Packet;
+        packet->timestamp = time(NULL);
+        packet->type = NOTIFICATION;
+        packet->length = sizeof (FrontEndPayload);
+
+        FrontEndPayload *frontEndPayload = new FrontEndPayload;
+        strncpy(frontEndPayload->senderUsername, username.c_str(), 100);
+        strncpy(frontEndPayload->commandContent, notificationID.c_str(), 100);
+        memcpy(packet->_payload, frontEndPayload->toBytes(), BUFFER_SIZE);
+
+        return packet;
+    }
+
+
+    ErrorCodes CommunicationManager::sendNotificationToRMs(string username, string notificationID) {
+        Packet *packet = this->createNotificationIDPacket(username, notificationID);
+        return sendPacketToRMS(packet);
+    }
+
+    ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
+                                                                 Notification notification) {
+
+        Packet *packet = this->createNotificationPacket(username, notification);
         return sendPacketToFrontEnds(packet);
-
     }
 
     ErrorCodes CommunicationManager::sendPacketToFrontEnds(Packet *packet) {
@@ -149,7 +181,6 @@ namespace communicationManager {
 
     Packet CommunicationManager::createAckPacketForType(PacketType type) {
 
-        cout << "Criando pacote ACK" << endl;
         string responseString = "Uhu! " + stringDescribingType(type) + " recebido com sucesso! :)";
 
         Packet package;
@@ -163,7 +194,6 @@ namespace communicationManager {
 
     Packet CommunicationManager::createGenericNackPacket() {
 
-        cout << "Criando pacote NACK" << endl;
         string responseString = "Erro!";
 
         Packet package;
@@ -176,8 +206,6 @@ namespace communicationManager {
     }
     Packet CommunicationManager::createEmptyPacket(PacketType type) {
 
-        cout << "Criando pacote vazio de " << stringDescribingType(type) << endl;
-
         Packet package;
         package.type = type;
         package.timestamp = time(NULL);
@@ -187,7 +215,6 @@ namespace communicationManager {
     }
 
     Packet CommunicationManager::createPacketWithID(int _id, PacketType type) {
-        cout << "Criando pacote contendo id = " << _id << endl;
 
         Packet package;
         package.type = type;
@@ -200,19 +227,16 @@ namespace communicationManager {
 
     Packet CommunicationManager::createExitPacket(int idCurrentProcess) {
 
-        cout << "Criando pacote EXIT " << endl;
-        return createPacketWithID(idCurrentProcess, EXIT);
+        return createPacketWithID(idCurrentProcess, EXIT_SERVER);
     }
 
     Packet CommunicationManager::createCoordinatorPacket(int idCurrentProcess) {
 
-        cout << "Criando pacote COORDINATOR " << endl;
         return createPacketWithID(idCurrentProcess, COORDINATOR);
     }
 
     Packet CommunicationManager::createHelloPacket(int idCurrentProcess, PacketType typeOfHello) {
 
-        cout << "Criando pacote " << stringDescribingType(typeOfHello) << endl;
         return createPacketWithID(idCurrentProcess, typeOfHello);
     }
 
@@ -222,10 +246,8 @@ namespace communicationManager {
      */
     Packet CommunicationManager::createExitPacket() {
 
-        cout << "Criando pacote EXIT" << endl;
-
         Packet package;
-        package.type = EXIT;
+        package.type = EXIT_SERVER;
         package.timestamp = time(NULL);
         bzero(package._payload, BUFFER_SIZE);
         package.length = BUFFER_SIZE;

@@ -8,7 +8,7 @@
 #   Renan Kummer
 ###
 
-all: common app_client app_server
+all: common app_client app_frontend app_server
 
 common:
 	@$(MAKE) -C common
@@ -16,12 +16,16 @@ common:
 app_client:
 	@$(MAKE) -C app_client
 
+app_frontend:
+	@$(MAKE) -C app_frontend
+
 app_server:
 	@$(MAKE) -C app_server
 
-.PHONY: common app_client app_server
+.PHONY: common app_client app_frontend app_server
 
 clean:
 	@$(MAKE) clean -C common
 	@$(MAKE) clean -C app_client
+	@$(MAKE) clean -C app_frontend
 	@$(MAKE) clean -C app_server

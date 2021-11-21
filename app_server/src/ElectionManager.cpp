@@ -24,7 +24,7 @@ ElectionManager::ElectionManager() {
 
 void ElectionManager::startElection() {
 
-    cout << "Starting a new election" << endl;
+    cout << "Começando nova eleição" << endl;
 
     int numberOfServers = this->servers.size();
 
@@ -33,7 +33,7 @@ void ElectionManager::startElection() {
     // para cada servidor com ID maior
     for (int i= this->currentServerID+1; i < numberOfServers; i++) {
 
-        cout << "enviando ELECTION para id = " << i << endl;
+        cout << "enviando ELECTION para servidor de id = " << i << endl;
 
         int sendSocket = this->servers[i].sendSocket;
         ReceiveThreadArguments *_arguments = new ReceiveThreadArguments;
@@ -44,15 +44,13 @@ void ElectionManager::startElection() {
 
         void *threadReturnValue;
         pthread_join(send_thread, &threadReturnValue);
-        cout << "voltou da thread" << endl;
         ErrorCodes *returnResult = (ErrorCodes *) threadReturnValue;
         hasReceivedSuccess = (*returnResult == SUCCESS);
-        cout << "valor de retorno da thread = " << *returnResult << endl;
 
     }
 
     if (hasReceivedSuccess) {
-        cout << "ESPERA O COORDINATOR" << endl;
+        cout << "Perdeu a eleição. Esperando COORDINATOR" << endl;
     } else {
         cout << "Ganhou eleição" << endl;
         GlobalManager::electionManager.assumeCoordination();
@@ -67,8 +65,6 @@ void ElectionManager::sendCoordinatorPacket(int sendSocket) {
 
     if (GlobalManager::commManager.send_packet(sendSocket, packet) == ERROR) {
         cout << "ERRO enviando COORDINATOR" << endl;
-    } else {
-        cout << "COORDINATOR enviado com sucesso" << endl;
     }
     free(packet);
 
@@ -90,6 +86,12 @@ void ElectionManager::assumeCoordination() {
 
     cout << "Se apresenta para front ends" << endl;
     GlobalManager::frontEndManager.sendHelloToFrontEnds();
+
+    cout << "Inicia consumo de notificações pendentes pros usuários com uma ou mais sessões" << endl;
+    for (auto user : GlobalManager::sessionManager.getUsers()) {
+        string username = user.first;
+        GlobalManager::sessionManager.additionalSessionOpeningProcedure(username);
+    }
 
 }
 
@@ -113,8 +115,6 @@ void* ElectionManager::send_election_message(void *data) {
         cout << "Não foi possivel enviar ELECTION" <<endl;
         *returnValue = ERROR;
         return (void *) returnValue;
-    } else {
-        cout << "ELECTION enviado com sucesso" << endl;
     }
 
     //espera recebimento answer
@@ -129,14 +129,12 @@ void* ElectionManager::send_election_message(void *data) {
     }
     // se recebeu algo -> ok
     else {
-        cout << "Recebeu answer com sucesso" << endl;
+        cout << "Recebeu ANSWER com sucesso" << endl;
         *returnValue = SUCCESS;
     }
 
-    cout << "vai fazer delete" << endl;
     delete receivedPacket;
     delete sendPacket;
-    cout << "fez delete. saindo da thread." << endl;
 
     return (void *) returnValue;
 
@@ -163,12 +161,10 @@ int ElectionManager::getCurrentCoordinatorSendSocket() {
 }
 
 void ElectionManager::setSendSocket(int sendSocket, int serverID) {
-    cout << "atualizando send socket do id = " << serverID << "para socket = " << sendSocket;
     this->servers[serverID].sendSocket = sendSocket;
 }
 
 void ElectionManager::setReceiveSocket(int receiveSocket, int serverID) {
-    cout << "atualizando receive socket do id = " << serverID << "para socket = " << receiveSocket;
     this->servers[serverID].receiveSocket = receiveSocket;
 }
 string ElectionManager::getIPfromID(int serverID) {
@@ -185,6 +181,9 @@ void ElectionManager::setCurrentServerID(int serverID) {
 }
 void ElectionManager::setServers(vector<ServerInfo> servers) {
     this->servers = servers;
+}
+vector<ServerInfo> ElectionManager::getServers() {
+    return this->servers;
 }
 int ElectionManager::getNumberOfServers() {
     return this->servers.size();

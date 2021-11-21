@@ -60,11 +60,14 @@ namespace profileSessionManager {
          *
          */
         ErrorCodes addNewFollowerToUser(string follower, string toBeFollowed);
-        ErrorCodes createNewSession(SessionAuth sessionAuth, int socketID);
         ErrorCodes createNewSession(string username, string sessionID);
+
+        void additionalSessionClosingProcedure(string username);
+        void additionalSessionOpeningProcedure(string username);
 
         void endAllSessions();
         list<Session> getAllSessions();
+        void deleteNotificationFromUser(string username, string notificationID);
 
 
         };

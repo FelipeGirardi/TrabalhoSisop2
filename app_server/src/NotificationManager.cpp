@@ -19,16 +19,8 @@ using namespace std;
 using namespace notification;
 using namespace profileSessionManager;
 
-    NotificationManager::NotificationManager() { }
-
-    void NotificationManager::setNotifications(unordered_map <string, Notification> notifications) {
-        this->notifications = notifications;
-
-        list<int> keys;
-        for(auto kv : notifications) { keys.push_back(stoi(kv.first)); }
-        this->idNextNotification = *(max_element(keys.begin(), keys.end())) + 1;
+    NotificationManager::NotificationManager() {
         sem_init(&(this->freeCritialSession), 0, 1);
-
     }
 
     unordered_map <string, Notification> NotificationManager::getNotifications() {
@@ -66,27 +58,39 @@ using namespace profileSessionManager;
 //            sessions.push_back(kv.second);
 //        }
 
-        ErrorCodes sent = GlobalManager::commManager.sendNotificationToFrontEnds(username,
-                                                                          this->notifications[notificationID]);
+        ErrorCodes sent;
+        cout << "Mandando notificação para RMS " << endl;
+        sent = GlobalManager::commManager.sendNotificationToRMs(username,
+                                                                                 this->notifications[notificationID].getID());
+
+        if (sent) {
+            cout << "Mandando notificação para front ends" << endl;
+            sent = GlobalManager::commManager.sendNotificationToFrontEnds(username,
+                                                                     this->notifications[notificationID]);
+        }
 
         if (sent == SUCCESS) {
             GlobalManager::notifManager.notifications[notificationID].decrementPendingReaders();
         }
+
         int pendingReaders = GlobalManager::notifManager.notifications[notificationID].getPendingReaders();
 
         if (pendingReaders == 0) {
-            cout << "Notificação foi mandada para todos os usuários pendentes. deletando." << endl;
+            cout << "Notificação foi mandada para todos os usuários pendentes. Deletando." << endl;
             GlobalManager::notifManager.notifications.erase(notificationID);
         } else {
-            cout << "Notificação pendente a " <<  pendingReaders << " usuários" << endl;
+            cout << "Notificação ainda é pendente a " <<  pendingReaders << " usuários" << endl;
         }
 
     }
+
+
 
     void NotificationManager::newNotificationSentBy(string username, string notification) {
 
         long int currentTime = static_cast<long int> (time(NULL));
         int pendingReaders = GlobalManager::notifManager.getPendingReaders(username);
+        cout << "Nova notificação é pendente a " << pendingReaders << " usuários" << endl;
         if (pendingReaders == 0) {
             cout << "Usuário não tem nenhum seguidor. Notificação ignorada." << endl;
             return;
@@ -94,6 +98,7 @@ using namespace profileSessionManager;
 
         sem_wait(&(GlobalManager::notifManager.freeCritialSession));
         string notificationID = to_string(GlobalManager::notifManager.idNextNotification);
+        cout << "ID nova notificação = " << notificationID << endl;
         Notification newNotification = Notification(notificationID,
                                                     notification, username,
                                                     currentTime,

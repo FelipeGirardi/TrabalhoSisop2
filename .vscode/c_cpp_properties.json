@@ -3,9 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/app_client/src/headers",
-                "${workspaceFolder}/common/include"
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",
