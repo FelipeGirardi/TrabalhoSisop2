@@ -57,10 +57,13 @@ void SocketManager::listenToServerChanges(string host, int port)
 
         serverMutex_.lock();
 
-        delete serverSession_.commandSocket;
-        delete serverSession_.notificationSocket;
-        serverSession_.commandSocket = nullptr;
-        serverSession_.notificationSocket = nullptr;
+        if ((serverSession_.notificationSocket != nullptr) && (serverSession_.commandSocket != nullptr))
+        {
+            delete serverSession_.commandSocket;
+            delete serverSession_.notificationSocket;
+            serverSession_.commandSocket = nullptr;
+            serverSession_.notificationSocket = nullptr;
+        }
 
         auto firstServerSocket = new Socket(firstServerSocketDescriptor);
         identifyServerSocketType(firstServerSocket);
@@ -241,12 +244,12 @@ int SocketManager::createSocketDescriptor()
 
 void SocketManager::initializeListenerSocket(int socketDescriptor, std::string host, int port)
 {
-    int option;
+    int option = 1;
     setsockopt(socketDescriptor, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
 
     sockaddr_in serverAddress;
     serverAddress.sin_family = AF_INET;
-    serverAddress.sin_port = htons((uint16_t)port);
+    serverAddress.sin_port = htons(port);
     serverAddress.sin_addr.s_addr = inet_addr(host.c_str());
     bzero(&(serverAddress.sin_zero), 8);
 
@@ -289,9 +292,15 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
 
     try
     {
+        auto sessionAuth = SessionAuth::fromBytes(incomingPacket->_payload);
+
+        FrontEndPayload authPayload;
+        strncpy(authPayload.senderUsername, sessionAuth->getProfileId().c_str(), 100);
+        strncpy(authPayload.commandContent, sessionAuth->getUuid().c_str(), 128);
+
+        memcpy(incomingPacket->_payload, authPayload.toBytes(), sizeof(FrontEndPayload));
         serverSession_.commandSocket->send(*incomingPacket);
 
-        auto sessionAuth = SessionAuth::fromBytes(incomingPacket->_payload);
         addSocketToClientSession(clientSocket, sessionAuth);
         delete sessionAuth;
 
@@ -300,7 +309,7 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
     }
     catch (const exception& e)
     {
-        cerr << e.what() << endl;
+        cerr << e.what() << "\n";
 
         Packet nackPacket = { PacketType::SERVER_ERROR };
         clientSocket->sendIgnoreAck(nackPacket);

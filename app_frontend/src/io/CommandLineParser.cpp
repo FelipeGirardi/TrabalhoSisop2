@@ -17,8 +17,8 @@ using namespace FrontendApp::Exception;
 // Static variables
 
 const unsigned CommandLineParser::hostIndex_ = 1U;
-const unsigned CommandLineParser::clientPortIndex_ = 2U;
-const unsigned CommandLineParser::serverPortIndex_ = 3U;
+const unsigned CommandLineParser::serverPortIndex_ = 2U;
+const unsigned CommandLineParser::clientPortIndex_ = 3U;
 
 
 // Public functions
