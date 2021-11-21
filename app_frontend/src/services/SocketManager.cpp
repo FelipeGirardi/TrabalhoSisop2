@@ -18,6 +18,7 @@
 #include <memory>
 #include <iostream>
 #include <exception>
+#include <errno.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -43,19 +44,23 @@ std::unordered_map<std::string, std::list<ClientSession>> SocketManager::clientS
 
 void SocketManager::listenToServerChanges(string host, int port)
 {
+    cout << "Started to listen for primary server changes at " << host << ":" << port << endl;
+    setbuf(stdout, nullptr);
     auto listenerSocketDescriptor = createSocketDescriptor();
     initializeListenerSocket(listenerSocketDescriptor, host, port);
 
     while (true)
     {
         sockaddr_in serverAddress;
-        socklen_t serverLength;
+        socklen_t serverLength = sizeof(serverAddress);
 
+        cout << "Waiting for primary server changes...";
         auto firstServerSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&serverAddress, &serverLength);
         if (firstServerSocketDescriptor < 0)
         {
-            ::close(listenerSocketDescriptor);
             cout << "Failed to accept first server socket" << endl;
+            cout << "Failure reason: " << strerror(errno) << endl;
+            ::close(listenerSocketDescriptor);
             throw SocketAcceptFailedException(listenerSocketDescriptor, false);
         }
 
@@ -68,10 +73,11 @@ void SocketManager::listenToServerChanges(string host, int port)
         identifyServerSocketType(firstServerSocket);
 
         auto secondServerSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&serverAddress, &serverLength);
-        if (firstServerSocketDescriptor < 0)
+        if (secondServerSocketDescriptor < 0)
         {
-            ::close(listenerSocketDescriptor);
             cout << "Failed to accept second server socket" << endl;
+            cout << "Failure reason: " << strerror(errno) << endl;
+            ::close(listenerSocketDescriptor);
             throw SocketAcceptFailedException(listenerSocketDescriptor, false);
         }
 
@@ -86,6 +92,7 @@ void SocketManager::listenToServerChanges(string host, int port)
 
 void SocketManager::listenForClientConnections(string host, int port)
 {
+    cout << "Started to listen for client connections at " << host << ":" << port << endl;
     auto listenerSocketDescriptor = createSocketDescriptor();
     initializeListenerSocket(listenerSocketDescriptor, host, port);
 
@@ -94,13 +101,16 @@ void SocketManager::listenForClientConnections(string host, int port)
         sockaddr_in clientAddress;
         socklen_t clientLength;
 
+        cout << "Waiting for client connections..." << endl;
         auto clientSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&clientAddress, &clientLength);
         if (clientSocketDescriptor < 0)
         {
-            ::close(listenerSocketDescriptor);
             cout << "Failed to accept client connection" << endl;
+            cout << "Failure reason: " << strerror(errno) << endl;
+            ::close(listenerSocketDescriptor);
             throw SocketAcceptFailedException(listenerSocketDescriptor);
         }
+        cout << "Received new client connection" << endl;
 
         auto clientSocket = new Socket(clientSocketDescriptor);
         thread(SocketManager::identifyClientSocketType, clientSocket).detach();
@@ -116,7 +126,7 @@ void SocketManager::listenForServerNotifications()
     }
     catch (...)
     {
-        cerr << "SocketManager: lost connection to server socket due to read failure..." << endl;
+        cout << "Lost connection to primary server socket..." << endl;
         return;
     }
 
@@ -124,25 +134,33 @@ void SocketManager::listenForServerNotifications()
     {
         if (incomingPacket->type != NOTIFICATION)
         {
-            cerr << "SocketManager: lost connection to server socket due to wrong packet type..." << endl;
+            cout << "Lost connection to primary server socket..." << endl;
             return;
         }
+        cout << "Received notification from server";
 
         try
         {
             auto frontendPayload = FrontEndPayload::fromBytes(incomingPacket->_payload);
+            auto sessionsCount = 0;
             if (clientSessions_.count(frontendPayload->senderUsername) > 0)
             {
                 auto activeSessions = clientSessions_[frontendPayload->senderUsername];
                 for (auto& session : activeSessions)
+                {
                     session.notificationSocket->sendIgnoreAck(*incomingPacket);
+                    sessionsCount++;
+                }
             }
+            cout << "Sent notification to " << sessionsCount << "client sessions from " << frontendPayload->senderUsername << endl;
 
             Packet ackPacket = { PacketType::SERVER_ACK };
             serverSession_.notificationSocket->sendIgnoreAck(ackPacket);
+            cout << "Sent ACK to server" << endl;
         }
         catch (...)
         {
+            cout << "Could not send notification to client sessions: sending NACK to server" << endl;
             Packet nackPacket = { PacketType::SERVER_ERROR };
             serverSession_.notificationSocket->sendIgnoreAck(nackPacket);
         }
@@ -153,12 +171,10 @@ void SocketManager::listenForServerNotifications()
         }
         catch (...)
         {
-            cerr << "SocketManager: lost connection to server socket due to read failure..." << endl;
+            cout << "Lost connection to primary server socket..." << endl;
             return;
         }
     }
-
-    // disconnectAllClients();
 
     serverSession_.commandSocket = nullptr;
     serverSession_.notificationSocket = nullptr;
@@ -166,8 +182,9 @@ void SocketManager::listenForServerNotifications()
 
 void SocketManager::listenForClientCommands(ClientSession clientSession)
 {
-    cout << "Waiting for user commands..." << endl;
+    cout << "Waiting for commands from client " << clientSession.profileId << " - " << clientSession.uuid << endl;
     auto incomingPacket = clientSession.commandSocket->receive();
+    cout << "Received command from client " << clientSession.profileId << " - " << clientSession.uuid << endl;
 
     while (incomingPacket->type != EXIT)
     {
@@ -177,30 +194,30 @@ void SocketManager::listenForClientCommands(ClientSession clientSession)
 
         memcpy(incomingPacket->_payload, frontendPayload.toBytes(), sizeof(FrontEndPayload));
 
-        cout << "Locking mutex" << endl;
         serverMutex_.lock();
 
         try
         {
-            cout << "Sending to server" << endl;
             serverSession_.commandSocket->send(*incomingPacket);
 
-            cout << "Sending ack to client" << endl;
             Packet ackPacket = { PacketType::SERVER_ACK };
             clientSession.commandSocket->sendIgnoreAck(ackPacket);
+            cout << "Sent command to server: sending ACK to client " << clientSession.profileId << " - " << clientSession.uuid << endl;
         }
         catch (...)
         {
-            cout << "Sending nack to client" << endl;
+            cout << "Could not send command to server: sending NACK to client" << clientSession.profileId << " - " << clientSession.uuid << endl;
             Packet nackPacket = { PacketType::SERVER_ERROR };
             clientSession.commandSocket->sendIgnoreAck(nackPacket);
         }
 
-        cout << "Unlocking mutex" << endl;
         serverMutex_.unlock();
 
+        cout << "Waiting for commands from client " << clientSession.profileId << " - " << clientSession.uuid << endl;
         incomingPacket = clientSession.commandSocket->receive();
     }
+
+    cout << "EXIT received from client " << clientSession.profileId << " - " << clientSession.uuid << endl;
 
     FrontEndPayload exitPayload;
     strcpy(exitPayload.senderUsername, clientSession.profileId.c_str());
@@ -303,11 +320,13 @@ void SocketManager::identifyServerSocketType(Socket* serverSocket)
     if (incomingPacket->type == PacketType::HELLO_SEND &&
         serverSession_.notificationSocket == nullptr)
     {
+        cout << "Primary server changed: received notification socket" << endl;
         serverSession_.notificationSocket = serverSocket;
     }
     else if (incomingPacket->type == PacketType::HELLO_RECEIVE &&
         serverSession_.commandSocket == nullptr)
     {
+        cout << "Primary server changed: received command socket" << endl;
         serverSession_.commandSocket = serverSocket;
     }
     else
@@ -315,7 +334,7 @@ void SocketManager::identifyServerSocketType(Socket* serverSocket)
         Packet nackPacket = { PacketType::SERVER_ERROR };
         serverSocket->sendIgnoreAck(nackPacket);
 
-        cout << "Not HELLO_SEND, neither HELLO_RECEIVE..." << endl;
+        cout << "ERROR: Primary server changed: received invalid socket" << endl;
         incomingPacket->printItself();
         throw UnexpectedPacketTypeException();
     }
@@ -326,7 +345,7 @@ void SocketManager::identifyServerSocketType(Socket* serverSocket)
 
 void SocketManager::identifyClientSocketType(Socket* clientSocket)
 {
-    cout << "On identifyClientSocketType" << endl;
+    cout << "Identifying client connection socket type..." << endl;
     auto incomingPacket = clientSocket->receive();
     if (incomingPacket->type != PacketType::USERNAME)
         throw UnexpectedPacketTypeException();
@@ -340,7 +359,7 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
     }
     catch (const exception& e)
     {
-        cerr << e.what() << "\n";
+        cout << "Could not identify client connection socket type: sending NACK to client" << endl;
 
         Packet nackPacket = { PacketType::SERVER_ERROR };
         clientSocket->sendIgnoreAck(nackPacket);
@@ -351,22 +370,20 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
 
 void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* sessionAuth)
 {
-    cout << "On addSocketToClientSession" << endl;
     if (clientSessions_.count(sessionAuth->getProfileId()) == 0)
     {
-        cout << "No sessions entry found for " << sessionAuth->getProfileId() << endl;
+        cout << "First connection from client " << sessionAuth->getProfileId() << endl;
         list<ClientSession> sessions;
         clientSessions_.insert(pair(sessionAuth->getProfileId(), sessions));
     }
 
     auto hasSession = false;
     auto& activeSessions = clientSessions_[sessionAuth->getProfileId()];
-    cout << "Iterating active sessions for " << sessionAuth->getProfileId() << endl;
     for (auto& session : activeSessions)
     {
         if (session.uuid == sessionAuth->getUuid())
         {
-            cout << "Session found!" << endl;
+            cout << "Session " << sessionAuth->getUuid() << " found for client " << sessionAuth->getProfileId() << endl;
             hasSession = true;
             if (sessionAuth->getSocketType() == SocketType::COMMAND_SOCKET)
                 session.commandSocket = clientSocket;
@@ -383,10 +400,6 @@ void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* 
                 Packet loginPacket = { PacketType::LOGIN, 0, time(NULL) };
                 memcpy(loginPacket._payload, authPayload.toBytes(), sizeof(FrontEndPayload));
 
-                cout << "On identifyClientSocketType: sending to server - packetType: " << endl;
-                loginPacket.printItself();
-
-                // Esse cara funciona com sendIgnoreAck - teste de 21/11
                 serverSession_.commandSocket->send(loginPacket);
 
                 cout << "Creating thread to listen for commands for " << sessionAuth->getProfileId() << endl;

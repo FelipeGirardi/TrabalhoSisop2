@@ -42,12 +42,10 @@ int Socket::getDescriptor()
 
 void Socket::send(Packet packet)
 {
-    cout << "Sending packet" << endl;
     auto response = ::write(socketDescriptor_, &packet, sizeof(Packet));
     if (response < 0)
         throw SocketWriteFailedException(socketDescriptor_);
 
-    cout << "Calling receive()" << endl;
     auto ackPacket = receive();
     if (ackPacket->type != SERVER_ACK)
         throw ServerNotAcknowledgedException(socketDescriptor_);
@@ -62,13 +60,9 @@ void Socket::sendIgnoreAck(Packet packet)
 
 Packet* Socket::receive()
 {
-    cout << "Receiving packet" << endl;
     auto incomingPacket = new Packet();
-    cout << "Created incomingPacket pointer" << endl;
 
     auto response = ::read(socketDescriptor_, incomingPacket, sizeof(Packet));
-    cout << "Read from socket" << endl;
-    incomingPacket->printItself();
     if (response < 0)
         throw SocketReadFailedException(socketDescriptor_);
 
