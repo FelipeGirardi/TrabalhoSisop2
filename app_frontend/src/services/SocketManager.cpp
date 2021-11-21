@@ -14,8 +14,8 @@
 #include "exceptions/UnexpectedPacketTypeException.hpp"
 
 #include <thread>
-#include <memory>
 #include <cstring>
+#include <memory>
 #include <iostream>
 #include <exception>
 #include <netdb.h>
@@ -53,24 +53,27 @@ void SocketManager::listenToServerChanges(string host, int port)
 
         auto firstServerSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&serverAddress, &serverLength);
         if (firstServerSocketDescriptor < 0)
+        {
+            ::close(listenerSocketDescriptor);
+            cout << "Failed to accept first server socket" << endl;
             throw SocketAcceptFailedException(listenerSocketDescriptor, false);
+        }
 
         serverMutex_.lock();
 
-        if ((serverSession_.notificationSocket != nullptr) && (serverSession_.commandSocket != nullptr))
-        {
-            delete serverSession_.commandSocket;
-            delete serverSession_.notificationSocket;
-            serverSession_.commandSocket = nullptr;
-            serverSession_.notificationSocket = nullptr;
-        }
+        serverSession_.commandSocket = nullptr;
+        serverSession_.notificationSocket = nullptr;
 
         auto firstServerSocket = new Socket(firstServerSocketDescriptor);
         identifyServerSocketType(firstServerSocket);
 
         auto secondServerSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&serverAddress, &serverLength);
         if (firstServerSocketDescriptor < 0)
+        {
+            ::close(listenerSocketDescriptor);
+            cout << "Failed to accept second server socket" << endl;
             throw SocketAcceptFailedException(listenerSocketDescriptor, false);
+        }
 
         auto secondServerSocket = new Socket(secondServerSocketDescriptor);
         identifyServerSocketType(secondServerSocket);
@@ -93,7 +96,11 @@ void SocketManager::listenForClientConnections(string host, int port)
 
         auto clientSocketDescriptor = ::accept(listenerSocketDescriptor, (sockaddr*)&clientAddress, &clientLength);
         if (clientSocketDescriptor < 0)
+        {
+            ::close(listenerSocketDescriptor);
+            cout << "Failed to accept client connection" << endl;
             throw SocketAcceptFailedException(listenerSocketDescriptor);
+        }
 
         auto clientSocket = new Socket(clientSocketDescriptor);
         thread(SocketManager::identifyClientSocketType, clientSocket).detach();
@@ -102,14 +109,23 @@ void SocketManager::listenForClientConnections(string host, int port)
 
 void SocketManager::listenForServerNotifications()
 {
-    auto incomingPacket = serverSession_.notificationSocket->receive();
+    Packet* incomingPacket = nullptr;
+    try
+    {
+        incomingPacket = serverSession_.notificationSocket->receive();
+    }
+    catch (...)
+    {
+        cerr << "SocketManager: lost connection to server socket due to read failure..." << endl;
+        return;
+    }
 
     while (incomingPacket->type != EXIT)
     {
         if (incomingPacket->type != NOTIFICATION)
         {
-            cerr << "SocketManager: lost connection to server socket..." << endl;
-            throw UnexpectedPacketTypeException();
+            cerr << "SocketManager: lost connection to server socket due to wrong packet type..." << endl;
+            return;
         }
 
         try
@@ -131,13 +147,19 @@ void SocketManager::listenForServerNotifications()
             serverSession_.notificationSocket->sendIgnoreAck(nackPacket);
         }
 
-        incomingPacket = serverSession_.notificationSocket->receive();
+        try
+        {
+            incomingPacket = serverSession_.notificationSocket->receive();
+        }
+        catch (...)
+        {
+            cerr << "SocketManager: lost connection to server socket due to read failure..." << endl;
+            return;
+        }
     }
 
-    disconnectAllClients();
+    // disconnectAllClients();
 
-    delete serverSession_.commandSocket;
-    delete serverSession_.notificationSocket;
     serverSession_.commandSocket = nullptr;
     serverSession_.notificationSocket = nullptr;
 }
@@ -217,6 +239,13 @@ void SocketManager::listenForClientCommands(ClientSession clientSession)
     activeSessions.erase(deleteIterator);
 }
 
+void SocketManager::closeServerSockets()
+{
+    ::close(serverSession_.commandSocket->getDescriptor());
+    ::close(serverSession_.notificationSocket->getDescriptor());
+}
+
+
 void SocketManager::disconnectAllClients()
 {
     Packet exitPacket = { PacketType::EXIT };
@@ -227,8 +256,8 @@ void SocketManager::disconnectAllClients()
         for (auto& session : activeSessions)
         {
             session.notificationSocket->sendIgnoreAck(exitPacket);
-            delete session.notificationSocket;
-            delete session.commandSocket;
+            ::close(session.commandSocket->getDescriptor());
+            ::close(session.notificationSocket->getDescriptor());
         }
     }
 
@@ -286,6 +315,8 @@ void SocketManager::identifyServerSocketType(Socket* serverSocket)
         Packet nackPacket = { PacketType::SERVER_ERROR };
         serverSocket->sendIgnoreAck(nackPacket);
 
+        cout << "Not HELLO_SEND, neither HELLO_RECEIVE..." << endl;
+        incomingPacket->printItself();
         throw UnexpectedPacketTypeException();
     }
 

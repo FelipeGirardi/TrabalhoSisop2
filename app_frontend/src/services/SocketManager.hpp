@@ -38,6 +38,8 @@ namespace FrontendApp
             static void listenForClientConnections(std::string host, int port);
             static void listenForServerNotifications();
             static void listenForClientCommands(ClientSession clientSession);
+
+            static void closeServerSockets();
             static void disconnectAllClients();
 
         private:

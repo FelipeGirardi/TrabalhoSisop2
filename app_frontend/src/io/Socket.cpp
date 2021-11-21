@@ -68,6 +68,7 @@ Packet* Socket::receive()
 
     auto response = ::read(socketDescriptor_, incomingPacket, sizeof(Packet));
     cout << "Read from socket" << endl;
+    incomingPacket->printItself();
     if (response < 0)
         throw SocketReadFailedException(socketDescriptor_);
 

@@ -9,6 +9,7 @@
 #include "exceptions/InvalidCommandLineArgsException.hpp"
 
 #include <thread>
+#include <csignal>
 #include <iostream>
 
 using namespace std;
@@ -16,8 +17,12 @@ using namespace FrontendApp::IO;
 using namespace FrontendApp::Service;
 using namespace FrontendApp::Exception;
 
+void handleInteractiveAttentionSignal(int signalNum);
+
 int main(int argc, char** argv)
 {
+    signal(SIGINT, handleInteractiveAttentionSignal);
+
     try
     {
         auto cliArgs = CommandLineParser::parseArgs(argc, argv);
@@ -31,4 +36,12 @@ int main(int argc, char** argv)
         cerr << e.what() << endl;
         exit(EXIT_FAILURE);
     }
+}
+
+void handleInteractiveAttentionSignal(int signalNum)
+{
+    SocketManager::disconnectAllClients();
+    SocketManager::closeServerSockets();
+
+    exit(signalNum);
 }
