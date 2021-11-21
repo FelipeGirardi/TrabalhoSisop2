@@ -22,10 +22,9 @@ void FrontEndCommunicationManager::sendHelloToFrontEnds() {
     cout << "Iniciando o envio de HELLO para front ends" << endl;
 
     int numberOfFrontEnds = this->frontEnds.size();
-    cout << "number of servers = " << numberOfFrontEnds << endl;
 
     for (int i = 0; i < numberOfFrontEnds; i++) {
-        cout << "Enviando HELLO SEND i = " << i << endl;
+        cout << "Enviando HELLO SEND para front end de IP = " << frontEnds[i].ip << endl;
         ErrorCodes successSend = sendHelloToFrontEnd(frontEnds[i], HELLO_SEND, i);
         if (successSend) {
             cout << "Sucesso enviando HELLO SEND" << endl;
@@ -42,7 +41,6 @@ void FrontEndCommunicationManager::sendHelloToFrontEnds() {
 ErrorCodes FrontEndCommunicationManager::sendHelloToFrontEnd(FrontEndInfo frontEndInfo,
     PacketType type, int idFrontEnd) {
 
-    cout << "Sending a hello to front end with ip = " << frontEndInfo.ip;
     ServerArguments* _arguments = new ServerArguments;
     _arguments->ip = frontEndInfo.ip;
     _arguments->port = frontEndInfo.port;
@@ -55,7 +53,6 @@ ErrorCodes FrontEndCommunicationManager::sendHelloToFrontEnd(FrontEndInfo frontE
     int* returnResult = (int*)threadReturnValue;
 
     if (*returnResult != INVALID_SOCKET) {
-        cout << "resultado valido" << endl;
         if (_arguments->typeOfPacket == HELLO_SEND) {
 
             GlobalManager::frontEndManager.setSendSocket(*returnResult, idFrontEnd);
@@ -63,7 +60,7 @@ ErrorCodes FrontEndCommunicationManager::sendHelloToFrontEnd(FrontEndInfo frontE
         else if (_arguments->typeOfPacket == HELLO_RECEIVE) {
             GlobalManager::frontEndManager.setReceiveSocket(*returnResult, idFrontEnd);
 
-            cout << "Criando thread de leitura de comandos de front ends" << endl;
+            cout << "Criando thread de leitura de comandos de front end de ip = " << frontEndInfo.ip << endl;
             int* pointerToSocket = (int*)malloc(sizeof(int));
             *pointerToSocket = *returnResult;
             pthread_t receiving_thread;
@@ -82,7 +79,6 @@ ErrorCodes FrontEndCommunicationManager::sendHelloToFrontEnd(FrontEndInfo frontE
 // espera ServerArguments como argumento
 void* FrontEndCommunicationManager::connectToFrontEnd(void* data) {
 
-    cout << "iniciando connect to front end" << endl;
     // cria conexao com front end
     struct sockaddr_in serv_addr;
     struct hostent* server;
@@ -93,8 +89,6 @@ void* FrontEndCommunicationManager::connectToFrontEnd(void* data) {
     string serverIP = _arguments->ip;
     int port = _arguments->port;
     PacketType packetType = _arguments->typeOfPacket;
-
-    cout << "Connecting to front end of ip = " << serverIP << endl;
 
     // seta timeout
     struct timeval tv;
@@ -114,7 +108,6 @@ void* FrontEndCommunicationManager::connectToFrontEnd(void* data) {
         *returnValue = INVALID_SOCKET;
         return (void*)returnValue;
     }
-    cout << "SOCKET = " << sockfd << endl;
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
@@ -131,13 +124,9 @@ void* FrontEndCommunicationManager::connectToFrontEnd(void* data) {
     int idCurrentProcess = GlobalManager::electionManager.getProcessID();
     *packet = GlobalManager::commManager.createHelloPacket(idCurrentProcess, packetType);
     if (GlobalManager::commManager.send_packet(sockfd, packet) == ERROR) {
-        cout << "ERROR enviando HELLO number = " << packetType << endl;
         *returnValue = INVALID_SOCKET;
         return (void*)returnValue;
     }
-    else {
-        cout << "Sucesso enviando HELLO number = " << packetType << endl;
-    };
 
     //espera ACK
     Packet* receivedPacket = new Packet;
@@ -145,13 +134,12 @@ void* FrontEndCommunicationManager::connectToFrontEnd(void* data) {
 
     // se estorou o tempo -> servidor nao esta ativo
     if (readResult < 0 || receivedPacket == NULL || receivedPacket->type == 0) {
-        cout << "Servidor não respondeu no tempo" << endl;
+        cout << "Servidor de ip = " << serverIP << " não respondeu no tempo" << endl;
         *returnValue = INVALID_SOCKET;
         return (void*)returnValue;
     }
     // se recebeu algo -> ok
     else {
-        cout << "Servidor respondeu no tempo" << endl;
         *returnValue = sockfd;
     }
 
@@ -170,31 +158,29 @@ void* FrontEndCommunicationManager::client_thread_func(void* data) {
     int commandSocket = *socket;
 
     // inicia leitura de comandos do front end
-    cout << "Iniciando leitura de comandos do socket = " << commandSocket << endl;
+    cout << "Iniciando leitura de comandos de front end = " << commandSocket << endl;
 
     while (!_exit) {
         bzero(buffer, BUFFER_SIZE);
 
         Packet* receivedPacket = new Packet;
         readResult = read(commandSocket, receivedPacket, sizeof(Packet));
-        cout << "numero do tipo do pacote recebido = " << receivedPacket->type << endl;
-        cout << "desc = " << stringDescribingType(receivedPacket->type) << endl;
 
         if (readResult < 0 || !(receivedPacket->type == SEND ||
             receivedPacket->type == FOLLOW ||
             receivedPacket->type == EXIT ||
             receivedPacket->type == LOGIN)) {
             free(receivedPacket);
-            printf("ERRO lendo do socket. Desconectando.\n");
+            printf("ERRO lendo do socket de front end. Desconectando.\n");
             break;
         }
-        cout << "Pacote recebido:" << endl;
-        receivedPacket->printItself();
+
         strcpy(buffer, receivedPacket->_payload);
 
         Packet* responsePacket = new Packet;
 
         FrontEndPayload* frontEndPayload = FrontEndPayload::fromBytes(receivedPacket->_payload);
+        cout << "Payload do pacote recebido:" << endl;
         cout << "sender username = " << frontEndPayload->senderUsername << endl;
         cout << "command content = " << frontEndPayload->commandContent << endl;
 
@@ -222,7 +208,6 @@ void* FrontEndCommunicationManager::client_thread_func(void* data) {
 
             GlobalManager::notifManager.newNotificationSentBy(frontEndPayload->senderUsername,
                 frontEndPayload->commandContent);
-            cout << "notificacao criada" << endl;
 
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
 
@@ -239,8 +224,6 @@ void* FrontEndCommunicationManager::client_thread_func(void* data) {
             cout << frontEndPayload->senderUsername << " desconectado" << endl;
 
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
-
-
 
         }
         else if (receivedPacket->type == LOGIN) {

@@ -27,7 +27,6 @@ namespace userInformation {
         //this->pendingNotifications = {};
         //this->followers = {};
         sem_init(&(this->freeCritialSession), 0, 1);
-        cout << "Inicializando o semaforo de " << username << endl;
         sem_init(&(this->hasItems), 0, 0);
     }
 
@@ -65,7 +64,6 @@ namespace userInformation {
     }
 
     void UserInformation::removeSession(string sessionID) {
-        cout << "Erasing session ID " << sessionID << endl;
         this->sessions.erase(sessionID);
     }
 
@@ -136,14 +134,11 @@ namespace userInformation {
 
     void UserInformation::produceNewNotification(string notificationID) {
 
-        cout << "Produzindo nova notificação" << endl;
-
         struct arg_struct* args = new struct arg_struct;
 
         args->userInformation = this;
         args->notificationID.assign(notificationID);
 
-        cout << "Trancarei a produção na critical session" << endl;
         sem_wait(&(this->freeCritialSession));
 
         cout << "Produzindo notificação com ID: " << notificationID << endl;
@@ -151,7 +146,6 @@ namespace userInformation {
 
         sem_post(&(this->freeCritialSession));
         sem_post(&(this->hasItems));
-        cout << "Liberei a produção na critical session" << endl;
 
     }
 
@@ -184,14 +178,10 @@ namespace userInformation {
             cout << "USER IS NULL" << endl;
             return 0;
         }
-        cout << "USER " << _this->toString() << endl;
 
         while (_this->getNumberOfSessions() > 0) {
-            cout << "Tem " << _this->getNumberOfSessions() << "sessoes ainda de " << _this->username << endl;
             sem_wait(&(_this->hasItems));
-            cout << "Tranquei aqui entre o hasItems o a critical session" << endl;
             sem_wait(&(_this->freeCritialSession));
-            cout << "Destranquei!" << endl;
 
             // this if shouldn't be needed, but better safe than sorry
             if (!_this->pendingNotifications.empty() && _this->getNumberOfSessions() > 0) {

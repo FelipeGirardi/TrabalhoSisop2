@@ -24,7 +24,7 @@ ElectionManager::ElectionManager() {
 
 void ElectionManager::startElection() {
 
-    cout << "Starting a new election" << endl;
+    cout << "Começando nova eleição" << endl;
 
     int numberOfServers = this->servers.size();
 
@@ -33,7 +33,7 @@ void ElectionManager::startElection() {
     // para cada servidor com ID maior
     for (int i= this->currentServerID+1; i < numberOfServers; i++) {
 
-        cout << "enviando ELECTION para id = " << i << endl;
+        cout << "enviando ELECTION para servidor de id = " << i << endl;
 
         int sendSocket = this->servers[i].sendSocket;
         ReceiveThreadArguments *_arguments = new ReceiveThreadArguments;
@@ -44,15 +44,13 @@ void ElectionManager::startElection() {
 
         void *threadReturnValue;
         pthread_join(send_thread, &threadReturnValue);
-        cout << "voltou da thread" << endl;
         ErrorCodes *returnResult = (ErrorCodes *) threadReturnValue;
         hasReceivedSuccess = (*returnResult == SUCCESS);
-        cout << "valor de retorno da thread = " << *returnResult << endl;
 
     }
 
     if (hasReceivedSuccess) {
-        cout << "ESPERA O COORDINATOR" << endl;
+        cout << "Perdeu a eleição. Esperando COORDINATOR" << endl;
     } else {
         cout << "Ganhou eleição" << endl;
         GlobalManager::electionManager.assumeCoordination();
@@ -139,10 +137,8 @@ void* ElectionManager::send_election_message(void *data) {
         *returnValue = SUCCESS;
     }
 
-    cout << "vai fazer delete" << endl;
     delete receivedPacket;
     delete sendPacket;
-    cout << "fez delete. saindo da thread." << endl;
 
     return (void *) returnValue;
 
@@ -169,12 +165,12 @@ int ElectionManager::getCurrentCoordinatorSendSocket() {
 }
 
 void ElectionManager::setSendSocket(int sendSocket, int serverID) {
-    cout << "atualizando send socket do id = " << serverID << "para socket = " << sendSocket;
+    cout << "Atualizando send socket do id = " << serverID << "para socket = " << sendSocket;
     this->servers[serverID].sendSocket = sendSocket;
 }
 
 void ElectionManager::setReceiveSocket(int receiveSocket, int serverID) {
-    cout << "atualizando receive socket do id = " << serverID << "para socket = " << receiveSocket;
+    cout << "Atualizando receive socket do id = " << serverID << "para socket = " << receiveSocket;
     this->servers[serverID].receiveSocket = receiveSocket;
 }
 string ElectionManager::getIPfromID(int serverID) {

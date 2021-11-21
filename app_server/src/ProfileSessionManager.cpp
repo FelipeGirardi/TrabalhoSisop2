@@ -79,62 +79,6 @@ namespace profileSessionManager {
 
     }
 
-
-    ErrorCodes ProfileSessionManager::createNewSession(SessionAuth sessionAuth, int socketID) {
-        string username = sessionAuth.getProfileId();
-        GlobalManager::sessionManager.registerUser(username);
-        if (GlobalManager::sessionManager.users[username].hasSessionWithID(sessionAuth.getUuid())) {
-            cout << "Usuário já tem sessao com esse ID" << endl;
-            Session existentSession = GlobalManager::sessionManager.users[username]
-                .getSessionWithID(sessionAuth.getUuid());
-            cout << "Sessão existente " << existentSession.client_socket << " " << existentSession.notif_socket << endl;
-            if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
-                if (existentSession.hasNotifSocket()) {
-                    return ERROR;
-                }
-                else {
-                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
-                        NOTIFICATION_SOCKET,
-                        socketID);
-                }
-            }
-            else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
-                if (existentSession.hasCommandSocket()) {
-                    return ERROR;
-                }
-                else {
-                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
-                        COMMAND_SOCKET,
-                        socketID);
-                }
-            }
-            else {
-                return ERROR;
-            }
-        }
-        else if (GlobalManager::sessionManager.users[username].getNumberOfSessions() < 2) {
-            cout << "Usuário não tem sessao com esse ID" << endl;
-            Session session;
-            session.userID = sessionAuth.getProfileId();
-            if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
-                session.notif_socket = socketID;
-                GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
-            }
-            else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
-                session.client_socket = socketID;
-                GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
-            }
-            else {
-                return ERROR;
-            }
-
-        }
-        else {
-            return ERROR;
-        }
-        return SUCCESS;
-    }
-
     void ProfileSessionManager::endSessionWithID(string sessionID, string username) {
 
         cout << "Encerrando sessão " << sessionID << " de " << username << endl;
@@ -186,7 +130,7 @@ namespace profileSessionManager {
      * -1 = nao deu follow
     */
     ErrorCodes ProfileSessionManager::addNewFollowerToUser(string follower, string toBeFollowed) {
-        cout << "Adicionando novo seguidor " << follower << "ao usuário " << toBeFollowed << " " << endl;
+        cout << "Adicionando novo seguidor " << follower << " ao usuário " << toBeFollowed << endl;
 
         if (follower.compare(toBeFollowed) == 0) {
             cout << "Não é possível seguir a si mesmo. Seu narcisista." << endl;

@@ -28,13 +28,12 @@ namespace communicationManager {
 
 
     ErrorCodes CommunicationManager::send_packet(int socket, Packet* package) {
-        cout << "Enviando o pacote:" << endl;
-        package->printItself();
+        //cout << "Enviando o pacote:" << endl;
+        //package->printItself();
 
-        int aa = write(socket, package, sizeof(Packet));
-        cout << "valor de retorno do write = " << aa << endl;
+        int result = write(socket, package, sizeof(Packet));
 
-        if (aa < 0) {
+        if (result < 0) {
             cout << "ERRO escrevendo no socket" << endl;
             return ERROR;
         }
@@ -163,8 +162,6 @@ namespace communicationManager {
 
 
     ErrorCodes CommunicationManager::sendNotificationToRMs(string username, string notificationID) {
-        cout << "Notificação sendo enviada para RMS " << endl;
-        cout << "ID = " << notificationID << endl;
         Packet *packet = this->createNotificationIDPacket(username, notificationID);
         return sendPacketToRMS(packet);
     }
@@ -172,7 +169,6 @@ namespace communicationManager {
     ErrorCodes CommunicationManager::sendNotificationToFrontEnds(string username,
                                                                  Notification notification) {
 
-        cout << "Notificação sendo enviada para Front Ends " << notification.toString() << endl;
         Packet *packet = this->createNotificationPacket(username, notification);
         return sendPacketToFrontEnds(packet);
     }

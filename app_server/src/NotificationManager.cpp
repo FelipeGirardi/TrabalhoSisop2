@@ -20,7 +20,6 @@ using namespace notification;
 using namespace profileSessionManager;
 
     NotificationManager::NotificationManager() {
-        cout << "inicializando o not manager" << endl;
         sem_init(&(this->freeCritialSession), 0, 1);
     }
 
@@ -60,6 +59,7 @@ using namespace profileSessionManager;
 //        }
 
         ErrorCodes sent;
+        cout << "Mandando notificação para RMS " << endl;
         sent = GlobalManager::commManager.sendNotificationToRMs(username,
                                                                                  this->notifications[notificationID].getID());
 
@@ -78,10 +78,10 @@ using namespace profileSessionManager;
         int pendingReaders = GlobalManager::notifManager.notifications[notificationID].getPendingReaders();
 
         if (pendingReaders == 0) {
-            cout << "Notificação foi mandada para todos os usuários pendentes. deletando." << endl;
+            cout << "Notificação foi mandada para todos os usuários pendentes. Deletando." << endl;
             GlobalManager::notifManager.notifications.erase(notificationID);
         } else {
-            cout << "Notificação pendente a " <<  pendingReaders << " usuários" << endl;
+            cout << "Notificação ainda é pendente a " <<  pendingReaders << " usuários" << endl;
         }
 
     }
@@ -92,17 +92,15 @@ using namespace profileSessionManager;
 
         long int currentTime = static_cast<long int> (time(NULL));
         int pendingReaders = GlobalManager::notifManager.getPendingReaders(username);
-        cout << "Notificação é pendente a " << pendingReaders << " usuários" << endl;
+        cout << "Nova notificação é pendente a " << pendingReaders << " usuários" << endl;
         if (pendingReaders == 0) {
             cout << "Usuário não tem nenhum seguidor. Notificação ignorada." << endl;
             return;
         }
 
-        cout << "vai entrar na SC" <<  endl;
         sem_wait(&(GlobalManager::notifManager.freeCritialSession));
-        cout << "entrou na SC" <<  endl;
         string notificationID = to_string(GlobalManager::notifManager.idNextNotification);
-        cout << "notification ID = " << notificationID << endl;
+        cout << "ID nova notificação = " << notificationID << endl;
         Notification newNotification = Notification(notificationID,
                                                     notification, username,
                                                     currentTime,
