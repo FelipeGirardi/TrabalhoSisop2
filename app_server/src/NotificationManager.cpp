@@ -19,16 +19,9 @@ using namespace std;
 using namespace notification;
 using namespace profileSessionManager;
 
-    NotificationManager::NotificationManager() { }
-
-    void NotificationManager::setNotifications(unordered_map <string, Notification> notifications) {
-        this->notifications = notifications;
-
-        list<int> keys;
-        for(auto kv : notifications) { keys.push_back(stoi(kv.first)); }
-        this->idNextNotification = *(max_element(keys.begin(), keys.end())) + 1;
+    NotificationManager::NotificationManager() {
+        cout << "inicializando o not manager" << endl;
         sem_init(&(this->freeCritialSession), 0, 1);
-
     }
 
     unordered_map <string, Notification> NotificationManager::getNotifications() {
@@ -66,12 +59,22 @@ using namespace profileSessionManager;
 //            sessions.push_back(kv.second);
 //        }
 
-        ErrorCodes sent = GlobalManager::commManager.sendNotificationToFrontEnds(username,
-                                                                          this->notifications[notificationID]);
+        ErrorCodes sent;
+        sent = GlobalManager::commManager.sendNotificationToRMs(username,
+                                                                                 this->notifications[notificationID].getID());
+
+        if (sent) {
+            cout << "Pedido de deleção de notificação mandado para RMS" << endl;
+            cout << "Mandando notificação para front ends" << endl;
+            sent = GlobalManager::commManager.sendNotificationToFrontEnds(username,
+                                                                     this->notifications[notificationID]);
+        }
 
         if (sent == SUCCESS) {
+            cout << "Notificação mandada para front ends" << endl;
             GlobalManager::notifManager.notifications[notificationID].decrementPendingReaders();
         }
+
         int pendingReaders = GlobalManager::notifManager.notifications[notificationID].getPendingReaders();
 
         if (pendingReaders == 0) {
@@ -83,17 +86,23 @@ using namespace profileSessionManager;
 
     }
 
+
+
     void NotificationManager::newNotificationSentBy(string username, string notification) {
 
         long int currentTime = static_cast<long int> (time(NULL));
         int pendingReaders = GlobalManager::notifManager.getPendingReaders(username);
+        cout << "Notificação é pendente a " << pendingReaders << " usuários" << endl;
         if (pendingReaders == 0) {
             cout << "Usuário não tem nenhum seguidor. Notificação ignorada." << endl;
             return;
         }
 
+        cout << "vai entrar na SC" <<  endl;
         sem_wait(&(GlobalManager::notifManager.freeCritialSession));
+        cout << "entrou na SC" <<  endl;
         string notificationID = to_string(GlobalManager::notifManager.idNextNotification);
+        cout << "notification ID = " << notificationID << endl;
         Notification newNotification = Notification(notificationID,
                                                     notification, username,
                                                     currentTime,

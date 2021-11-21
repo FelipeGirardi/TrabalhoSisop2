@@ -24,11 +24,12 @@ typedef enum PacketType {
     COORDINATOR,
 
     HELLO_SEND, // server -> server
-    HELLO_RECEIVE
+    HELLO_RECEIVE,
+
+    EXIT_SERVER
 
 }PacketType;
 
 std::string stringDescribingType(PacketType type);
-
 
 #endif //PACKETTYPE_HPP

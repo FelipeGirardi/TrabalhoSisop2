@@ -75,6 +75,7 @@ namespace userInformation {
             void addNewSession(string sessionID, Session session);
             void removeSession(string sessionID);
             unordered_map<string, Session> getSessions();
+            void deletePendingNotification(string notificationID);
 
     };
 }

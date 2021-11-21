@@ -147,7 +147,18 @@ namespace userInformation {
         sem_post(&(this->freeCritialSession));
         sem_post(&(this->hasItems));
 
+    }
 
+    void UserInformation::deletePendingNotification(string notificationID) {
+
+        cout << "Deletando notificação de ID: " << notificationID << endl;
+        sem_wait(&(this->hasItems));
+        sem_wait(&(this->freeCritialSession));
+
+        this->pendingNotifications.remove(notificationID);
+        cout << "Sucesso deletando notificação de ID: " << notificationID << endl;
+
+        sem_post(&(this->freeCritialSession));
     }
 
     void UserInformation::startListeningForNotifications() {

@@ -141,20 +141,32 @@ namespace profileSessionManager {
         Session session = GlobalManager::sessionManager.users[username].getSessionWithID(sessionID);
         GlobalManager::sessionManager.users[username].removeSession(sessionID);
 
-        if (session.hasNotifSocket()) {
-            close(session.notif_socket);
-        }
-        if (session.hasCommandSocket()) {
-            close(session.client_socket);
-        }
+    }
+
+    // Só chamada pelo RM primário
+    void ProfileSessionManager::additionalSessionClosingProcedure(string username) {
 
         int numberOfSessions = GlobalManager::sessionManager.users[username].getNumberOfSessions();
+        cout << "Número de sessões desse usuário = " << numberOfSessions;
 
         if(numberOfSessions == 0) {
-
+            cout << "Encerrando thread de escuta de notificações" << endl;
             GlobalManager::sessionManager.users[username].stopListeningForNotifications();
         }
+    }
 
+    // Só chamada pelo RM primário
+    void ProfileSessionManager::additionalSessionOpeningProcedure(string username) {
+
+        int numberOfSessions = GlobalManager::sessionManager
+                .getUserByUsername(username).getNumberOfSessions();
+        cout << "Número de sessões do usuário = " << username << " = " << numberOfSessions;
+
+        if (numberOfSessions >= 1) {
+            cout << "Iniciando thread de escuta de notificações do usuario " << username << endl;
+            GlobalManager::sessionManager.users[username]
+                    .startListeningForNotifications();
+        }
     }
 
     /*
@@ -203,5 +215,8 @@ namespace profileSessionManager {
         return returnValue;
     }
 
+    void ProfileSessionManager::deleteNotificationFromUser(string username, string notificationID) {
+        this->users[username].deletePendingNotification(notificationID);
+    }
 
 }

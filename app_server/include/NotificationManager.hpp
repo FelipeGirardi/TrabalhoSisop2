@@ -33,7 +33,6 @@ class NotificationManager {
         unordered_map <string, Notification> getNotifications();
 
         /* Setters */
-        void setNotifications(unordered_map <string, Notification> notifications);
         void addNewNotification(Notification notification);
 
         /* Others */

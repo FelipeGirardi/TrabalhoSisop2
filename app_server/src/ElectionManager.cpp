@@ -91,6 +91,12 @@ void ElectionManager::assumeCoordination() {
     cout << "Se apresenta para front ends" << endl;
     GlobalManager::frontEndManager.sendHelloToFrontEnds();
 
+    cout << "Inicia consumo de notificações pendentes pros usuários com uma ou mais sessões" << endl;
+    for (auto user : GlobalManager::sessionManager.getUsers()) {
+        string username = user.first;
+        GlobalManager::sessionManager.additionalSessionOpeningProcedure(username);
+    }
+
 }
 
 void* ElectionManager::send_election_message(void *data) {
@@ -185,6 +191,9 @@ void ElectionManager::setCurrentServerID(int serverID) {
 }
 void ElectionManager::setServers(vector<ServerInfo> servers) {
     this->servers = servers;
+}
+vector<ServerInfo> ElectionManager::getServers() {
+    return this->servers;
 }
 int ElectionManager::getNumberOfServers() {
     return this->servers.size();

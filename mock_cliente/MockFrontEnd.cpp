@@ -11,15 +11,19 @@
 #include "../common/include/Packet.hpp"
 #include "../common/include/PacketType.hpp"
 #include "../common/include/FrontEndPayload.hpp"
+#include "../app_server/include/utils/StringExtensions.hpp"
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <vector>
 
 #define PORT 4000
 
 using namespace std;
 int socketToSend = -1;
 int socketToReceive = -1;
-void sendSomething();
+void *sendSomething(void *data);
+pthread_t send_thread;
+int stop = 0;
 void *auth_client_func(void *data);
 
 int main(int argc, char *argv[])
@@ -82,7 +86,18 @@ int main(int argc, char *argv[])
             cout << "voltou da thread de auth" << endl;
 
             if (socketToSend != -1) {
-                sendSomething();
+
+                cout << "Cancela thread antigo primario" << endl;
+                stop = 1;
+                sleep(2);
+                //pthread_cancel(send_thread);
+                cout << "Inicia nova thread" << endl;
+                sleep(2);
+                stop = 0;
+                pthread_t newSendThread;
+                send_thread = newSendThread;
+                pthread_create(&send_thread, NULL, &sendSomething, NULL);
+
             }
 
         }
@@ -97,42 +112,59 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-void sendSomething() {
 
-    char buffer[256];
+
+void * sendSomething(void *data) {
+
     Packet *pkt = new Packet;
+    string name;
+    string garbage;
 
-    FrontEndPayload *pktPayload = new FrontEndPayload;
-    strncpy(pktPayload->commandContent, "@marioooooo", 100);
-    strncpy(pktPayload->senderUsername, "@mariaaaaaa", 100);
+    while(!stop) {
+        printf("Enter the message: ");
+        getline(cin, name);
+        StringExtensions stringParser;
+        vector <string> splitedString = stringParser.split(name, ' ');
+        PacketType command = (PacketType) stoi(splitedString[0]);
+        string senderUsername = splitedString[1];
+        string commandContent = splitedString[2];
 
-    cout << "username = " << pktPayload->senderUsername << endl;
-    cout << "command = " << pktPayload->commandContent << endl;
+        FrontEndPayload *pktPayload = new FrontEndPayload;
+        strncpy(pktPayload->commandContent, commandContent.c_str(), 100);
+        strncpy(pktPayload->senderUsername, senderUsername.c_str(), 100);
 
-    char * paylooad = pktPayload->toBytes();
-    FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
+        cout << "comando = " << stringDescribingType(command) << endl;
+        cout << "username = " << pktPayload->senderUsername << endl;
+        cout << "command = " << pktPayload->commandContent << endl;
 
-    cout << "username = " << bufferReversed->senderUsername << endl;
-    cout << "command = " << bufferReversed->commandContent << endl;
+        char *paylooad = pktPayload->toBytes();
+        FrontEndPayload *bufferReversed = FrontEndPayload::fromBytes(paylooad);
 
-    bzero(pkt->_payload, 256);
-    memcpy(pkt->_payload, paylooad, 256);
-    pkt->type = FOLLOW;
-    pkt->length = strlen(paylooad);
-    pkt->timestamp = 0;
+        cout << "username = " << bufferReversed->senderUsername << endl;
+        cout << "command = " << bufferReversed->commandContent << endl;
 
-    FrontEndPayload *newPayload = FrontEndPayload::fromBytes(pkt->_payload);
-    cout << "new payload username " << newPayload->senderUsername << endl;
-    cout << "new payload content " << newPayload->commandContent << endl;
+        bzero(pkt->_payload, 256);
+        memcpy(pkt->_payload, paylooad, 256);
+        pkt->type = command;
+        pkt->length = strlen(paylooad);
+        pkt->timestamp = 0;
 
-    /* write in the socket */
-    cout << "vai mandar = " << sizeof(*pkt) << endl;
-    cout << "SOCKET = " << socketToSend << endl;
-    int n = write(socketToSend, pkt, sizeof(Packet));
-    if (n < 0)
-        printf("ERROR writing to socket\n");
-    else
-        cout << "deu bom enviando" << endl;
+        FrontEndPayload *newPayload = FrontEndPayload::fromBytes(pkt->_payload);
+        cout << "new payload username " << newPayload->senderUsername << endl;
+        cout << "new payload content " << newPayload->commandContent << endl;
+
+        /* write in the socket */
+        cout << "vai mandar = " << sizeof(*pkt) << endl;
+        cout << "SOCKET = " << socketToSend << endl;
+        int n = write(socketToSend, pkt, sizeof(Packet));
+        if (n < 0)
+            printf("ERROR writing to socket\n");
+        else
+            cout << "deu bom enviando" << endl;
+    }
+    cout << "retornando da thread" << endl;
+    return 0;
+
 
     //bzero(buffer,256);
 }

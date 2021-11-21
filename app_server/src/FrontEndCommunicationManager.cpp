@@ -166,7 +166,7 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
     int *socket = (int *) data;
     int commandSocket = *socket;
 
-    // inicia leitura de comandos do cliente
+    // inicia leitura de comandos do front end
     cout << "Iniciando leitura de comandos do socket = " << commandSocket << endl;
 
     while(!_exit) {
@@ -195,12 +195,18 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
         cout << "sender username = " << frontEndPayload->senderUsername << endl;
         cout << "command content = " << frontEndPayload->commandContent << endl;
 
-        if(receivedPacket->type == FOLLOW) {
+        //replicar
+        ErrorCodes sendPacketResult = GlobalManager::commManager.sendPacketToRMS(receivedPacket);
+
+        if (sendPacketResult == ERROR) {
+            *responsePacket = GlobalManager::commManager.createGenericNackPacket();
+        } else if(receivedPacket->type == FOLLOW) {
             cout << "Recebeu comando FOLLOW" << endl;
 
             ErrorCodes followResult = GlobalManager::sessionManager
                     .addNewFollowerToUser(frontEndPayload->senderUsername,
                                           frontEndPayload->commandContent);
+
             if (followResult == SUCCESS)
                 *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
             else
@@ -211,23 +217,28 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
 
             GlobalManager::notifManager.newNotificationSentBy(frontEndPayload->senderUsername,
                                                               frontEndPayload->commandContent);
+            cout << "notificacao criada" << endl;
 
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
 
         } else if(receivedPacket->type == EXIT) {
             cout << "Recebeu comando EXIT" << endl;
 
-            cout << "Termina sessão com usuário" << endl;
             GlobalManager::sessionManager.endSessionWithID(frontEndPayload->commandContent,
                                                            frontEndPayload->senderUsername);
+
+            GlobalManager::sessionManager
+            .additionalSessionClosingProcedure(frontEndPayload->senderUsername);
+
             cout << frontEndPayload->senderUsername << " desconectado" << endl;
 
             *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
+
+            //nao sei se precisa
             _exit = 1;
 
         } else if(receivedPacket->type == LOGIN) {
             cout << "Recebeu comando LOGIN" << endl;
-            cout << "Inicia sessão com usuário" << endl;
 
             if (GlobalManager::sessionManager.createNewSession(frontEndPayload->senderUsername,
                                                            frontEndPayload->commandContent) == ERROR) {
@@ -235,8 +246,11 @@ void* FrontEndCommunicationManager::client_thread_func(void *data) {
                 *responsePacket = GlobalManager::commManager.createGenericNackPacket();
             } else {
                 *responsePacket = GlobalManager::commManager.createAckPacketForType(receivedPacket->type);
-                GlobalManager::sessionManager.users[frontEndPayload->senderUsername]
-                .startListeningForNotifications();
+
+                // Verifica se é a primeira sessão criada
+                GlobalManager::sessionManager
+                .additionalSessionOpeningProcedure(frontEndPayload->senderUsername);
+
             }
 
         }
