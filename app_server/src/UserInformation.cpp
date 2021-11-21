@@ -27,6 +27,7 @@ namespace userInformation {
         //this->pendingNotifications = {};
         //this->followers = {};
         sem_init(&(this->freeCritialSession), 0, 1);
+        cout << "Inicializando o semaforo de " << username << endl;
         sem_init(&(this->hasItems), 0, 0);
     }
 
@@ -48,7 +49,8 @@ namespace userInformation {
 
         if (type == Common::NOTIFICATION_SOCKET) {
             this->sessions[sessionID].notif_socket = socketValue;
-        } else if (type == Common::COMMAND_SOCKET) {
+        }
+        else if (type == Common::COMMAND_SOCKET) {
             this->sessions[sessionID].client_socket = socketValue;
         }
 
@@ -63,6 +65,7 @@ namespace userInformation {
     }
 
     void UserInformation::removeSession(string sessionID) {
+        cout << "Erasing session ID " << sessionID << endl;
         this->sessions.erase(sessionID);
     }
 
@@ -125,7 +128,8 @@ namespace userInformation {
         cout << "Cancelando thread de consumo de notificações" << endl;
         if (pthread_cancel(this->consumerTid) == 0) {
             cout << "Sucesso terminando thread de consumo de notificação" << endl;
-        } else {
+        }
+        else {
             cout << "ERRO terminando thread de consumo de notificação" << endl;
         }
     }
@@ -139,6 +143,7 @@ namespace userInformation {
         args->userInformation = this;
         args->notificationID.assign(notificationID);
 
+        cout << "Trancarei a produção na critical session" << endl;
         sem_wait(&(this->freeCritialSession));
 
         cout << "Produzindo notificação com ID: " << notificationID << endl;
@@ -146,6 +151,7 @@ namespace userInformation {
 
         sem_post(&(this->freeCritialSession));
         sem_post(&(this->hasItems));
+        cout << "Liberei a produção na critical session" << endl;
 
     }
 
@@ -181,17 +187,23 @@ namespace userInformation {
         cout << "USER " << _this->toString() << endl;
 
         while (_this->getNumberOfSessions() > 0) {
-            sleep(rand() % 5);
+            cout << "Tem " << _this->getNumberOfSessions() << "sessoes ainda de " << _this->username << endl;
             sem_wait(&(_this->hasItems));
+            cout << "Tranquei aqui entre o hasItems o a critical session" << endl;
             sem_wait(&(_this->freeCritialSession));
+            cout << "Destranquei!" << endl;
 
             // this if shouldn't be needed, but better safe than sorry
-            if (!_this->pendingNotifications.empty()) {
+            if (!_this->pendingNotifications.empty() && _this->getNumberOfSessions() > 0) {
 
                 string consumedItem = _this->pendingNotifications.front();
                 cout << "Consumindo notificação de ID: " << consumedItem << endl;
                 _this->pendingNotifications.pop_front();
                 GlobalManager::notifManager.sendNotificationTo(_this->username, consumedItem);
+            }
+            else if (_this->getNumberOfSessions() == 0) {
+                cout << "Não há sessões ativas para " << _this->username << endl;
+                sem_post(&(_this->hasItems));
             }
             else {
                 cout << "ERRO consumindo notificação" << endl;

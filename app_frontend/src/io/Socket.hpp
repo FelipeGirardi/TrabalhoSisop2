@@ -25,7 +25,7 @@ namespace FrontendApp
 
             void send(Packet packet);
             void sendIgnoreAck(Packet packet);
-            std::unique_ptr<Packet> receive();
+            Packet* receive();
 
         private:
             const int socketDescriptor_;

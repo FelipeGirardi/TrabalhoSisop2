@@ -136,7 +136,6 @@ void SocketManager::listenForServerNotifications()
 
     disconnectAllClients();
 
-    serverMutex_.lock();
     delete serverSession_.commandSocket;
     delete serverSession_.notificationSocket;
     serverSession_.commandSocket = nullptr;
@@ -145,7 +144,8 @@ void SocketManager::listenForServerNotifications()
 
 void SocketManager::listenForClientCommands(ClientSession clientSession)
 {
-    auto incomingPacket = clientSession.notificationSocket->receive();
+    cout << "Waiting for user commands..." << endl;
+    auto incomingPacket = clientSession.commandSocket->receive();
 
     while (incomingPacket->type != EXIT)
     {
@@ -155,22 +155,29 @@ void SocketManager::listenForClientCommands(ClientSession clientSession)
 
         memcpy(incomingPacket->_payload, frontendPayload.toBytes(), sizeof(FrontEndPayload));
 
+        cout << "Locking mutex" << endl;
         serverMutex_.lock();
 
         try
         {
+            cout << "Sending to server" << endl;
             serverSession_.commandSocket->send(*incomingPacket);
 
+            cout << "Sending ack to client" << endl;
             Packet ackPacket = { PacketType::SERVER_ACK };
             clientSession.commandSocket->sendIgnoreAck(ackPacket);
         }
         catch (...)
         {
+            cout << "Sending nack to client" << endl;
             Packet nackPacket = { PacketType::SERVER_ERROR };
             clientSession.commandSocket->sendIgnoreAck(nackPacket);
         }
 
+        cout << "Unlocking mutex" << endl;
         serverMutex_.unlock();
+
+        incomingPacket = clientSession.commandSocket->receive();
     }
 
     FrontEndPayload exitPayload;
@@ -203,8 +210,6 @@ void SocketManager::listenForClientCommands(ClientSession clientSession)
         if (iterator->uuid == clientSession.uuid)
         {
             deleteIterator = iterator;
-            delete iterator->commandSocket;
-            delete iterator->notificationSocket;
             break;
         }
     }
@@ -278,12 +283,19 @@ void SocketManager::identifyServerSocketType(Socket* serverSocket)
     }
     else
     {
+        Packet nackPacket = { PacketType::SERVER_ERROR };
+        serverSocket->sendIgnoreAck(nackPacket);
+
         throw UnexpectedPacketTypeException();
     }
+
+    Packet ackPacket = { PacketType::SERVER_ACK };
+    serverSocket->sendIgnoreAck(ackPacket);
 }
 
 void SocketManager::identifyClientSocketType(Socket* clientSocket)
 {
+    cout << "On identifyClientSocketType" << endl;
     auto incomingPacket = clientSocket->receive();
     if (incomingPacket->type != PacketType::USERNAME)
         throw UnexpectedPacketTypeException();
@@ -293,19 +305,7 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
     try
     {
         auto sessionAuth = SessionAuth::fromBytes(incomingPacket->_payload);
-
-        FrontEndPayload authPayload;
-        strncpy(authPayload.senderUsername, sessionAuth->getProfileId().c_str(), 100);
-        strncpy(authPayload.commandContent, sessionAuth->getUuid().c_str(), 128);
-
-        memcpy(incomingPacket->_payload, authPayload.toBytes(), sizeof(FrontEndPayload));
-        serverSession_.commandSocket->send(*incomingPacket);
-
         addSocketToClientSession(clientSocket, sessionAuth);
-        delete sessionAuth;
-
-        Packet ackPacket = { PacketType::SERVER_ACK };
-        clientSocket->sendIgnoreAck(ackPacket);
     }
     catch (const exception& e)
     {
@@ -313,7 +313,6 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
 
         Packet nackPacket = { PacketType::SERVER_ERROR };
         clientSocket->sendIgnoreAck(nackPacket);
-        delete clientSocket;
     }
 
     serverMutex_.unlock();
@@ -321,18 +320,22 @@ void SocketManager::identifyClientSocketType(Socket* clientSocket)
 
 void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* sessionAuth)
 {
+    cout << "On addSocketToClientSession" << endl;
     if (clientSessions_.count(sessionAuth->getProfileId()) == 0)
     {
+        cout << "No sessions entry found for " << sessionAuth->getProfileId() << endl;
         list<ClientSession> sessions;
         clientSessions_.insert(pair(sessionAuth->getProfileId(), sessions));
     }
 
     auto hasSession = false;
     auto& activeSessions = clientSessions_[sessionAuth->getProfileId()];
+    cout << "Iterating active sessions for " << sessionAuth->getProfileId() << endl;
     for (auto& session : activeSessions)
     {
         if (session.uuid == sessionAuth->getUuid())
         {
+            cout << "Session found!" << endl;
             hasSession = true;
             if (sessionAuth->getSocketType() == SocketType::COMMAND_SOCKET)
                 session.commandSocket = clientSocket;
@@ -340,7 +343,24 @@ void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* 
                 session.notificationSocket = clientSocket;
 
             if (session.commandSocket != nullptr && session.notificationSocket != nullptr)
+            {
+                cout << "All sockets set for " << sessionAuth->getProfileId() << " - " << sessionAuth->getUuid() << endl;
+                FrontEndPayload authPayload;
+                strncpy(authPayload.senderUsername, sessionAuth->getProfileId().c_str(), 100);
+                strncpy(authPayload.commandContent, sessionAuth->getUuid().c_str(), 128);
+
+                Packet loginPacket = { PacketType::LOGIN, 0, time(NULL) };
+                memcpy(loginPacket._payload, authPayload.toBytes(), sizeof(FrontEndPayload));
+
+                cout << "On identifyClientSocketType: sending to server - packetType: " << endl;
+                loginPacket.printItself();
+
+                // Esse cara funciona com sendIgnoreAck - teste de 21/11
+                serverSession_.commandSocket->send(loginPacket);
+
+                cout << "Creating thread to listen for commands for " << sessionAuth->getProfileId() << endl;
                 thread(listenForClientCommands, session).detach();
+            }
 
             break;
         }
@@ -348,6 +368,7 @@ void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* 
 
     if (!hasSession)
     {
+        cout << "Creating session for " << sessionAuth->getProfileId() << endl;
         if (sessionAuth->getSocketType() == SocketType::COMMAND_SOCKET)
         {
             ClientSession newSession = { clientSocket, nullptr, sessionAuth->getUuid(), sessionAuth->getProfileId() };
@@ -359,4 +380,7 @@ void SocketManager::addSocketToClientSession(Socket* clientSocket, SessionAuth* 
             activeSessions.push_front(newSession);
         }
     }
+
+    Packet ackPacket = { PacketType::SERVER_ACK };
+    clientSocket->sendIgnoreAck(ackPacket);
 }

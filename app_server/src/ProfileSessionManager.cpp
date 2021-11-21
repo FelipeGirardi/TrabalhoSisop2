@@ -26,7 +26,7 @@ namespace profileSessionManager {
         this->users = users;
     }
 
-    unordered_map<string,UserInformation> ProfileSessionManager::getUsers() {
+    unordered_map<string, UserInformation> ProfileSessionManager::getUsers() {
         return this->users;
     }
 
@@ -39,7 +39,7 @@ namespace profileSessionManager {
         list<string> followers = this->users[username].getFollowers();
 
         for (string follower : followers) {
-            if (GlobalManager::sessionManager.users.find(follower) == GlobalManager::sessionManager.users.end()) {continue;}
+            if (GlobalManager::sessionManager.users.find(follower) == GlobalManager::sessionManager.users.end()) { continue; }
             GlobalManager::sessionManager.users[follower].produceNewNotification(notificationID);
         }
 
@@ -52,7 +52,8 @@ namespace profileSessionManager {
             cout << "Usuário nao registrado. Criando novo." << endl;
             UserInformation newUserInfo = UserInformation(username);
             GlobalManager::sessionManager.users[username] = newUserInfo;
-        } else {
+        }
+        else {
             // user already registered
             cout << "Usuário já registrado." << endl;
             cout << GlobalManager::sessionManager.getUsers()[username].toString() << endl;
@@ -67,11 +68,12 @@ namespace profileSessionManager {
             Session session;
             session.userID = username;
             GlobalManager::sessionManager.users[username].addNewSession(sessionID,
-                                                                        session);
+                session);
 
             return SUCCESS;
 
-        } else {
+        }
+        else {
             return ERROR;
         }
 
@@ -84,42 +86,50 @@ namespace profileSessionManager {
         if (GlobalManager::sessionManager.users[username].hasSessionWithID(sessionAuth.getUuid())) {
             cout << "Usuário já tem sessao com esse ID" << endl;
             Session existentSession = GlobalManager::sessionManager.users[username]
-                    .getSessionWithID(sessionAuth.getUuid());
+                .getSessionWithID(sessionAuth.getUuid());
             cout << "Sessão existente " << existentSession.client_socket << " " << existentSession.notif_socket << endl;
             if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
                 if (existentSession.hasNotifSocket()) {
                     return ERROR;
-                } else {
-                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
-                                                        NOTIFICATION_SOCKET,
-                                                        socketID);
                 }
-            } else if (sessionAuth.getSocketType() == COMMAND_SOCKET ) {
+                else {
+                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
+                        NOTIFICATION_SOCKET,
+                        socketID);
+                }
+            }
+            else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
                 if (existentSession.hasCommandSocket()) {
                     return ERROR;
-                } else {
-                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
-                                                        COMMAND_SOCKET,
-                                                        socketID);
                 }
-            } else {
+                else {
+                    GlobalManager::sessionManager.users[username].updateSession(sessionAuth.getUuid(),
+                        COMMAND_SOCKET,
+                        socketID);
+                }
+            }
+            else {
                 return ERROR;
             }
-        } else if (GlobalManager::sessionManager.users[username].getNumberOfSessions() < 2) {
+        }
+        else if (GlobalManager::sessionManager.users[username].getNumberOfSessions() < 2) {
             cout << "Usuário não tem sessao com esse ID" << endl;
             Session session;
             session.userID = sessionAuth.getProfileId();
             if (sessionAuth.getSocketType() == NOTIFICATION_SOCKET) {
                 session.notif_socket = socketID;
                 GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
-            } else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
+            }
+            else if (sessionAuth.getSocketType() == COMMAND_SOCKET) {
                 session.client_socket = socketID;
                 GlobalManager::sessionManager.users[username].addNewSession(sessionAuth.getUuid(), session);
-            } else {
+            }
+            else {
                 return ERROR;
             }
 
-        } else {
+        }
+        else {
             return ERROR;
         }
         return SUCCESS;
@@ -139,6 +149,7 @@ namespace profileSessionManager {
         }
 
         Session session = GlobalManager::sessionManager.users[username].getSessionWithID(sessionID);
+        cout << "Encontrei a sessão de " << session.userID << endl;
         GlobalManager::sessionManager.users[username].removeSession(sessionID);
 
     }
@@ -149,7 +160,7 @@ namespace profileSessionManager {
         int numberOfSessions = GlobalManager::sessionManager.users[username].getNumberOfSessions();
         cout << "Número de sessões desse usuário = " << numberOfSessions;
 
-        if(numberOfSessions == 0) {
+        if (numberOfSessions == 0) {
             cout << "Encerrando thread de escuta de notificações" << endl;
             GlobalManager::sessionManager.users[username].stopListeningForNotifications();
         }
@@ -159,13 +170,13 @@ namespace profileSessionManager {
     void ProfileSessionManager::additionalSessionOpeningProcedure(string username) {
 
         int numberOfSessions = GlobalManager::sessionManager
-                .getUserByUsername(username).getNumberOfSessions();
+            .getUserByUsername(username).getNumberOfSessions();
         cout << "Número de sessões do usuário = " << username << " = " << numberOfSessions;
 
         if (numberOfSessions >= 1) {
             cout << "Iniciando thread de escuta de notificações do usuario " << username << endl;
             GlobalManager::sessionManager.users[username]
-                    .startListeningForNotifications();
+                .startListeningForNotifications();
         }
     }
 
@@ -199,7 +210,7 @@ namespace profileSessionManager {
             for (auto kv : user.second.getSessions()) {
                 cout << "ID da Sessão = " << kv.first << endl;
                 GlobalManager::sessionManager.endSessionWithID(kv.first,
-                                                               user.first);
+                    user.first);
             }
             cout << endl;
         }
