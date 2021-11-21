@@ -64,14 +64,12 @@ using namespace profileSessionManager;
                                                                                  this->notifications[notificationID].getID());
 
         if (sent) {
-            cout << "Pedido de deleção de notificação mandado para RMS" << endl;
             cout << "Mandando notificação para front ends" << endl;
             sent = GlobalManager::commManager.sendNotificationToFrontEnds(username,
                                                                      this->notifications[notificationID]);
         }
 
         if (sent == SUCCESS) {
-            cout << "Notificação mandada para front ends" << endl;
             GlobalManager::notifManager.notifications[notificationID].decrementPendingReaders();
         }
 

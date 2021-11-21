@@ -47,15 +47,12 @@ namespace communicationManager {
      */
     ErrorCodes CommunicationManager::sendPacketToSessions(list<Session> sessions, Packet* package) {
 
-        cout << "Enviando o pacote de " << stringDescribingType(package->type) <<
-        " para o total de " << sessions.size() << " sessões." << endl;
-
         if (sessions.empty()) { return SUCCESS; }
 
         ErrorCodes returnValue = ERROR;
         for (Session session : sessions) {
 
-            cout << "Enviando pacote para " << session.userID << " socket = " << session.notif_socket << endl;
+            cout << "Enviando pacote para " << session.userID << endl;
             if (this->send_packet(session.notif_socket, package) >= 0) {
                 returnValue = SUCCESS;
             }
@@ -65,15 +62,11 @@ namespace communicationManager {
 
     ErrorCodes CommunicationManager::sendPacketToSockets(list<int> sockets, Packet* package) {
 
-        cout << "Enviando o pacote de " << stringDescribingType(package->type) <<
-             " para o total de " << sockets.size() << " sockets." << endl;
-
         if (sockets.empty()) { return SUCCESS; }
 
         ErrorCodes returnValue = ERROR;
         for (int socket : sockets) {
 
-            cout << "Enviando pacote para socket" << socket << endl;
             if (this->send_packet(socket, package) >= 0) {
                 returnValue = SUCCESS;
             }
@@ -107,8 +100,6 @@ namespace communicationManager {
 
     ErrorCodes CommunicationManager::sendPacketToRMS(Packet *packet) {
 
-        cout << "Replicando pacote para RMS" << endl;
-
         vector<ServerInfo> rms = GlobalManager::electionManager.getServers();
         ErrorCodes successCode;
         int currentServerID = GlobalManager::electionManager.getProcessID();
@@ -117,7 +108,6 @@ namespace communicationManager {
             if (rm._id == currentServerID ||  rm.sendSocket == INVALID_SOCKET) { continue; }
             cout << "Enviando pacote para rm de id = " << rm._id << " ";
             cout << "IP = "<< rm.ip << " ";
-            cout << "send socket = " <<  rm.sendSocket << endl;
             successCode = send_packet(rm.sendSocket, packet);
             if (successCode == SUCCESS) {
                 cout << "SUCESSO enviando!" << endl;
@@ -191,7 +181,6 @@ namespace communicationManager {
 
     Packet CommunicationManager::createAckPacketForType(PacketType type) {
 
-        cout << "Criando pacote ACK" << endl;
         string responseString = "Uhu! " + stringDescribingType(type) + " recebido com sucesso! :)";
 
         Packet package;
@@ -205,7 +194,6 @@ namespace communicationManager {
 
     Packet CommunicationManager::createGenericNackPacket() {
 
-        cout << "Criando pacote NACK" << endl;
         string responseString = "Erro!";
 
         Packet package;
@@ -217,8 +205,6 @@ namespace communicationManager {
         return package;
     }
     Packet CommunicationManager::createEmptyPacket(PacketType type) {
-
-        cout << "Criando pacote vazio de " << stringDescribingType(type) << endl;
 
         Packet package;
         package.type = type;
@@ -241,13 +227,11 @@ namespace communicationManager {
 
     Packet CommunicationManager::createExitPacket(int idCurrentProcess) {
 
-        cout << "Criando pacote EXIT " << endl;
         return createPacketWithID(idCurrentProcess, EXIT_SERVER);
     }
 
     Packet CommunicationManager::createCoordinatorPacket(int idCurrentProcess) {
 
-        cout << "Criando pacote COORDINATOR " << endl;
         return createPacketWithID(idCurrentProcess, COORDINATOR);
     }
 
@@ -261,8 +245,6 @@ namespace communicationManager {
      * The payload is a buffer with BUFFER_SIZE zeros
      */
     Packet CommunicationManager::createExitPacket() {
-
-        cout << "Criando pacote EXIT" << endl;
 
         Packet package;
         package.type = EXIT_SERVER;

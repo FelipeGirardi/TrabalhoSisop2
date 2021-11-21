@@ -65,8 +65,6 @@ void ElectionManager::sendCoordinatorPacket(int sendSocket) {
 
     if (GlobalManager::commManager.send_packet(sendSocket, packet) == ERROR) {
         cout << "ERRO enviando COORDINATOR" << endl;
-    } else {
-        cout << "COORDINATOR enviado com sucesso" << endl;
     }
     free(packet);
 
@@ -117,8 +115,6 @@ void* ElectionManager::send_election_message(void *data) {
         cout << "Não foi possivel enviar ELECTION" <<endl;
         *returnValue = ERROR;
         return (void *) returnValue;
-    } else {
-        cout << "ELECTION enviado com sucesso" << endl;
     }
 
     //espera recebimento answer
@@ -133,7 +129,7 @@ void* ElectionManager::send_election_message(void *data) {
     }
     // se recebeu algo -> ok
     else {
-        cout << "Recebeu answer com sucesso" << endl;
+        cout << "Recebeu ANSWER com sucesso" << endl;
         *returnValue = SUCCESS;
     }
 
@@ -165,12 +161,10 @@ int ElectionManager::getCurrentCoordinatorSendSocket() {
 }
 
 void ElectionManager::setSendSocket(int sendSocket, int serverID) {
-    cout << "Atualizando send socket do id = " << serverID << "para socket = " << sendSocket;
     this->servers[serverID].sendSocket = sendSocket;
 }
 
 void ElectionManager::setReceiveSocket(int receiveSocket, int serverID) {
-    cout << "Atualizando receive socket do id = " << serverID << "para socket = " << receiveSocket;
     this->servers[serverID].receiveSocket = receiveSocket;
 }
 string ElectionManager::getIPfromID(int serverID) {

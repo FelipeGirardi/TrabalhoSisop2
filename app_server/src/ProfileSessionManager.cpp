@@ -93,7 +93,6 @@ namespace profileSessionManager {
         }
 
         Session session = GlobalManager::sessionManager.users[username].getSessionWithID(sessionID);
-        cout << "Encontrei a sessão de " << session.userID << endl;
         GlobalManager::sessionManager.users[username].removeSession(sessionID);
 
     }

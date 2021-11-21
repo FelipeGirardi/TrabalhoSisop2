@@ -27,12 +27,8 @@ void FrontEndCommunicationManager::sendHelloToFrontEnds() {
         cout << "Enviando HELLO SEND para front end de IP = " << frontEnds[i].ip << endl;
         ErrorCodes successSend = sendHelloToFrontEnd(frontEnds[i], HELLO_SEND, i);
         if (successSend) {
-            cout << "Sucesso enviando HELLO SEND" << endl;
             cout << "Enviando HELLO RECEIVE" << endl;
             ErrorCodes successReceive = sendHelloToFrontEnd(frontEnds[i], HELLO_RECEIVE, i);
-            if (successReceive) {
-                cout << "Sucesso enviando HELLO RECEIVE" << endl;
-            }
         }
 
     }
@@ -70,7 +66,7 @@ ErrorCodes FrontEndCommunicationManager::sendHelloToFrontEnd(FrontEndInfo frontE
         return SUCCESS;
     }
     else {
-        cout << "resultado invalido" << endl;
+        cout << "Resultado invalido" << endl;
     }
     return ERROR;
 
@@ -242,13 +238,11 @@ void* FrontEndCommunicationManager::client_thread_func(void* data) {
 
         }
 
-        cout << "Enviando pacote ACK/NACK recebimento de comando **" << endl;
+        cout << "Enviando pacote ACK/NACK" << endl;
         if (GlobalManager::commManager.send_packet(commandSocket, responsePacket) == ERROR) {
             cout << "Não foi possivel enviar ACK/NACK" << endl;
         }
-        else {
-            cout << "ACK/NACK enviado com sucesso" << endl;
-        }
+
         free(receivedPacket);
         free(responsePacket);
 

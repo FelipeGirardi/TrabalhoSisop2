@@ -102,7 +102,6 @@ int main(int argc, char* argv[])
 
     setbuf(stdout, NULL);  // zera buffer do stdout
 
-    cout << "Criando socket servidor\n";
     // cria socket TCP verificando erro
     if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
         cout << "ERRO abrindo socket **\n";
@@ -118,7 +117,6 @@ int main(int argc, char* argv[])
     bzero(&(serv_addr.sin_zero), 8);
 
     // faz o bind
-    cout << "Fazendo bind IP e porta\n";
     if (::bind(sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
         cout << "ERRO no bind **\n";
         return 0;
@@ -149,7 +147,6 @@ int main(int argc, char* argv[])
 
             // Creates thread for receiving username
             pthread_t auth_thread;
-            cout << "Criando thread autenticação" << endl;
             int *pointerToSocket = (int*) malloc(sizeof (int));
             *pointerToSocket = client_sockfd;
             pthread_create(&auth_thread, NULL, &auth_client_func, (void *) pointerToSocket);
@@ -227,12 +224,10 @@ void sendHelloToServers(vector<ServerInfo> servers) {
         cout << "Enviando HELLO SEND para servidor de ip = " << _ip << endl;
         ErrorCodes successSend = sendHelloToServer(_arguments, i);
         if (successSend) {
-            cout << "Sucesso enviando HELLO SEND" << endl;
             ServerArguments _arguments2 = { .ip=_ip, .port=port, .typeOfPacket= HELLO_RECEIVE,};
             cout << "Enviando HELLO RECEIVE para servidor de ip = " << _ip << endl;
             ErrorCodes successReceive = sendHelloToServer(_arguments2, i);
             if (successReceive) {
-                cout << "Sucesso enviando HELLO RECEIVE" << endl;
                 validResponseCounter += 1;
             }
         }
@@ -351,8 +346,6 @@ void *send_keep_alive_thread_func(void *data) {
         cout << "Enviando pacote KEEP ALIVE" << endl;
         if (GlobalManager::commManager.send_packet(*socket, packet) == ERROR) {
             cout << "Não foi possivel enviar KEEP ALIVE" <<endl;
-        } else {
-            cout << "KEEP ALIVE enviado com sucesso" << endl;
         }
 
         Packet *receivedPacket = new Packet;
@@ -413,7 +406,6 @@ void *receive_server_events_thread_func(void *data) {
             cout << "ID novo coordinator = " << coordinatorID << endl;
             GlobalManager::electionManager.setNewCoordinatorID(coordinatorID);
 
-            cout << "Cancela envio de keep alive para antigo coordinator" << endl;
             pthread_cancel(keep_alive_thread);
             cout << "Inicia envio de keep alive para novo coordinator" << endl;
             pthread_t newKeepAliveID;
@@ -433,7 +425,6 @@ void *receive_server_events_thread_func(void *data) {
         } else if (receivedPacket->type == EXIT_SERVER) {
             cout << "Recebeu EXIT SERVER" << endl;
             int _id = atoi(receivedPacket->_payload);
-            cout << "id do servidor remetente = " << _id << endl;
             GlobalManager::electionManager.setSendSocket(INVALID_SOCKET, _id);
 
             // nao há ack/answer para mensagens EXIT
@@ -496,8 +487,6 @@ void *receive_server_events_thread_func(void *data) {
         if (GlobalManager::commManager.send_packet(*receivedSocket, responsePacket) == ERROR) {
             cout << "ERRO enviando ACK/NACK" << endl;
             shouldStartElection = false;
-        } else {
-            cout << "ACK/NACK enviado com sucesso" << endl;
         }
 
         if (shouldStartElection) {
@@ -565,18 +554,14 @@ void *auth_client_func(void *data) {
     cout << "Enviando pacote ACK/NACK recebimento de comando" << endl;
     if (GlobalManager::commManager.send_packet(client_socket, responsePacket) == ERROR) {
         cout << "ERRO enviando ACK/NACK" <<endl;
-    } else {
-        cout << "ACK/NACK enviado com sucesso" << endl;
     }
 
     if (shouldSendCoordinator) {
-        cout << "Enviando pacote coordinator para nova conexão" << endl;
+        cout << "Enviando pacote COORDINATOR para nova conexão" << endl;
         int _id = GlobalManager::electionManager.getProcessID();
         *responsePacket =  GlobalManager::commManager.createCoordinatorPacket(_id);
         if (GlobalManager::commManager.send_packet(client_socket, responsePacket) == ERROR) {
             cout << "ERRO enviando COORDINATOR" <<endl;
-        } else {
-            cout << "COORDINATOR enviado com sucesso" << endl;
         }
     }
 

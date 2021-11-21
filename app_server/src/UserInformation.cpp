@@ -124,10 +124,7 @@ namespace userInformation {
 
     void UserInformation::stopListeningForNotifications() {
         cout << "Cancelando thread de consumo de notificações" << endl;
-        if (pthread_cancel(this->consumerTid) == 0) {
-            cout << "Sucesso terminando thread de consumo de notificação" << endl;
-        }
-        else {
+        if (pthread_cancel(this->consumerTid) != 0) {
             cout << "ERRO terminando thread de consumo de notificação" << endl;
         }
     }
@@ -156,7 +153,6 @@ namespace userInformation {
         sem_wait(&(this->freeCritialSession));
 
         this->pendingNotifications.remove(notificationID);
-        cout << "Sucesso deletando notificação de ID: " << notificationID << endl;
 
         sem_post(&(this->freeCritialSession));
     }
@@ -202,7 +198,7 @@ namespace userInformation {
             sem_post(&(_this->freeCritialSession));
 
         }
-        cout << "Finalizando thread de consumo" << endl;
+        //cout << "Finalizando thread de consumo" << endl;
         //free(_this);
         return 0;
     }
