@@ -157,9 +157,6 @@ void* FrontEndCommunicationManager::client_thread_func(void* data) {
     int* socket = (int*)data;
     int commandSocket = *socket;
 
-    // inicia leitura de comandos do front end
-    cout << "Iniciando leitura de comandos de front end = " << commandSocket << endl;
-
     while (!_exit) {
         bzero(buffer, BUFFER_SIZE);
 

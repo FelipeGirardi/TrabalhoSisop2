@@ -207,8 +207,6 @@ ErrorCodes sendHelloToServer(ServerArguments _arguments, int _id) {
 
         }
         return SUCCESS;
-    } else {
-        cout << "resultado invalido" << endl;
     }
     return ERROR;
 

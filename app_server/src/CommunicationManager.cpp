@@ -229,7 +229,6 @@ namespace communicationManager {
     }
 
     Packet CommunicationManager::createPacketWithID(int _id, PacketType type) {
-        cout << "Criando pacote contendo id = " << _id << endl;
 
         Packet package;
         package.type = type;
@@ -254,7 +253,6 @@ namespace communicationManager {
 
     Packet CommunicationManager::createHelloPacket(int idCurrentProcess, PacketType typeOfHello) {
 
-        cout << "Criando pacote " << stringDescribingType(typeOfHello) << endl;
         return createPacketWithID(idCurrentProcess, typeOfHello);
     }
 
